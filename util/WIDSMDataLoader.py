@@ -10,7 +10,7 @@ from tqdm import tqdm
 class WISDMDataset(Dataset):
 
     def __getitem__(self, index) -> T_co:
-        return torch.tensor(self.userDfs[index].values)
+        return torch.tensor(self.userDfs[index].values).float()
 
     def __len__(self) -> int:
         return len(self.userDfs)
@@ -43,7 +43,7 @@ class WISDMDataset(Dataset):
                         temp = pd.DataFrame(data=df.values, columns=self.columns)
 
                         temp['z'] = temp['z'].str.replace(';', '')
-                        temp['user'] = temp['user'].astype(np.float)
+                        temp['user'] = temp['user'].astype(np.double)
                         temp['time'] = temp['time'].astype(np.float)
                         temp['x'] = temp['x'].astype(np.float)
                         temp['y'] = temp['y'].astype(np.float)

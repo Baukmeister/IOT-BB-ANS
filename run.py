@@ -8,4 +8,5 @@ dataSet = WISDMDataset("data/wisdm-dataset/raw")
 vae = VAE()
 dataLoader = torch.utils.data.DataLoader(dataSet)
 
-print()
+for x in iter(dataLoader):
+    print(vae.forward(x))
