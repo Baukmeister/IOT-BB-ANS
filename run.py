@@ -1,6 +1,11 @@
-from util.WIDSMDataLoader import WISDMDataLoader
+import torch.utils.data
 
-dataLoader = WISDMDataLoader("data/wisdm-dataset/raw")
-dataLoader.load()
+from models.vae import VAE
+from util.WIDSMDataLoader import WISDMDataset
 
-print(dataLoader.data_dict)
+dataSet = WISDMDataset("data/wisdm-dataset/raw")
+
+vae = VAE()
+dataLoader = torch.utils.data.DataLoader(dataSet)
+
+print()
