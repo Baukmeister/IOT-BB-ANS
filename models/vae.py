@@ -1,5 +1,5 @@
 import torch.cuda
-from torch import nn
+from torch import nn, optim
 
 
 class VAE_encoder(nn.Module):
@@ -46,7 +46,12 @@ class VAE_full(nn.Module):
 
   def forward(self, x):
 
+    input = x.detach().numpy()
+
     x = self.encoder(x)
     x, _ = self.decoder(x)
 
+    output = x.detach().numpy()
     return x
+
+
