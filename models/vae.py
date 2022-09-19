@@ -1,6 +1,7 @@
 import torch.cuda
 from torch import nn, optim
 
+#TODO: rework model using this repo https://github.com/Khamies/LSTM-Variational-AutoEncoder/blob/main/model.py
 
 class VAE_encoder(nn.Module):
     def __init__(self, input_dim, hidden_dim):
