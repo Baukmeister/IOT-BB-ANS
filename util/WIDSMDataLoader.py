@@ -10,10 +10,10 @@ from tqdm import tqdm
 class WISDMDataset(Dataset):
 
     def __getitem__(self, index) -> T_co:
-        return torch.tensor(self.userDfs[index].values).float()
+        return torch.tensor(self.WISDMdf.iloc[1,2:5].values).float()
 
     def __len__(self) -> int:
-        return len(self.userDfs)
+        return self.WISDMdf.shape[0]
 
     def __init__(self, path) -> None:
         self.path = path
@@ -39,7 +39,7 @@ class WISDMDataset(Dataset):
                     if not str(filename).startswith("."):
                         df = pd.read_csv(
                             f"{path}/{filename}",
-                            sep=",", header=None)[[0,2,3,4,5]]
+                            sep=",", header=None)[[0, 2, 3, 4, 5]]
                         temp = pd.DataFrame(data=df.values, columns=self.columns)
 
                         temp['z'] = temp['z'].str.replace(';', '')
@@ -50,7 +50,3 @@ class WISDMDataset(Dataset):
                         temp['z'] = temp['z'].astype(np.float)
 
                         self.WISDMdf = pd.concat([self.WISDMdf, temp])
-
-        print("Partitioning into user datasets ...")
-        for user in tqdm(self.WISDMdf.user.unique()):
-            self.userDfs.append(self.WISDMdf[self.WISDMdf.user == user])

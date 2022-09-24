@@ -1,42 +1,19 @@
 import torch
+from torch import nn
 
 
 class VAE_Loss(torch.nn.Module):
+    recon_loss = nn.MSELoss()
 
-    def __init__(self):
-        super(VAE_Loss, self).__init__()
+    def loss_function(self, x, x_hat, mean, log_var):
+        reproduction_loss = self.recon_loss(x_hat, x)
+        KLD = -0.5 * torch.sum(1 + log_var - mean.pow(2) - log_var.exp())
 
-        self.nlloss = torch.nn.NLLLoss()
+        if KLD < 0 or reproduction_loss < 0:
+            raise Warning("Negative loss. Something went wrong!")
 
-    def KL_loss(self, mu, log_var, z):
-        kl = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
-        kl = kl.sum(
-            -1)  # to go from multi-dimensional z to single dimensional z : (batch_size x latent_size) ---> (batch_size)
-        # i.e Z = [ [z1_1, z1_2 , ...., z1_lt] ] ------> z = [ z1]
-        #         [ [z2_1, z2_2, ....., z2_lt] ]             [ z2]
-        #                   .                                [ . ]
-        #                   .                                [ . ]
-        #         [[zn_1, zn_2, ....., zn_lt] ]              [ zn]
+        return reproduction_loss + KLD
 
-        #        lt=latent_size
-        kl = kl.mean()
+    def forward(self, mean, log_var, x_hat_param, x):
 
-        return kl
-
-    def reconstruction_loss(self, x_hat_param, x):
-        x = x.view(-1).contiguous()
-        x_hat_param = x_hat_param.view(-1, x_hat_param.size(2))
-
-        recon = self.nlloss(x_hat_param, x)
-
-        return recon
-
-    def forward(self, mu, log_var, z, x_hat_param, x):
-        kl_loss = self.KL_loss(mu, log_var, z)
-        #TODO: change this
-        recon_loss = torch.nn.MSELoss()(x_hat_param, x)
-
-        elbo = kl_loss + recon_loss  # we use + because recon loss is a NLLoss (cross entropy) and it's negative in its own, and in the ELBO equation we have
-        # elbo = KL_loss - recon_loss, therefore, ELBO = KL_loss - (NLLoss) = KL_loss + NLLoss
-
-        return elbo, kl_loss, recon_loss
+        return self.loss_function(x, x_hat_param, mean, log_var)
