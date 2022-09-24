@@ -10,7 +10,7 @@ from tqdm import tqdm
 class WISDMDataset(Dataset):
 
     def __getitem__(self, index) -> T_co:
-        return torch.tensor(self.WISDMdf.iloc[1,2:5].values).float()
+        return torch.tensor(self.WISDMdf.iloc[index,2:5].values).float()
 
     def __len__(self) -> int:
         return self.WISDMdf.shape[0]
