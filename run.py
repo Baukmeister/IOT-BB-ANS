@@ -4,6 +4,7 @@ import torch.utils.data
 from loss.vae_loss import VAE_Loss
 from models.vae import *
 from util.WIDSMDataLoader import WISDMDataset
+from tqdm import tqdm
 
 dataSet = WISDMDataset("data/wisdm-dataset/raw")
 
@@ -19,7 +20,6 @@ dataLoader = torch.utils.data.DataLoader(dataSet, batch_size=128, shuffle=True)
 
 optimizer = optim.Adam(vae.parameters(), lr=0.001, weight_decay=0.001)
 
-
 def plot_prediction(prediction, target):
     import matplotlib.pyplot as plt
 
@@ -27,8 +27,8 @@ def plot_prediction(prediction, target):
     fig = plt.figure(figsize=(4, 4))
 
     ax = fig.add_subplot(projection='3d')
-    prediction = prediction.detach().numpy()[0]
-    target = target.detach().numpy()[0]
+    prediction = prediction.cpu().detach().numpy()[0]
+    target = target.cpu().detach().numpy()[0]
 
 
     # plot the points
@@ -38,29 +38,36 @@ def plot_prediction(prediction, target):
 
     plt.show()
 
+# TODO add test set evalution and store best model
+def train():
+    for epoch in range(1):  # loop over the dataset multiple times
 
-for epoch in range(1):  # loop over the dataset multiple times
+        running_loss = 0.0
+        losses = []
+        for i, data in enumerate(tqdm(dataLoader)):
+            # get the inputs; data is a list of [inputs, labels]
 
-    running_loss = 0.0
-    losses = []
-    for i, data in enumerate(dataLoader):
-        # get the inputs; data is a list of [inputs, labels]
+            # zero the parameter gradients
+            optimizer.zero_grad()
 
-        # zero the parameter gradients
-        optimizer.zero_grad()
+            # forward + backward + optimize
+            output, mean, log_var, z = vae(data)
 
-        # forward + backward + optimize
-        output, mean, log_var, z = vae(data)
+            loss = vae_loss(mean=mean, log_var=log_var, x_hat_param=output, x=data)
+            losses.append(loss.item())
+            loss.backward()
+            optimizer.step()
 
-        if plot and i % 1000 == 0:
-            plot_prediction(output, data)
-        loss = vae_loss(mean=mean, log_var=log_var, x_hat_param=output, x=data)
-        losses.append(loss)
-        loss.backward()
-        optimizer.step()
+            if plot and i % 1000 == 0:
+                plot_prediction(output, data)
+                print(f'[{epoch + 1}, {i}] loss: {loss.item()}')
 
-        # print statistics
-        print(f'[{epoch + 1}, {i}] loss: {loss.item()}')
+            if i > 1000:
+                break
 
-    plt.title("Training loss")
-    plt.plot(list(range(len(losses))), losses,)
+        plt.title(f"Training loss iteration {i}, epoch {epoch}")
+        plt.plot(list(range(len(losses))), losses,)
+        plt.show()
+
+if __name__ == '__main__':
+    train()

@@ -10,12 +10,15 @@ from tqdm import tqdm
 class WISDMDataset(Dataset):
 
     def __getitem__(self, index) -> T_co:
-        return torch.tensor(self.WISDMdf.iloc[index,2:5].values).float()
+        item = torch.tensor(self.WISDMdf.iloc[index,2:5].values).float()
+        return item.to(self.device)
 
     def __len__(self) -> int:
         return self.WISDMdf.shape[0]
 
     def __init__(self, path) -> None:
+
+
         self.path = path
         self.columns = ['user', 'time', 'x', 'y', 'z']
 
@@ -27,6 +30,12 @@ class WISDMDataset(Dataset):
 
         self.WISDMdf = pd.DataFrame(columns=self.columns)
         self.userDfs = []
+
+        if torch.cuda.is_available():
+            self.device = "cuda"
+        else:
+            self.device = "cpu"
+
         self._load()
 
     def _load(self):

@@ -4,12 +4,11 @@ from torch import nn, optim
 #TODO: rework model using this repo https://github.com/Khamies/LSTM-Variational-AutoEncoder/blob/main/model.py
 
 class VAE_encoder(nn.Module):
-    def __init__(self, input_dim, hidden_dim, latent_dim, device):
+    def __init__(self, input_dim, hidden_dim, latent_dim):
         super(VAE_encoder, self).__init__()
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.latent_dim = latent_dim
-        self.device = device
 
         self.encoder_linear = nn.Linear(self.input_dim, self.hidden_dim)
         self.fully_connected = nn.Linear(self.hidden_dim,self.hidden_dim)
@@ -23,8 +22,6 @@ class VAE_encoder(nn.Module):
         mean = self.mean(x)
         log_var = self.log_variance(x)
 
-        # Generate a unit gaussian noise.
-        batch_size = x.size(0)
 
         return mean, log_var, x
 
@@ -57,12 +54,14 @@ class VAE_full(nn.Module):
     super(VAE_full, self).__init__()
 
     if torch.cuda.is_available():
-        self.device = "cpu"
+        self.device = "cuda"
     else:
         self.device = "cpu"
 
-    self.encoder = VAE_encoder(input_dim=n_features, hidden_dim=hidden_size, latent_dim=latent_size, device=self.device).to(self.device)
+    print(f"Using: {self.device}")
+    self.encoder = VAE_encoder(input_dim=n_features, hidden_dim=hidden_size, latent_dim=latent_size).to(self.device)
     self.decoder = VAE_decoder(hidden_dim=hidden_size, latent_dim=latent_size, output_dim=n_features).to(self.device)
+    self.to(self.device)
 
   def reparameterization(self, mean, log_var):
       epsilon = torch.randn_like(log_var).to(self.device)  # sampling epsilon
@@ -71,13 +70,10 @@ class VAE_full(nn.Module):
 
   def forward(self, x):
 
-    input = x.detach().numpy()
-
     mean, log_var, x = self.encoder(x)
     z = self.reparameterization(mean, log_var)
     x = self.decoder(z)
 
-    output = x.detach().numpy()
     return x, mean, log_var, z
 
 
