@@ -20,17 +20,17 @@ prior_precision = 8
 bernoulli_precision = 16
 q_precision = 14
 
-batch_size = 128
-
+batch_size = 1
+data_set_size = 500
 latent_dim = 9
 latent_shape = (batch_size, latent_dim)
 latent_size = np.prod(latent_shape)
-obs_shape = (batch_size, 28 * 28)
+obs_shape = (batch_size, 3)
 obs_size = np.prod(obs_shape)
 
 ## Setup codecs
 # VAE codec
-model = VAE_full(n_features=3, hidden_size=18, latent_size=latent_dim)
+model = VAE_full(n_features=3, hidden_size=18, latent_size=latent_dim, device="cpu")
 model.load_state_dict(torch.load('../models/trained_vae_l9_h18'))
 
 encoder_net = torch_fun_to_numpy_fun(model.encoder)
@@ -46,15 +46,13 @@ def vae_view(head):
 
 ## Load biometrics data
 data_set = WISDMDataset("../data/wisdm-dataset/raw")
-data_points = data_set.WISDMdf
+data_points = [entry for entry in data_set.WISDMdf.iloc[:data_set_size,][["x", "y", "z"]].to_numpy()]
 
 num_batches = len(data_points) // batch_size
 
 vae_append, vae_pop = cs.repeat(cs.substack(
     bb_ans.VAE(decoder_net, encoder_net, obs_codec, prior_precision, q_precision),
     vae_view), num_batches)
-
-
 
 ## Encode
 # Initialize message with some 'extra' bits

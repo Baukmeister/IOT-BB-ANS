@@ -52,10 +52,10 @@ class VAE_decoder(nn.Module):
 
 
 class VAE_full(nn.Module):
-  def __init__(self, n_features, hidden_size, latent_size):
+  def __init__(self, n_features, hidden_size, latent_size, device=None):
     super(VAE_full, self).__init__()
-
-    if torch.cuda.is_available():
+    self.device = device
+    if self.device is None and torch.cuda.is_available():
         self.device = "cuda"
     else:
         self.device = "cpu"
