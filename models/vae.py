@@ -1,8 +1,6 @@
 import torch.cuda
 from torch import nn, optim
 
-#TODO: rework model using this repo https://github.com/Khamies/LSTM-Variational-AutoEncoder/blob/main/model.py
-
 class VAE_encoder(nn.Module):
     def __init__(self, input_dim, hidden_dim, latent_dim):
         super(VAE_encoder, self).__init__()
@@ -18,6 +16,8 @@ class VAE_encoder(nn.Module):
 
     def forward(self, x):
         x = self.encoder_linear(x)
+        x = self.fully_connected(x)
+        x = self.fully_connected(x)
         x = self.fully_connected(x)
         mean = self.mean(x)
         log_var = self.log_variance(x)
@@ -44,6 +44,8 @@ class VAE_decoder(nn.Module):
 
         hidden_decoder = self.init_hidden_decoder(z)
 
+        x = self.fully_connected(hidden_decoder)
+        x = self.fully_connected(hidden_decoder)
         x = self.fully_connected(hidden_decoder)
         x = self.decoder_linear(x)
         return x

@@ -80,6 +80,9 @@ def test_model():
 
     return mean_loss
 
+def model_name():
+    return f"trained_vae_l{latent_dim}_h{hidden_dim}"
+
 def train():
     for epoch in range(1):  # loop over the dataset multiple times
 
@@ -107,7 +110,7 @@ def train():
 
                 if test_loss < best_loss:
                     best_loss = test_loss
-                    torch.save(vae.state_dict(), f"models/trained_vae_l{latent_dim}_h{hidden_dim}")
+                    torch.save(vae.state_dict(), f"models/{model_name()}")
                     print("\nStored model as new best model")
 
         plt.title(f"Training loss iteration epoch {epoch + 1}")
