@@ -45,7 +45,8 @@ def vae_view(head):
 
 
 ## Load biometrics data
-data_points = WISDMDataset("data/wisdm-dataset/raw").WISDMdf
+data_set = WISDMDataset("../data/wisdm-dataset/raw")
+data_points = data_set.WISDMdf
 
 num_batches = len(data_points) // batch_size
 
@@ -60,7 +61,8 @@ vae_append, vae_pop = cs.repeat(cs.substack(
 encode_t0 = time.time()
 init_message = cs.base_message(obs_size + latent_size)
 
-# Encode the mnist images
+# TODO: The datapoints need to be seperated into lists of numpy arrays!
+# Encode the datapoints
 message, = vae_append(init_message, data_points)
 
 flat_message = cs.flatten(message)
