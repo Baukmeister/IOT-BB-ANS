@@ -11,13 +11,13 @@ dataSet = WISDMDataset("data/wisdm-dataset/raw")
 
 # CONFIG
 input_dim = 3
-hidden_dim = 18
+hidden_dim = 16
 latent_dim = 2
 plot = True
 test_set_ratio = 0.001
 train_batch_size = 128
-learning_rate = 0.001
-weight_decay = 0.001
+learning_rate = 0.01
+weight_decay = 0.01
 plot_epoch_interval = 2000
 
 testSetSize = int(len(dataSet) * test_set_ratio)
