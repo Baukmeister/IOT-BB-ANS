@@ -110,11 +110,11 @@ def train():
                     torch.save(vae.state_dict(), f"models/trained_vae_l{latent_dim}_h{hidden_dim}")
                     print("\nStored model as new best model")
 
-        plt.title(f"Training loss iteration epoch {epoch}")
+        plt.title(f"Training loss iteration epoch {epoch + 1}")
         plt.plot(list(range(len(train_losses))), train_losses, )
         plt.show()
 
-        plt.title(f"Test loss iteration epoch {epoch}")
+        plt.title(f"Test loss iteration epoch {epoch + 1}")
         plt.plot(list(range(len(test_losses))), test_losses)
         plt.show()
 
