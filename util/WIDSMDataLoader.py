@@ -40,7 +40,7 @@ class WISDMDataset(Dataset):
 
     def _load(self):
 
-        for path in [self.phone_accel_path]:  # , self.phone_gyro_path, self.watch_accel_path, self.watch_gyro_path]:
+        for path in [self.phone_accel_path , self.phone_gyro_path, self.watch_accel_path, self.watch_gyro_path]:
 
             print(f"\nLoading data from '{path}' ...")
             for dirname, _, filenames in os.walk(path):
