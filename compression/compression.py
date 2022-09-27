@@ -1,5 +1,5 @@
 # TODO work through these tutorials to gain more insights https://github.com/facebookresearch/NeuralCompression
-
+# TODO figure out why this fails at working wit the std_gaussian_buckets[idx]call in the codecs.py file
 
 import sys
 import torch
@@ -20,7 +20,7 @@ prior_precision = 8
 bernoulli_precision = 16
 q_precision = 14
 
-batch_size = 1
+batch_size = 10
 data_set_size = 500
 latent_dim = 9
 latent_shape = (batch_size, latent_dim)
@@ -46,9 +46,12 @@ def vae_view(head):
 
 ## Load biometrics data
 data_set = WISDMDataset("../data/wisdm-dataset/raw")
-data_points = [entry for entry in data_set.WISDMdf.iloc[:data_set_size,][["x", "y", "z"]].to_numpy()]
+data_points_singles = [entry for entry in data_set.WISDMdf.iloc[:data_set_size,][["x", "y", "z"]].to_numpy()]
+num_batches = len(data_points_singles) // batch_size
 
-num_batches = len(data_points) // batch_size
+data_points = np.split(np.reshape(data_points_singles, (len(data_points_singles), -1)), num_batches)
+
+
 
 vae_append, vae_pop = cs.repeat(cs.substack(
     bb_ans.VAE(decoder_net, encoder_net, obs_codec, prior_precision, q_precision),
@@ -59,7 +62,6 @@ vae_append, vae_pop = cs.repeat(cs.substack(
 encode_t0 = time.time()
 init_message = cs.base_message(obs_size + latent_size)
 
-# TODO: The datapoints need to be seperated into lists of numpy arrays!
 # Encode the datapoints
 message, = vae_append(init_message, data_points)
 
