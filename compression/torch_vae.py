@@ -70,7 +70,7 @@ class BinaryVAE(nn.Module):
 
 
 def train(model, epoch, data_loader, optimizer, log_interval=10):
-    model.train()
+    model.perform_training()
     losses = []
     for batch_idx, (data, _) in enumerate(train_loader):
         data = data
