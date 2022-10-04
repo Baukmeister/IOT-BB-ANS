@@ -36,7 +36,7 @@ model.load_state_dict(torch.load('../models/trained_vae_l9_h18'))
 encoder_net = torch_fun_to_numpy_fun(model.encoder)
 decoder_net = torch_fun_to_numpy_fun(model.decoder)
 
-obs_codec = lambda p: cs.Bernoulli(p, bernoulli_precision)
+obs_codec = lambda p: cs.NonUniform(encoder_net,decoder_net,prior_precision)
 
 
 def vae_view(head):

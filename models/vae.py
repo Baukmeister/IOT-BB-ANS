@@ -94,7 +94,7 @@ class VAE_full(pl.LightningModule):
             , alpha=0.3)
 
         plt.legend([pred_ax, target_ax], ["Predictions", "Targets"])
-        plt.title(f"Batch: {batch_idx} - Training loss: {loss.item()}")
+        plt.title(f"Batch: {batch_idx} - Training loss: {round(loss.item(),3)}")
         plt.show()
 
     def reparameterization(self, mean, log_var):

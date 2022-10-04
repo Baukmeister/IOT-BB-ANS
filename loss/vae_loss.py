@@ -3,7 +3,7 @@ from torch import nn
 
 
 class VAE_Loss(torch.nn.Module):
-    recon_loss = nn.MSELoss()
+    recon_loss = nn.MSELoss(reduction="mean")
 
     def loss_function(self, x, x_hat, mean, log_var):
         reproduction_loss = self.recon_loss(x_hat, x)

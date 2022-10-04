@@ -74,7 +74,6 @@ def main():
     trainDataLoader = data.DataLoader(train_set, batch_size=train_batch_size, shuffle=True, num_workers=8)
     testDataLoader = data.DataLoader(test_set)
 
-    optimizer = optim.Adam(vae.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
     trainer = pl.Trainer(limit_train_batches=100000, max_epochs=1,accelerator='gpu', devices=1)
     trainer.fit(model=vae, train_dataloaders=trainDataLoader)
