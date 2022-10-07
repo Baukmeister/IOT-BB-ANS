@@ -2,6 +2,7 @@ import torch.cuda
 from matplotlib import pyplot as plt
 from torch import nn, optim
 import pytorch_lightning as pl
+from torch.distributions import Normal
 
 from loss.vae_loss import VAE_Loss
 import torch
@@ -24,7 +25,7 @@ class Encoder(torch.nn.Module):
         self.fc2 = torch.nn.Linear(H, H)
         self.fc3 = torch.nn.Linear(H, H)
         self.enc_mu = torch.nn.Linear(H, latent_size)
-        self.enc_log_sigma = torch.nn.Linear(H, latent_size)
+        self.enc_std = torch.nn.Linear(H, latent_size)
 
     def forward(self, x):
         x = F.relu(self.linear1(x))
@@ -32,8 +33,8 @@ class Encoder(torch.nn.Module):
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
         mu = self.enc_mu(x)
-        log_var = torch.exp(self.enc_log_sigma(x))
-        return mu, log_var
+        std = torch.exp(self.enc_std(x))
+        return mu, std
 
 
 class Decoder(torch.nn.Module):
@@ -44,13 +45,15 @@ class Decoder(torch.nn.Module):
         self.fc2 = torch.nn.Linear(H, H)
         self.fc3 = torch.nn.Linear(H, H)
         self.output_linear = torch.nn.Linear(H, D_out)
+        self.sigmoid = nn.Sigmoid()
 
-    def forward(self, x):
-        x = F.relu(self.linear1(x))
+
+    def forward(self, z):
+        x = F.relu(self.linear1(z))
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
-        output = self.output_linear(x)
+        output = self.sigmoid(x)
         return output
 
 
@@ -93,27 +96,28 @@ class VAE_full(pl.LightningModule):
         plt.title(f"Batch: {batch_idx} - Training loss: {round(loss.item(), 3)}")
         plt.show()
 
-    def sampling(self, mu, log_var):
-        std = torch.exp(log_var / 2)
-        epsilon = torch.randn_like(std)
-        return mu + epsilon * std
+    def reparameterize(self, mu, std):
+        eps = torch.randn_like(std)
+        return eps.mul(std).add_(mu)
 
     def forward(self, x):
 
-        mu, log_var = self.encoder(x)
-        z = self.sampling(mu, log_var)
-        output = self.decoder(z)
-        return output, mu, log_var
+        mu, std = self.encoder(x)
+        z = self.reparameterize(mu, std)
+        x_probs = self.decoder(z)
+        p_z = torch.sum(Normal(0, 1).log_prob(z), dim=1)
+        q_z = torch.sum(Normal(mu, std).log_prob(z), dim=1)
+        return x_probs, mu, std, p_z, q_z
 
     def training_step(self, batch, batch_idx):
 
 
-        output, mu, log_var = self.forward(batch)
-        loss = self.loss(input=batch, output=output, mu=mu, log_var=log_var)
+        x_probs, mu, std, p_z, q_z  = self.forward(batch)
+        loss = self.loss(x_probs, mu, std, p_z, q_z)
 
         if batch_idx % 1000 == 0:
             self.log(f'\n[batch: {batch_idx}]\ntraining loss', loss)
-            self.plot_prediction(prediction_tensors=output, target_tensors=batch, batch_idx=batch_idx, loss=loss)
+            self.plot_prediction(prediction_tensors=x_probs.rsample(), target_tensors=batch, batch_idx=batch_idx, loss=loss)
 
         return loss
 
