@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import torch
 from torch.utils import data
 
 from models.vae import *
@@ -60,7 +61,7 @@ def main():
     # CONFIG
     input_dim = 3
     hidden_dim = 32
-    latent_dim = 2
+    latent_dim = 8
     test_set_ratio = 0.001
     train_batch_size = 128
     learning_rate = 0.01
@@ -71,12 +72,13 @@ def main():
     train_set, test_set = data.random_split(dataSet, [trainSetSize, testSetSize])
 
     vae = VAE_full(n_features=input_dim, hidden_size=hidden_dim, latent_size=latent_dim)
-    trainDataLoader = data.DataLoader(train_set, batch_size=train_batch_size, shuffle=True, num_workers=8)
+    trainDataLoader = data.DataLoader(train_set, batch_size=train_batch_size, shuffle=True, num_workers=1)
     testDataLoader = data.DataLoader(test_set)
 
 
-    trainer = pl.Trainer(limit_train_batches=100000, max_epochs=1,accelerator='gpu', devices=1)
+    trainer = pl.Trainer(limit_train_batches=50000, max_epochs=1,accelerator='gpu', devices=1)
     trainer.fit(model=vae, train_dataloaders=trainDataLoader)
+    torch.save(vae.state_dict(), f"./models/trained_vae_l{latent_dim}_h{hidden_dim}")
 
 
 if __name__ == '__main__':

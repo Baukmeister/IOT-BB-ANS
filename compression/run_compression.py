@@ -22,7 +22,8 @@ q_precision = 14
 
 batch_size = 10
 data_set_size = 500
-latent_dim = 9
+latent_dim = 2
+hidden_dim = 32
 latent_shape = (batch_size, latent_dim)
 latent_size = np.prod(latent_shape)
 obs_shape = (batch_size, 3)
@@ -30,14 +31,15 @@ obs_size = np.prod(obs_shape)
 
 ## Setup codecs
 # VAE codec
-model = VAE_full(n_features=3, hidden_size=18, latent_size=latent_dim, device="cpu")
-model.load_state_dict(torch.load('../models/trained_vae_l9_h18'))
+
+
+model = VAE_full(n_features=3, hidden_size=hidden_dim, latent_size=latent_dim, device="cpu")
+model.load_state_dict(torch.load(f'../models/trained_vae_l{latent_dim}_h{hidden_dim}'))
 
 encoder_net = torch_fun_to_numpy_fun(model.encoder)
 decoder_net = torch_fun_to_numpy_fun(model.decoder)
 
 obs_codec = lambda p: cs.NonUniform(encoder_net,decoder_net,prior_precision)
-
 
 def vae_view(head):
     return ag_tuple((np.reshape(head[:latent_size], latent_shape),

@@ -4,58 +4,54 @@ from torch import nn, optim
 import pytorch_lightning as pl
 
 from loss.vae_loss import VAE_Loss
+import torch
+from torch.autograd import Variable
+import numpy as np
+import torch.nn.functional as F
+import torchvision
+from torchvision import transforms
+import torch.optim as optim
+from torch import nn
+import matplotlib.pyplot as plt
+from torch import distributions
 
 
-class VAE_encoder(nn.Module):
-    def __init__(self, input_dim, hidden_dim, latent_dim):
-        super(VAE_encoder, self).__init__()
-        self.input_dim = input_dim
-        self.hidden_dim = hidden_dim
-        self.latent_dim = latent_dim
-
-        self.encoder_linear = nn.Linear(self.input_dim, self.hidden_dim)
-        self.fully_connected = nn.Linear(self.hidden_dim, self.hidden_dim)
-        self.mean = torch.nn.Linear(in_features=self.hidden_dim, out_features=self.latent_dim)
-        self.log_variance = torch.nn.Linear(in_features=self.hidden_dim, out_features=self.latent_dim)
+class Encoder(torch.nn.Module):
+    def __init__(self, D_in, H, latent_size):
+        super(Encoder, self).__init__()
+        self.linear1 = torch.nn.Linear(D_in, H)
+        self.fc1 = torch.nn.Linear(H, H)
+        self.fc2 = torch.nn.Linear(H, H)
+        self.fc3 = torch.nn.Linear(H, H)
+        self.enc_mu = torch.nn.Linear(H, latent_size)
+        self.enc_log_sigma = torch.nn.Linear(H, latent_size)
 
     def forward(self, x):
-        x = self.encoder_linear(x)
-        x = self.fully_connected(x)
-        x = self.fully_connected(x)
-        x = self.fully_connected(x)
-        x = self.fully_connected(x)
-        x = self.fully_connected(x)
-        mean = self.mean(x)
-        log_var = self.log_variance(x)
-
-        return mean, log_var, x
+        x = F.relu(self.linear1(x))
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = F.relu(self.fc3(x))
+        mu = self.enc_mu(x)
+        log_var = torch.exp(self.enc_log_sigma(x))
+        return mu, log_var
 
 
-class VAE_decoder(nn.Module):
+class Decoder(torch.nn.Module):
+    def __init__(self, D_in, H, D_out):
+        super(Decoder, self).__init__()
+        self.linear1 = torch.nn.Linear(D_in, H)
+        self.fc1 = torch.nn.Linear(H, H)
+        self.fc2 = torch.nn.Linear(H, H)
+        self.fc3 = torch.nn.Linear(H, H)
+        self.output_linear = torch.nn.Linear(H, D_out)
 
-    def __init__(self, hidden_dim, latent_dim, output_dim):
-        super(VAE_decoder, self).__init__()
-
-        self.hidden_dim = hidden_dim
-        self.latent_dim = latent_dim
-        self.output_dim = output_dim
-
-        self.init_hidden_decoder = torch.nn.Linear(in_features=self.latent_dim,
-                                                   out_features=self.hidden_dim)
-
-        self.fully_connected = nn.Linear(hidden_dim, hidden_dim)
-        self.decoder_linear = nn.Linear(hidden_dim, output_dim)
-
-    def forward(self, z):
-        hidden_decoder = self.init_hidden_decoder(z)
-
-        x = self.fully_connected(hidden_decoder)
-        x = self.fully_connected(x)
-        x = self.fully_connected(x)
-        x = self.fully_connected(x)
-        x = self.fully_connected(x)
-        x = self.decoder_linear(x)
-        return x
+    def forward(self, x):
+        x = F.relu(self.linear1(x))
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = F.relu(self.fc3(x))
+        output = self.output_linear(x)
+        return output
 
 
 class VAE_full(pl.LightningModule):
@@ -67,8 +63,8 @@ class VAE_full(pl.LightningModule):
             device = "cpu"
 
         print(f"Using: {self.device}")
-        self.encoder = VAE_encoder(input_dim=n_features, hidden_dim=hidden_size, latent_dim=latent_size).to(device)
-        self.decoder = VAE_decoder(hidden_dim=hidden_size, latent_dim=latent_size, output_dim=n_features).to(device)
+        self.encoder = Encoder(D_in=n_features, H=hidden_size, latent_size=latent_size).to(device)
+        self.decoder = Decoder(D_in=latent_size, H=hidden_size, D_out=n_features).to(device)
         self.to(device)
         self.loss = VAE_Loss()
 
@@ -94,28 +90,28 @@ class VAE_full(pl.LightningModule):
             , alpha=0.3)
 
         plt.legend([pred_ax, target_ax], ["Predictions", "Targets"])
-        plt.title(f"Batch: {batch_idx} - Training loss: {round(loss.item(),3)}")
+        plt.title(f"Batch: {batch_idx} - Training loss: {round(loss.item(), 3)}")
         plt.show()
 
-    def reparameterization(self, mean, log_var):
-        epsilon = torch.randn_like(log_var).to(self.device)  # sampling epsilon
-        z = mean + log_var * epsilon  # reparameterization trick
-        return z
+    def sampling(self, mu, log_var):
+        std = torch.exp(log_var / 2)
+        epsilon = torch.randn_like(std)
+        return mu + epsilon * std
 
     def forward(self, x):
 
-        mean, log_var, x = self.encoder(x)
-        z = self.reparameterization(mean, log_var)
-        x = self.decoder(z)
-
-        return x, mean, log_var, z
+        mu, log_var = self.encoder(x)
+        z = self.sampling(mu, log_var)
+        output = self.decoder(z)
+        return output, mu, log_var
 
     def training_step(self, batch, batch_idx):
 
-        output, mean, log_var, z = self.forward(batch)
-        loss = self.loss(mean=mean, log_var=log_var, x_hat_param=output, x=batch)
 
-        if batch_idx % 3000 == 0:
+        output, mu, log_var = self.forward(batch)
+        loss = self.loss(input=batch, output=output, mu=mu, log_var=log_var)
+
+        if batch_idx % 1000 == 0:
             self.log(f'\n[batch: {batch_idx}]\ntraining loss', loss)
             self.plot_prediction(prediction_tensors=output, target_tensors=batch, batch_idx=batch_idx, loss=loss)
 
