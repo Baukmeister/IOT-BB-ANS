@@ -1,19 +1,16 @@
 # TODO work through these tutorials to gain more insights https://github.com/facebookresearch/NeuralCompression
 # TODO figure out why this fails at working wit the std_gaussian_buckets[idx]call in the codecs.py file
 
-import sys
-import torch
-import numpy as np
-from autograd.builtins import tuple as ag_tuple
-import craystack as cs
-from models.vae import VAE_full
-from torch_vae import BinaryVAE
-from torch_util import torch_fun_to_numpy_fun
-import craystack.bb_ans as bb_ans
 import time
-import itertools
 
+import numpy as np
+import torch
+from autograd.builtins import tuple as ag_tuple
 
+import craystack as cs
+import craystack.bb_ans as bb_ans
+from models.vae import VAE_full
+from torch_util import torch_fun_to_numpy_fun
 from util.WIDSMDataLoader import WISDMDataset
 
 rng = np.random.RandomState(0)
@@ -24,7 +21,7 @@ q_precision = 14
 
 batch_size = 10
 data_set_size = 500
-pooling_factor = 4
+pooling_factor = 1
 latent_dim = 4
 hidden_dim = 32
 latent_shape = (batch_size, latent_dim)
@@ -39,11 +36,13 @@ obs_size = np.prod(obs_shape)
 model = VAE_full(n_features=3 * int(pooling_factor), hidden_size=hidden_dim, latent_size=latent_dim, device="cpu")
 model.load_state_dict(torch.load(f'../models/trained_vae_pooling{pooling_factor}_l{latent_dim}_h{hidden_dim}'))
 
+
 encoder_net = torch_fun_to_numpy_fun(model.encoder)
 decoder_net = torch_fun_to_numpy_fun(model.decoder)
 
-# TODO: This codec has to be fixed
-obs_codec = lambda p: cs.NonUniform(encoder_net,decoder_net,prior_precision)
+
+obs_codec = lambda p: cs.Uniform(prior_precision)
+
 
 def vae_view(head):
     return ag_tuple((np.reshape(head[:latent_size], latent_shape),
@@ -56,8 +55,6 @@ data_points_singles = [data_set.__getitem__(i).cpu().numpy() for i in range(data
 num_batches = len(data_points_singles) // batch_size
 
 data_points = np.split(np.reshape(data_points_singles, (len(data_points_singles), -1)), num_batches)
-
-
 
 vae_append, vae_pop = cs.repeat(cs.substack(
     bb_ans.VAE(decoder_net, encoder_net, obs_codec, prior_precision, q_precision),
