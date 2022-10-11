@@ -10,15 +10,15 @@ from tqdm import tqdm
 class WISDMDataset(Dataset):
 
     def __getitem__(self, index) -> T_co:
-        item = torch.tensor(self.WISDMdf.iloc[index,2:5].values).float()
+        item = torch.tensor(self.WISDMdf.iloc[index:index+self.pooling_factor,2:5].values.flatten()).float()
         return item.to(self.device)
 
     def __len__(self) -> int:
-        return self.WISDMdf.shape[0]
+        return self.WISDMdf.shape[0] // self.pooling_factor
 
-    def __init__(self, path) -> None:
+    def __init__(self, path, pooling_factor=1) -> None:
 
-
+        self.pooling_factor = pooling_factor
         self.path = path
         self.columns = ['user', 'time', 'x', 'y', 'z']
 

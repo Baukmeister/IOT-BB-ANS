@@ -24,7 +24,7 @@ class Encoder(torch.nn.Module):
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
         mu = self.enc_mu(x)
-        log_var = self.enc_log_var(x)
+        log_var = torch.exp(self.enc_log_var(x))
         return mu, log_var
 
 
@@ -86,7 +86,9 @@ class VAE_full(pl.LightningModule):
         plt.show()
 
     def reparameterize(self, mu, log_var):
-        #std = torch.exp(0.5 * log_var)
+
+        # TODO: Figure out why this line diminishes training performance
+        # std = torch.exp(0.5 * log_var)
         std = log_var
         eps = torch.randn_like(std)
         return eps * std + mu
