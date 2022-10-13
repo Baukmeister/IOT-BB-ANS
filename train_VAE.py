@@ -1,5 +1,3 @@
-import matplotlib.pyplot as plt
-import torch
 from torch.utils import data
 
 from models.vae import *
@@ -75,7 +73,7 @@ def main():
     trainSetSize = len(dataSet) - testSetSize
     train_set, test_set = data.random_split(dataSet, [trainSetSize, testSetSize])
 
-    vae = VAE_full(n_features=input_dim, hidden_size=hidden_dim, latent_size=latent_dim)
+    vae = VAE_full(n_features=input_dim, batch_size = train_batch_size, hidden_size=hidden_dim, latent_size=latent_dim)
     trainDataLoader = data.DataLoader(train_set, batch_size=train_batch_size, shuffle=True, num_workers=8)
     testDataLoader = data.DataLoader(test_set)
 

@@ -31,8 +31,6 @@ obs_size = np.prod(obs_shape)
 
 ## Setup codecs
 # VAE codec
-
-
 model = VAE_full(n_features=3 * int(pooling_factor), hidden_size=hidden_dim, latent_size=latent_dim, device="cpu")
 model.load_state_dict(torch.load(f'../models/trained_vae_pooling{pooling_factor}_l{latent_dim}_h{hidden_dim}'))
 
@@ -55,6 +53,7 @@ data_points_singles = [data_set.__getitem__(i).cpu().numpy() for i in range(data
 num_batches = len(data_points_singles) // batch_size
 
 data_points = np.split(np.reshape(data_points_singles, (len(data_points_singles), -1)), num_batches)
+data_points = np.int64(data_points)
 
 vae_append, vae_pop = cs.repeat(cs.substack(
     bb_ans.VAE(decoder_net, encoder_net, obs_codec, prior_precision, q_precision),
