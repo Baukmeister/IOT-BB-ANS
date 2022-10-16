@@ -2,59 +2,70 @@ import os
 import torch
 import numpy as np
 import util
+from util import bb_util
 import rans
-from torch_vae.tvae_beta_binomial import BetaBinomialVAE
-from torch_vae import tvae_utils
-from torchvision import datasets, transforms
+from compression import tvae_utils
+
+from models.vae import VAE_full
 import time
 
+from util.WIDSMDataLoader import WISDMDataset
 
 rng = np.random.RandomState(0)
-np.seterr(over='raise')
 
 prior_precision = 8
-obs_precision = 14
+bernoulli_precision = 16
 q_precision = 14
 
-num_images = 100
-
+batch_size = 10
+data_set_size = 5000
+pooling_factor = 4
+hidden_dim = 32
+latent_dim = 4
+obs_precision = 14
 compress_lengths = []
 
-latent_dim = 50
-latent_shape = (1, latent_dim)
-model = BetaBinomialVAE(hidden_dim=200, latent_dim=latent_dim)
-model.load_state_dict(
-    torch.load('./saved_params/torch_vae_beta_binomial_params',
-               map_location=lambda storage, location: storage))
+
+latent_shape = (batch_size, latent_dim)
+latent_size = np.prod(latent_shape)
+obs_shape = (batch_size, 3 * int(pooling_factor))
+obs_size = np.prod(obs_shape)
+
+## Setup codecs
+# VAE codec
+model = VAE_full(n_features=3 * int(pooling_factor), batch_size=128, hidden_size=hidden_dim, latent_size=latent_dim, device="cpu")
+model.load_state_dict(torch.load(f'../models/trained_vae_pooling{pooling_factor}_l{latent_dim}_h{hidden_dim}'))
+
 model.eval()
 
-rec_net = tvae_utils.torch_fun_to_numpy_fun(model.encode)
-gen_net = tvae_utils.torch_fun_to_numpy_fun(model.decode)
+rec_net = tvae_utils.torch_fun_to_numpy_fun(model.encoder)
+gen_net = tvae_utils.torch_fun_to_numpy_fun(model.decoder)
 
 obs_append = tvae_utils.beta_binomial_obs_append(255, obs_precision)
 obs_pop = tvae_utils.beta_binomial_obs_pop(255, obs_precision)
 
-vae_append = util.vae_append(latent_shape, gen_net, rec_net, obs_append,
+vae_append = bb_util.vae_append(latent_shape, gen_net, rec_net, obs_append,
                              prior_precision, q_precision)
-vae_pop = util.vae_pop(latent_shape, gen_net, rec_net, obs_pop,
+vae_pop = bb_util.vae_pop(latent_shape, gen_net, rec_net, obs_pop,
                        prior_precision, q_precision)
 
-# load some mnist images
-mnist = datasets.MNIST('data/mnist', train=False, download=True,
-                       transform=transforms.Compose([transforms.ToTensor()]))
-images = mnist.test_data[:num_images]
+## Load biometrics data
+data_set = WISDMDataset("../data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=True)
+data_points_singles = [data_set.__getitem__(i).cpu().numpy() for i in range(data_set_size)]
+num_batches = len(data_points_singles) // batch_size
 
-images = [image.float().view(1, -1) for image in images]
+
 
 # randomly generate some 'other' bits
 other_bits = rng.randint(low=1 << 16, high=1 << 31, size=50, dtype=np.uint32)
 state = rans.unflatten(other_bits)
+data_points = np.split(np.reshape(data_points_singles, (len(data_points_singles), -1)), num_batches)
 
 
 print_interval = 10
 encode_start_time = time.time()
-for i, image in enumerate(images):
-    state = vae_append(state, image)
+for i, data_point in enumerate(data_points):
+    state = vae_append(state, data_point)
 
     if not i % print_interval:
         print('Encoded {}'.format(i))
@@ -67,8 +78,8 @@ compressed_message = rans.flatten(state)
 
 compressed_bits = 32 * (len(compressed_message) - len(other_bits))
 print("Used " + str(compressed_bits) + " bits.")
-print('This is {:.2f} bits per pixel'.format(compressed_bits
-                                             / (num_images * 784)))
+print('This is {:.2f} bits per data point'.format(compressed_bits
+                                             / (len(data_points) * pooling_factor * 3)))
 
 if not os.path.exists('results'):
     os.mkdir('results')
@@ -77,10 +88,10 @@ np.savetxt('compressed_lengths_cts', np.array(compress_lengths))
 state = rans.unflatten(compressed_message)
 decode_start_time = time.time()
 
-for n in range(len(images)):
-    state, image_ = vae_pop(state)
-    original_image = images[len(images)-n-1].numpy()
-    np.testing.assert_allclose(original_image, image_)
+for n in range(len(data_points)):
+    state, data_point_ = vae_pop(state)
+    original_data_point = data_points[len(data_points)-n-1]
+    np.testing.assert_allclose(original_data_point, data_point_)
 
     if not n % print_interval:
         print('Decoded {}'.format(n))
