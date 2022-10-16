@@ -16,9 +16,10 @@ class WISDMDataset(Dataset):
     def __len__(self) -> int:
         return self.WISDMdf.shape[0] // self.pooling_factor
 
-    def __init__(self, path, pooling_factor=1) -> None:
+    def __init__(self, path, pooling_factor=1, discretize=False) -> None:
 
         self.pooling_factor = pooling_factor
+        self.discretize = discretize
         self.path = path
         self.columns = ['user', 'time', 'x', 'y', 'z']
 
@@ -54,8 +55,14 @@ class WISDMDataset(Dataset):
                         temp['z'] = temp['z'].str.replace(';', '')
                         temp['user'] = temp['user'].astype(np.double)
                         temp['time'] = temp['time'].astype(np.float)
-                        temp['x'] = temp['x'].astype(np.float)
-                        temp['y'] = temp['y'].astype(np.float)
-                        temp['z'] = temp['z'].astype(np.float)
+
+                        if self.discretize:
+                            temp['x'] = ((temp['x'].astype(np.float)+80)).round()
+                            temp['y'] = ((temp['y'].astype(np.float)+80)).round()
+                            temp['z'] = ((temp['z'].astype(np.float)+80)).round()
+                        else:
+                            temp['x'] = temp['x'].astype(np.float)
+                            temp['y'] = temp['y'].astype(np.float)
+                            temp['z'] = temp['z'].astype(np.float)
 
                         self.WISDMdf = pd.concat([self.WISDMdf, temp])

@@ -66,7 +66,7 @@ def main():
     weight_decay = 0.01
 
     model_name = f"./models/trained_vae_pooling{pooling_factor}_l{latent_dim}_h{hidden_dim}"
-    dataSet = WISDMDataset("data/wisdm-dataset/raw", pooling_factor=pooling_factor)
+    dataSet = WISDMDataset("data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=True)
 
 
     testSetSize = int(len(dataSet) * test_set_ratio)
@@ -74,7 +74,7 @@ def main():
     train_set, test_set = data.random_split(dataSet, [trainSetSize, testSetSize])
 
     vae = VAE_full(n_features=input_dim, batch_size = train_batch_size, hidden_size=hidden_dim, latent_size=latent_dim)
-    trainDataLoader = data.DataLoader(train_set, batch_size=train_batch_size, shuffle=True, num_workers=8)
+    trainDataLoader = data.DataLoader(train_set, batch_size=train_batch_size, shuffle=True, num_workers=1)
     testDataLoader = data.DataLoader(test_set)
 
 

@@ -6,7 +6,7 @@ import torch.cuda
 import torch.nn.functional as F
 import torch.optim as optim
 from torch import lgamma
-from torch.distributions import Beta, Normal
+from torch.distributions import Beta, Normal, Binomial
 
 from loss.vae_loss import VAE_Loss
 
@@ -70,7 +70,7 @@ class VAE_full(pl.LightningModule):
 
         self.register_buffer('prior_mean', torch.zeros(1))
         self.register_buffer('prior_std', torch.ones(1))
-        self.register_buffer('n', torch.ones(batch_size, n_features) * 200.)
+        self.register_buffer('n', torch.ones(batch_size, n_features) * 160.)
 
         print(f"Using: {self.device}")
         self.n_features = n_features
@@ -114,10 +114,10 @@ class VAE_full(pl.LightningModule):
         x_alpha, x_beta = self.decode(sample)
         beta = Beta(x_alpha, x_beta)
         p = beta.sample()
-        # binomial = Binomial(255, p)
-        # x_sample = binomial.sample()
+        binomial = Binomial(160, p)
+        x_sample = binomial.sample()
 
-        return p
+        return x_sample
 
     def loss(self, x):
         # TODO: investigate why this "x" input seems to be full of 0 values
@@ -137,9 +137,13 @@ class VAE_full(pl.LightningModule):
         mu, log_var = self.encoder(x_inputs)
         z = self.reparameterize(mu, log_var)
         x_alpha, x_beta = self.decoder(z)
+
         beta_distr = Beta(x_alpha, x_beta)
         p = beta_distr.sample()
-        return p
+        binomial = Binomial(160, p)
+        x_reconstructed = binomial.sample().float()
+        return x_reconstructed
+
 
     def training_step(self, batch, batch_idx):
 
