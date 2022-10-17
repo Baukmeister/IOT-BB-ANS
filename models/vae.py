@@ -11,13 +11,6 @@ from torch.distributions import Beta, Normal, Binomial
 from loss.vae_loss import VAE_Loss
 
 
-# TODO: investigate the mathematical background of this function
-def beta_binomial_log_pdf(k, n, alpha, beta):
-    numer = lgamma(n + 1) + lgamma(k + alpha) + lgamma(n - k + beta) + lgamma(alpha + beta)
-    denom = lgamma(k + 1) + lgamma(n - k + 1) + lgamma(n + alpha + beta) + lgamma(alpha) + lgamma(beta)
-    return numer - denom
-
-
 class Encoder(torch.nn.Module):
     def __init__(self, D_in, H, latent_size):
         super(Encoder, self).__init__()
@@ -46,7 +39,7 @@ class Decoder(torch.nn.Module):
         self.fc1 = torch.nn.Linear(H, H)
         self.fc2 = torch.nn.Linear(H, H)
         self.fc3 = torch.nn.Linear(H, H)
-        self.output_linear = torch.nn.Linear(H, D_out)
+        self.output_linear = torch.nn.Linear(H, D_out * 2)
 
     def forward(self, z):
         x = F.relu(self.linear1(z))
@@ -54,8 +47,9 @@ class Decoder(torch.nn.Module):
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
         x = self.output_linear(x)
+        mean, log_var = torch.split(x, self.D_out, dim=1)
 
-        return x
+        return mean, log_var
 
 
 class VAE_full(pl.LightningModule):
@@ -75,15 +69,15 @@ class VAE_full(pl.LightningModule):
         self.to(device)
 
     # TODO: Use a learned scale instead of a fixed parameter
-    def gaussian_likelihood(self, x_hat, logscale, x):
-        scale = torch.exp(logscale)
-        mean = x_hat
-        dist = torch.distributions.Normal(mean, scale)
+    def gaussian_likelihood(self, mean, log_var, x):
+
+        std = torch.exp(log_var / 2)
+        dist = torch.distributions.Normal(mean, std)
 
         # measure prob of seeing image under p(x|z)
         log_pxz = dist.log_prob(x)
         # adapt these dimensions
-        return log_pxz.sum()
+        return log_pxz.sum(1)
 
     def kl_divergence(self, z, mu, std):
         # --------------------------
@@ -102,6 +96,7 @@ class VAE_full(pl.LightningModule):
         kl = kl.sum(-1)
         return kl
 
+    # TODO: adapt this to work with pooling
     def plot_prediction(self, prediction_tensors, target_tensors, batch_idx, loss):
         fig = plt.figure(figsize=(4, 4))
 
@@ -140,9 +135,9 @@ class VAE_full(pl.LightningModule):
         mu, log_var = self.encoder(x)
         z = self.reparameterize(mu, log_var)
 
-        x_hat = self.decoder(z)
+        dec_mu, dec_log_var = self.decoder(z)
         # reconstruction loss
-        recon_loss = self.gaussian_likelihood(x_hat, self.log_scale, x)
+        recon_loss = self.gaussian_likelihood(dec_mu, dec_log_var, x)
 
         # kl
         std = torch.exp(log_var / 2)
@@ -166,21 +161,20 @@ class VAE_full(pl.LightningModule):
         z = self.reparameterize(mu, log_var)
 
         # decoded
-        x_hat = self.decoder(z)
-        #TODO: This probably need to be sampled (if we want to have samples as outputs)
-        return x_hat
+        mean, scale = self.decoder(z)
+
+        return mean, scale
 
     def training_step(self, batch, batch_idx):
 
-        output_probs = self.forward(batch)
+        mean, log_var = self.forward(batch)
         loss = self.loss(batch)
 
         if batch_idx % 500 == 0:
             self.log(f'\n[batch: {batch_idx}]\ntraining loss', loss)
 
-            scale = torch.exp(self.log_scale)
-            mean = output_probs
-            distribution = torch.distributions.Normal(mean, scale)
+            std = torch.exp(log_var / 2)
+            distribution = torch.distributions.Normal(mean, std)
             outputs = distribution.sample()
 
             self.plot_prediction(prediction_tensors=outputs, target_tensors=batch, batch_idx=batch_idx,
@@ -189,5 +183,5 @@ class VAE_full(pl.LightningModule):
         return loss
 
     def configure_optimizers(self):
-        optimizer = optim.Adam(self.parameters(), lr=1e-3)
+        optimizer = optim.Adam(self.parameters(), lr=1e-2, weight_decay=0.1)
         return optimizer
