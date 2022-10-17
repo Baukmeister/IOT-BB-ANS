@@ -16,11 +16,12 @@ class WISDMDataset(Dataset):
     def __len__(self) -> int:
         return self.WISDMdf.shape[0] // self.pooling_factor
 
-    def __init__(self, path, pooling_factor=1, discretize=False) -> None:
+    def __init__(self, path, pooling_factor=1, discretize=False, data_set_size="single") -> None:
 
         self.pooling_factor = pooling_factor
         self.discretize = discretize
         self.path = path
+        self.data_set_size = data_set_size
         self.columns = ['user', 'time', 'x', 'y', 'z']
 
         self.phone_accel_path = f"{self.path}/phone/accel"
@@ -37,11 +38,18 @@ class WISDMDataset(Dataset):
         else:
             self.device = "cpu"
 
+        if self.data_set_size == "single":
+            self.paths = [self.phone_accel_path]
+        elif self.data_set_size == "all":
+            self.paths = [self.phone_accel_path, self.phone_gyro_path, self.watch_accel_path, self.watch_gyro_path]
+        else:
+            raise ValueError(f"Invalid size option: {self.data_set_size}")
+
         self._load()
 
     def _load(self):
 
-        for path in [self.phone_accel_path]: # , self.phone_gyro_path, self.watch_accel_path, self.watch_gyro_path]:
+        for path in self.paths:
 
             print(f"\nLoading data from '{path}' ...")
             for dirname, _, filenames in os.walk(path):

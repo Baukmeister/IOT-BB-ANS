@@ -78,7 +78,7 @@ def main():
     testDataLoader = data.DataLoader(test_set)
 
 
-    trainer = pl.Trainer(limit_train_batches=500, max_epochs=1,accelerator='gpu', devices=1)
+    trainer = pl.Trainer(limit_train_batches=5000, max_epochs=1,accelerator='gpu', devices=1)
     trainer.fit(model=vae, train_dataloaders=trainDataLoader)
     torch.save(vae.state_dict(), model_name)
 
