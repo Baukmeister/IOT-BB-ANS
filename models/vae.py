@@ -1,3 +1,5 @@
+from random import sample
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
@@ -53,14 +55,15 @@ class Decoder(torch.nn.Module):
 
 
 class VAE_full(pl.LightningModule):
-    def __init__(self, n_features, batch_size, hidden_size, latent_size, device=None):
+    def __init__(self, n_features, batch_size, hidden_size, latent_size, device=None, lr=0.001, wc=0):
         super(VAE_full, self).__init__()
         if self.device is None and torch.cuda.is_available():
             device = "cuda"
         else:
             device = "cpu"
 
-        self.log_scale = nn.Parameter(torch.Tensor([0.0]))
+        self.lr = lr
+        self.wc = wc
 
         print(f"Using: {self.device}")
         self.n_features = n_features
@@ -101,20 +104,36 @@ class VAE_full(pl.LightningModule):
         fig = plt.figure(figsize=(4, 4))
 
         ax = fig.add_subplot(projection='3d')
-        predictions = [prediction.cpu().detach().numpy() for prediction in prediction_tensors]
-        targets = [target.cpu().detach().numpy() for target in target_tensors]
+
+        # select a random subset of the target and predictions to not overcrowd the plot
+        predictions = sample(
+            [prediction.cpu().detach().numpy() for prediction in prediction_tensors],
+            500 // prediction_tensors.shape[1]
+        )
+        targets = sample(
+            [target.cpu().detach().numpy() for target in target_tensors],
+            500 // target_tensors.shape[1]
+        )
+
+        pred_x = [[pred[i] for i in range(0, len(pred), 3)] for pred in predictions]
+        pred_y = [[pred[i] for i in range(1, len(pred), 3)] for pred in predictions]
+        pred_z = [[pred[i] for i in range(2, len(pred), 3)] for pred in predictions]
 
         # plot the points
         pred_ax = ax.scatter(
-            [pred[0] for pred in predictions],
-            [pred[1] for pred in predictions],
-            [pred[2] for pred in predictions]
+            [item for sublist in pred_x for item in sublist],
+            [item for sublist in pred_y for item in sublist],
+            [item for sublist in pred_z for item in sublist]
             , c="blue")
 
+        target_x = [[target[i] for i in range(0, len(target), 3)] for target in targets]
+        target_y = [[target[i] for i in range(1, len(target), 3)] for target in targets]
+        target_z = [[target[i] for i in range(2, len(target), 3)] for target in targets]
+
         target_ax = ax.scatter(
-            [target[0] for target in targets],
-            [target[1] for target in targets],
-            [target[2] for target in targets]
+            [item for sublist in target_x for item in sublist],
+            [item for sublist in target_y for item in sublist],
+            [item for sublist in target_z for item in sublist]
             , c="red"
             , alpha=0.3)
 
@@ -183,5 +202,5 @@ class VAE_full(pl.LightningModule):
         return loss
 
     def configure_optimizers(self):
-        optimizer = optim.Adam(self.parameters(), lr=1e-2, weight_decay=0.1)
+        optimizer = optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.wc)
         return optimizer
