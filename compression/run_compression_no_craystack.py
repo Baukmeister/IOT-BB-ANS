@@ -18,7 +18,7 @@ bernoulli_precision = 16
 q_precision = 14
 
 batch_size = 10
-data_set_size = 5000
+data_set_size = 8000
 pooling_factor = 4
 hidden_dim = 32
 latent_dim = 4
@@ -41,8 +41,8 @@ model.eval()
 rec_net = tvae_utils.torch_fun_to_numpy_fun(model.encoder)
 gen_net = tvae_utils.torch_fun_to_numpy_fun(model.decoder)
 
-obs_append = tvae_utils.beta_binomial_obs_append(255, obs_precision)
-obs_pop = tvae_utils.beta_binomial_obs_pop(255, obs_precision)
+obs_append = tvae_utils.beta_binomial_obs_append(160, obs_precision)
+obs_pop = tvae_utils.beta_binomial_obs_pop(160, obs_precision)
 
 vae_append = bb_util.vae_append(latent_shape, gen_net, rec_net, obs_append,
                              prior_precision, q_precision)
@@ -62,7 +62,7 @@ state = rans.unflatten(other_bits)
 data_points = np.split(np.reshape(data_points_singles, (len(data_points_singles), -1)), num_batches)
 
 
-print_interval = 10
+print_interval = 100
 encode_start_time = time.time()
 for i, data_point in enumerate(data_points):
     state = vae_append(state, data_point)
@@ -78,8 +78,7 @@ compressed_message = rans.flatten(state)
 
 compressed_bits = 32 * (len(compressed_message) - len(other_bits))
 print("Used " + str(compressed_bits) + " bits.")
-print('This is {:.2f} bits per data point'.format(compressed_bits
-                                             / (len(data_points) * pooling_factor * 3)))
+print(f'This is {compressed_bits / np.size(data_points)} bits per data point')
 
 if not os.path.exists('results'):
     os.mkdir('results')
