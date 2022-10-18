@@ -10,6 +10,7 @@ from models.vae import VAE_full
 import time
 
 from util.WIDSMDataLoader import WISDMDataset
+from util.io import vae_model_name
 
 rng = np.random.RandomState(0)
 
@@ -18,11 +19,13 @@ bernoulli_precision = 16
 q_precision = 14
 
 batch_size = 10
-data_set_size = 8000
-pooling_factor = 4
+data_set_size = 600
+pooling_factor = 8
 hidden_dim = 32
 latent_dim = 4
+discretize = True
 obs_precision = 14
+
 compress_lengths = []
 
 
@@ -33,8 +36,15 @@ obs_size = np.prod(obs_shape)
 
 ## Setup codecs
 # VAE codec
-model = VAE_full(n_features=3 * int(pooling_factor), batch_size=128, hidden_size=hidden_dim, latent_size=latent_dim, device="cpu")
-model.load_state_dict(torch.load(f'../models/trained_vae_pooling{pooling_factor}_l{latent_dim}_h{hidden_dim}'))
+model = VAE_full(n_features=3 * int(pooling_factor), batch_size=128, hidden_size=hidden_dim, latent_size=latent_dim,
+                 device="cpu")
+model.load_state_dict(torch.load(vae_model_name(
+    model_folder="../models",
+    dicretize=discretize,
+    hidden_dim=hidden_dim,
+    latent_dim=latent_dim,
+    pooling_factor=pooling_factor
+)))
 
 model.eval()
 
@@ -99,3 +109,4 @@ print('\nAll decoded in {:.2f}s'.format(time.time() - decode_start_time))
 
 recovered_bits = rans.flatten(state)
 assert all(other_bits == recovered_bits)
+np.testing.assert_equal(data_point, data_point_)

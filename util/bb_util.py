@@ -302,3 +302,11 @@ def beta_binomials_pop(a, b, n, precision):
     # TODO: Implement this using bits-back instead of generic discrete distrn.
     probs = generate_beta_binomial_probs(a, b, n)
     return categoricals_pop(probs, precision)
+
+def gaussian_append(mu, log_var, precision):
+    probs = []
+    return categoricals_append(probs, precision)
+
+def gaussian_pop(mu, log_var, precision):
+    probs = []
+    return categoricals_pop(probs, precision)

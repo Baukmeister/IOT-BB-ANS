@@ -57,15 +57,15 @@ def main():
     # CONFIG
     pooling_factor = 8
     input_dim = 3 * int(pooling_factor)
-    hidden_dim = 64
-    latent_dim = 16
+    hidden_dim = 32
+    latent_dim = 4
     test_set_ratio = 0.001
-    train_batch_size = 128
-    dicretize = False
-    learning_rate = 0.05
-    weight_decay = 0.1
+    train_batch_size = 8
+    dicretize = True
+    learning_rate = 0.005
+    weight_decay = 0.
 
-    model_name = vae_model_name(dicretize, hidden_dim, latent_dim, pooling_factor)
+    model_name = vae_model_name("./models", dicretize, hidden_dim, latent_dim, pooling_factor)
     dataSet = WISDMDataset("data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=dicretize,
                            data_set_size="single")
 
@@ -83,7 +83,7 @@ def main():
     trainDataLoader = data.DataLoader(train_set, batch_size=train_batch_size, shuffle=True, num_workers=1)
     testDataLoader = data.DataLoader(test_set)
 
-    trainer = pl.Trainer(limit_train_batches=15000, max_epochs=1, accelerator='gpu', devices=1)
+    trainer = pl.Trainer(limit_train_batches=3000, max_epochs=1, accelerator='gpu', devices=1)
     trainer.fit(model=vae, train_dataloaders=trainDataLoader)
     torch.save(vae.state_dict(), model_name)
 

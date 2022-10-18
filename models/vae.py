@@ -108,11 +108,11 @@ class VAE_full(pl.LightningModule):
         # select a random subset of the target and predictions to not overcrowd the plot
         predictions = sample(
             [prediction.cpu().detach().numpy() for prediction in prediction_tensors],
-            500 // prediction_tensors.shape[1]
+            min(500, prediction_tensors.shape[1]) // prediction_tensors.shape[1]
         )
         targets = sample(
             [target.cpu().detach().numpy() for target in target_tensors],
-            500 // target_tensors.shape[1]
+            min(500, target_tensors.shape[1]) // target_tensors.shape[1]
         )
 
         pred_x = [[pred[i] for i in range(0, len(pred), 3)] for pred in predictions]
