@@ -2,6 +2,7 @@ from torch.utils import data
 
 from models.vae import *
 from util.WIDSMDataLoader import WISDMDataset
+from util.io import vae_model_name
 
 
 def plot_prediction(prediction_tensors, target_tensors):
@@ -64,7 +65,7 @@ def main():
     learning_rate = 0.05
     weight_decay = 0.1
 
-    model_name = f"./models/trained_vae_pooling{pooling_factor}_l{latent_dim}_h{hidden_dim}_d{dicretize}"
+    model_name = vae_model_name(dicretize, hidden_dim, latent_dim, pooling_factor)
     dataSet = WISDMDataset("data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=dicretize,
                            data_set_size="single")
 
@@ -85,6 +86,8 @@ def main():
     trainer = pl.Trainer(limit_train_batches=15000, max_epochs=1, accelerator='gpu', devices=1)
     trainer.fit(model=vae, train_dataloaders=trainDataLoader)
     torch.save(vae.state_dict(), model_name)
+
+
 
 
 if __name__ == '__main__':
