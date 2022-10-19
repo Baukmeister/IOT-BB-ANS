@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 import util
-from util.bb_util import beta_binomials_append, beta_binomials_pop
+from util.bb_util import beta_binomials_append, beta_binomials_pop, gaussian_pop, gaussian_append
 
 
 def tensor_to_ndarray(tensor):
@@ -55,6 +55,27 @@ def beta_binomial_obs_pop(n, precision):
         a, b = params
         def pop(state):
             state, data = beta_binomials_pop(a, b, n, precision)(state)
+            return state, torch.Tensor(data)
+        return pop
+    return obs_pop
+
+# TODO: create pop and append operations for gaussian observation
+
+
+def gaussian_obs_append(n, precision):
+    def obs_append(params):
+        mean, log_var = params
+        def append(state, data):
+            return gaussian_append(mean, log_var, n, precision)(
+                state, np.int64(data))
+        return append
+    return obs_append
+
+def gaussian_obs_pop(n, precision):
+    def obs_pop(params):
+        mean, log_var = params
+        def pop(state):
+            state, data = gaussian_pop(mean, log_var, n, precision)(state)
             return state, torch.Tensor(data)
         return pop
     return obs_pop

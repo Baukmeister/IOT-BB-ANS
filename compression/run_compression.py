@@ -15,9 +15,8 @@ from util.io import vae_model_name
 
 rng = np.random.RandomState(0)
 
-prior_precision = 8
-bernoulli_precision = 16
-q_precision = 14
+prior_precision = 16
+q_precision = 16
 
 batch_size = 10
 data_set_size = 120
@@ -25,7 +24,7 @@ pooling_factor = 8
 hidden_dim = 32
 latent_dim = 4
 discretize = True
-obs_precision = 14
+obs_precision = 64
 compress_lengths = []
 
 latent_shape = (batch_size, latent_dim)
@@ -52,7 +51,7 @@ decoder_net = torch_fun_to_numpy_fun(model.decoder)
 
 
 def obs_codec(res):
-    return cs.DiagGaussian_StdBins(mean=res[0], stdd=res[1], coding_prec=prior_precision,bin_prec=prior_precision)
+    return cs.DiagGaussian_StdBins(mean=res[0], stdd=res[1], coding_prec=8, bin_prec=16)
 
 
 def vae_view(head):
@@ -98,4 +97,5 @@ decode_t = time.time() - decode_t0
 
 print('All decoded in {:.2f}s.'.format(decode_t))
 
+# TODO: somehow this all deodes to 2^bin_prec
 np.testing.assert_equal(data_points, data_points_)

@@ -51,8 +51,8 @@ model.eval()
 rec_net = tvae_utils.torch_fun_to_numpy_fun(model.encoder)
 gen_net = tvae_utils.torch_fun_to_numpy_fun(model.decoder)
 
-obs_append = tvae_utils.beta_binomial_obs_append(160, obs_precision)
-obs_pop = tvae_utils.beta_binomial_obs_pop(160, obs_precision)
+obs_append = tvae_utils.gaussian_obs_append(160,obs_precision)
+obs_pop = tvae_utils.gaussian_obs_pop(160,obs_precision)
 
 vae_append = bb_util.vae_append(latent_shape, gen_net, rec_net, obs_append,
                              prior_precision, q_precision)
