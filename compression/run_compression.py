@@ -18,11 +18,11 @@ rng = np.random.RandomState(0)
 prior_precision = 16
 q_precision = 16
 
-batch_size = 10
+batch_size = 1
 data_set_size = 120
-pooling_factor = 8
+pooling_factor = 1
 hidden_dim = 32
-latent_dim = 4
+latent_dim = 2
 discretize = True
 obs_precision = 64
 compress_lengths = []
@@ -51,7 +51,7 @@ decoder_net = torch_fun_to_numpy_fun(model.decoder)
 
 
 def obs_codec(res):
-    return cs.DiagGaussian_StdBins(mean=res[0], stdd=res[1], coding_prec=8, bin_prec=16)
+    return cs.DiagGaussian_StdBins(mean=res[0], stdd=res[1], coding_prec=12, bin_prec=20)
 
 
 def vae_view(head):

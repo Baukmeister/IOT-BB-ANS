@@ -29,8 +29,8 @@ class Encoder(torch.nn.Module):
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
         mu = self.enc_mu(x)
-        log_var = torch.exp(self.enc_log_var(x))
-        return mu, log_var
+        log_var = self.enc_log_var(x)
+        return mu, torch.exp(log_var)
 
 
 class Decoder(torch.nn.Module):
@@ -51,7 +51,7 @@ class Decoder(torch.nn.Module):
         x = self.output_linear(x)
         mean, log_var = torch.split(x, self.D_out, dim=1)
 
-        return mean, log_var
+        return mean, torch.exp(log_var)
 
 
 class VAE_full(pl.LightningModule):
@@ -72,12 +72,11 @@ class VAE_full(pl.LightningModule):
         self.to(device)
 
     # TODO: Use a learned scale instead of a fixed parameter
-    def gaussian_likelihood(self, mean, log_var, x):
+    def gaussian_likelihood(self, mean, std, x):
 
-        std = torch.exp(log_var / 2)
         dist = torch.distributions.Normal(mean, std)
 
-        # measure prob of seeing image under p(x|z)
+        # measure prob of seeing data under p(x|z)
         log_pxz = dist.log_prob(x)
         # adapt these dimensions
         return log_pxz.sum(1)
@@ -141,9 +140,8 @@ class VAE_full(pl.LightningModule):
         plt.title(f"Batch: {batch_idx} - Training loss: {round(loss.item(), 3)}")
         plt.show()
 
-    def reparameterize(self, mu, log_var):
+    def reparameterize(self, mu, std):
 
-        std = torch.exp(log_var / 2)
         q = torch.distributions.Normal(mu, std)
         z = q.rsample()
 
@@ -151,15 +149,14 @@ class VAE_full(pl.LightningModule):
 
     def loss(self, x):
 
-        mu, log_var = self.encoder(x)
-        z = self.reparameterize(mu, log_var)
+        mu, std = self.encoder(x)
+        z = self.reparameterize(mu, std)
 
-        dec_mu, dec_log_var = self.decoder(z)
+        dec_mu, dec_std = self.decoder(z)
         # reconstruction loss
-        recon_loss = self.gaussian_likelihood(dec_mu, dec_log_var, x)
+        recon_loss = self.gaussian_likelihood(dec_mu, dec_std, x)
 
         # kl
-        std = torch.exp(log_var / 2)
         kl = self.kl_divergence(z, mu, std)
 
         elbo = (kl - recon_loss)
@@ -186,13 +183,12 @@ class VAE_full(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
 
-        mean, log_var = self.forward(batch)
+        mean, std = self.forward(batch)
         loss = self.loss(batch)
 
         if batch_idx % 500 == 0:
             self.log(f'\n[batch: {batch_idx}]\ntraining loss', loss)
 
-            std = torch.exp(log_var / 2)
             distribution = torch.distributions.Normal(mean, std)
             outputs = distribution.sample()
 

@@ -16,7 +16,7 @@ rng = np.random.RandomState(0)
 
 prior_precision = 8
 bernoulli_precision = 16
-q_precision = 14
+q_precision = 8
 
 batch_size = 10
 data_set_size = 600
@@ -24,7 +24,7 @@ pooling_factor = 8
 hidden_dim = 32
 latent_dim = 4
 discretize = True
-obs_precision = 14
+obs_precision = 16
 
 compress_lengths = []
 

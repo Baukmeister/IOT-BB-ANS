@@ -55,10 +55,10 @@ def test_model(loss, dataLoader, model):
 
 def main():
     # CONFIG
-    pooling_factor = 8
+    pooling_factor = 1
     input_dim = 3 * int(pooling_factor)
     hidden_dim = 32
-    latent_dim = 4
+    latent_dim = 2
     test_set_ratio = 0.001
     train_batch_size = 8
     dicretize = True
