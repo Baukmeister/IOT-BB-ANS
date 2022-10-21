@@ -23,7 +23,7 @@ pooling_factor = 1
 hidden_dim = 32
 latent_dim = 2
 discretize = True
-obs_precision = 26
+obs_precision = 16
 compress_lengths = []
 
 latent_shape = (batch_size, latent_dim)
@@ -33,7 +33,7 @@ obs_size = np.prod(obs_shape)
 
 ## Setup codecs
 # VAE codec
-model = VAE_full(n_features=3 * int(pooling_factor), batch_size=128, hidden_size=hidden_dim, latent_size=latent_dim,
+model = VAE_full(n_features=3 * int(pooling_factor), batch_size=batch_size, hidden_size=hidden_dim, latent_size=latent_dim,
                  device="cpu")
 model.load_state_dict(torch.load(vae_model_name(
     model_folder="../models",
@@ -52,7 +52,7 @@ decoder_net = torch_fun_to_numpy_fun(model.decoder)
 # obs_codec is used to generate the likelihood function P(X|Z).
 # mean and stdd are for a distribution over the output X variable based on a specific z value!
 def obs_codec(res):
-    return cs.DiagGaussian_UnifBins(mean=res[0], stdd=res[1], bin_min=60, bin_max=100, n_bins=800, coding_prec=obs_precision)
+    return cs.DiagGaussian_UnifBins(mean=res[0], stdd=res[1], bin_min=60, bin_max=100, n_bins=150, coding_prec=obs_precision)
 
 
 def vae_view(head):
@@ -100,5 +100,4 @@ decode_t = time.time() - decode_t0
 
 print('All decoded in {:.2f}s.'.format(decode_t))
 
-# TODO: somehow this all deodes to 2^bin_prec
 np.testing.assert_equal(data_points, data_points_)
