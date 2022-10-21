@@ -6,7 +6,6 @@ import torch
 from autograd.builtins import tuple as ag_tuple
 
 import craystack as cs
-import rans
 from compression.torch_util import torch_fun_to_numpy_fun
 from craystack import bb_ans
 from models.vae import VAE_full
@@ -19,12 +18,12 @@ prior_precision = 16
 q_precision = 16
 
 batch_size = 1
-data_set_size = 120
+data_set_size = 1000
 pooling_factor = 1
 hidden_dim = 32
 latent_dim = 2
 discretize = True
-obs_precision = 64
+obs_precision = 26
 compress_lengths = []
 
 latent_shape = (batch_size, latent_dim)
@@ -53,7 +52,7 @@ decoder_net = torch_fun_to_numpy_fun(model.decoder)
 # obs_codec is used to generate the likelihood function P(X|Z).
 # mean and stdd are for a distribution over the output X variable based on a specific z value!
 def obs_codec(res):
-    return cs.DiagGaussian_UnifBins(mean=res[0], stdd=res[1], bin_min=50, bin_max=2000, n_bins=140, coding_prec=12)
+    return cs.DiagGaussian_UnifBins(mean=res[0], stdd=res[1], bin_min=60, bin_max=100, n_bins=800, coding_prec=obs_precision)
 
 
 def vae_view(head):
