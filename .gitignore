@@ -131,3 +131,7 @@ dmypy.json
 
 # Custom
 /data
+/models/*
+/lightning_logs/*
+/compression/compressed_lengths_cts
+/.idea/*

@@ -18,11 +18,11 @@ prior_precision = 8
 bernoulli_precision = 16
 q_precision = 8
 
-batch_size = 10
+batch_size = 1
 data_set_size = 600
-pooling_factor = 8
+pooling_factor = 1
 hidden_dim = 32
-latent_dim = 4
+latent_dim = 2
 discretize = True
 obs_precision = 16
 

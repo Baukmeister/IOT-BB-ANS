@@ -50,8 +50,10 @@ encoder_net = torch_fun_to_numpy_fun(model.encoder)
 decoder_net = torch_fun_to_numpy_fun(model.decoder)
 
 
+# obs_codec is used to generate the likelihood function P(X|Z).
+# mean and stdd are for a distribution over the output X variable based on a specific z value!
 def obs_codec(res):
-    return cs.DiagGaussian_StdBins(mean=res[0], stdd=res[1], coding_prec=12, bin_prec=20)
+    return cs.DiagGaussian_UnifBins(mean=res[0], stdd=res[1], bin_min=50, bin_max=2000, n_bins=140, coding_prec=12)
 
 
 def vae_view(head):
@@ -64,12 +66,14 @@ data_set = WISDMDataset("../data/wisdm-dataset/raw", pooling_factor=pooling_fact
 data_points_singles = [data_set.__getitem__(i).cpu().numpy() for i in range(data_set_size)]
 num_batches = len(data_points_singles) // batch_size
 
-data_points = np.split(np.reshape(data_points_singles, (len(data_points_singles), -1)), num_batches)
-data_points = np.int64(data_points)
-
 vae_append, vae_pop = cs.repeat(cs.substack(
     bb_ans.VAE(decoder_net, encoder_net, obs_codec, prior_precision, q_precision),
     vae_view), num_batches)
+
+data_points = np.split(np.reshape(data_points_singles, (len(data_points_singles), -1)), num_batches)
+data_points = np.int64(data_points)
+
+
 
 ## Encode
 # Initialize message with some 'extra' bits
