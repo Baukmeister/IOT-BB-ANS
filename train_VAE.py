@@ -62,12 +62,12 @@ def main():
     test_set_ratio = 0.001
     train_batch_size = 8
     dicretize = True
-    learning_rate = 0.005
+    learning_rate = 0.01
     weight_decay = 0.1
 
     model_name = vae_model_name("./models", dicretize, hidden_dim, latent_dim, pooling_factor)
     dataSet = WISDMDataset("data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=dicretize,
-                           data_set_size="single")
+                           scaling_factor=1, data_set_size="single")
 
     testSetSize = int(len(dataSet) * test_set_ratio)
     trainSetSize = len(dataSet) - testSetSize
