@@ -18,7 +18,7 @@ prior_precision = 16
 q_precision = 16
 
 batch_size = 1
-data_set_size = 1000
+data_set_size = 10000
 pooling_factor = 1
 hidden_dim = 32
 latent_dim = 2
