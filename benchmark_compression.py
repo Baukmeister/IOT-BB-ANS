@@ -34,7 +34,7 @@ def lzma_compress(data_points):
 
 if __name__ == "__main__":
     # Biometrics data
-    dataSet = WISDMDataset("data/wisdm-dataset/raw", pooling_factor=1, discretize=True).WISDMdf.to_numpy().astype(np.uint8)
+    dataSet = WISDMDataset("data/wisdm-dataset/raw", pooling_factor=1, discretize=True, scaling_factor=1).WISDMdf.to_numpy().astype(np.uint8)
     bench_compressor(gzip_compress, gzip.decompress, "gzip", dataSet)
     bench_compressor(bz2_compress, bz2.decompress, "bz2", dataSet)
     bench_compressor(lzma_compress, lzma.decompress, "lzma", dataSet)

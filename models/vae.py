@@ -74,14 +74,22 @@ class VAE_full(pl.LightningModule):
     # TODO: Use a learned scale instead of a fixed parameter
     def gaussian_likelihood(self, mean, std, x):
 
+        mean = torch.nan_to_num(mean)
+        std = torch.clamp(torch.nan_to_num(std), 1e-6)
+
         dist = torch.distributions.Normal(mean, std)
 
         # measure prob of seeing data under p(x|z)
         log_pxz = dist.log_prob(x)
         # adapt these dimensions
-        return log_pxz.sum(1)
+        output = log_pxz.sum(1)
+        return output
 
-    def kl_divergence(self, z, mu, std):
+    def kl_divergence(self, z, mu, std):#
+
+        mu = torch.clamp(torch.nan_to_num(mu), 1e-6)
+        std = torch.clamp(torch.nan_to_num(std), 1e-6)
+
         # --------------------------
         # Monte carlo KL divergence
         # --------------------------
@@ -98,7 +106,6 @@ class VAE_full(pl.LightningModule):
         kl = kl.sum(-1)
         return kl
 
-    # TODO: adapt this to work with pooling
     def plot_prediction(self, prediction_tensors, target_tensors, batch_idx, loss):
         fig = plt.figure(figsize=(4, 4))
 
@@ -142,15 +149,28 @@ class VAE_full(pl.LightningModule):
 
     def reparameterize(self, mu, std):
 
+
+        mu = torch.clamp(torch.nan_to_num(mu), 1e-6)
+        std = torch.clamp(torch.nan_to_num(std), 1e-6)
+
         q = torch.distributions.Normal(mu, std)
         z = q.rsample()
 
         return z
 
+    def mse_loss(self, x, dec_mu, dec_std):
+        dec_mu = torch.clamp(torch.nan_to_num(dec_mu), 1e-6)
+        dec_std = torch.clamp(torch.nan_to_num(dec_std), 1e-6)
+        distribution = torch.distributions.Normal(dec_mu, dec_std)
+        outputs = distribution.sample()
+        loss_fun = torch.nn.MSELoss()
+        return loss_fun(x,outputs)
+
     def loss(self, x):
 
+        #TODO: mu and std get to nan after a few iterations
         mu, std = self.encoder(x)
-        z = self.reparameterize(mu, std)
+        z = self.reparameterize(mu, torch.clamp(std, 1e-6))
 
         dec_mu, dec_std = self.decoder(z)
         # reconstruction loss
@@ -184,10 +204,13 @@ class VAE_full(pl.LightningModule):
     def training_step(self, batch, batch_idx):
 
         mean, std = self.forward(batch)
-        loss = self.loss(batch)
+        loss = self.loss(batch) * 0.01
 
         if batch_idx % 500 == 0:
             self.log(f'\n[batch: {batch_idx}]\ntraining loss', loss)
+
+            mean = torch.clamp(torch.nan_to_num(mean), 1e-6)
+            std = torch.clamp(torch.nan_to_num(std), 1e-6)
 
             distribution = torch.distributions.Normal(mean, std)
             outputs = distribution.sample()

@@ -18,12 +18,12 @@ prior_precision = 16
 q_precision = 16
 
 batch_size = 1
-data_set_size = 10000
+data_set_size = 1000
 pooling_factor = 1
 hidden_dim = 32
 latent_dim = 2
 discretize = True
-obs_precision = 16
+obs_precision = 20
 compress_lengths = []
 
 latent_shape = (batch_size, latent_dim)
@@ -52,8 +52,7 @@ decoder_net = torch_fun_to_numpy_fun(model.decoder)
 # obs_codec is used to generate the likelihood function P(X|Z).
 # mean and stdd are for a distribution over the output X variable based on a specific z value!
 def obs_codec(res):
-    return cs.DiagGaussian_UnifBins(mean=res[0], stdd=res[1], bin_min=60, bin_max=100, n_bins=150, coding_prec=obs_precision)
-
+    return cs.DiagGaussian_UnifBins(mean=res[0], stdd=res[1], bin_min=-20, bin_max=20, n_bins=1000, coding_prec=obs_precision)
 
 def vae_view(head):
     return ag_tuple((np.reshape(head[:latent_size], latent_shape),
@@ -61,7 +60,7 @@ def vae_view(head):
 
 
 ## Load biometrics data
-data_set = WISDMDataset("../data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=discretize)
+data_set = WISDMDataset("../data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=discretize, scaling_factor=1)
 data_points_singles = [data_set.__getitem__(i).cpu().numpy() for i in range(data_set_size)]
 num_batches = len(data_points_singles) // batch_size
 
