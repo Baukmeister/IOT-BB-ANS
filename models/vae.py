@@ -6,6 +6,7 @@ import torch
 import torch.cuda
 import torch.nn.functional as F
 import torch.optim as optim
+from torch.autograd import Variable
 
 
 class Encoder(torch.nn.Module):
@@ -36,6 +37,8 @@ class Decoder(torch.nn.Module):
         self.fc1 = torch.nn.Linear(H, H)
         self.fc2 = torch.nn.Linear(H, H)
         self.fc3 = torch.nn.Linear(H, H)
+        self.fc4 = torch.nn.Linear(H, H)
+        self.fc5 = torch.nn.Linear(H, H)
         self.output_linear = torch.nn.Linear(H, D_out * 2)
 
     def forward(self, z):
@@ -43,6 +46,8 @@ class Decoder(torch.nn.Module):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
+        x = F.relu(self.fc4(x))
+        x = F.relu(self.fc5(x))
         x = self.output_linear(x)
         mean, log_var = torch.split(x, self.D_out, dim=1)
 
@@ -50,6 +55,8 @@ class Decoder(torch.nn.Module):
         return mean, log_var
 
 
+#TODO: Figure out why the predictions seem to be very clustered around 0
+# Seems like eitehr mean or scale are screwed (not the same for each iteration)
 class VAE_full(pl.LightningModule):
     def __init__(self, n_features, batch_size, hidden_size, latent_size, device=None, lr=0.001, wc=0):
         super(VAE_full, self).__init__()
@@ -81,10 +88,24 @@ class VAE_full(pl.LightningModule):
 
     def kl_divergence(self, z, mu, log_var):
 
-        sigma = torch.exp(log_var)
-        KLD = (sigma**2 + mu**2 - torch.log(sigma) - 1/2).sum()
+        std = torch.exp(log_var)
+        # --------------------------
+        # Monte carlo KL divergence
+        # --------------------------
+        # 1. define the first two probabilities (in this case Normal for both)
+        p = torch.distributions.Normal(torch.zeros_like(mu), torch.ones_like(std))
+        q = torch.distributions.Normal(mu, std)
 
-        return KLD
+        # 2. get the probabilities from the equation
+        log_qzx = q.log_prob(z)
+        log_pz = p.log_prob(z)
+
+        # kl
+        kl = (log_qzx - log_pz)
+        kl = kl.sum(-1)
+
+        alt = torch.distributions.kl.kl_divergence(p,q)
+        return alt.mean()
 
     def plot_prediction(self, prediction_tensors, target_tensors, batch_idx, loss):
         fig = plt.figure(figsize=(4, 4))
@@ -137,32 +158,32 @@ class VAE_full(pl.LightningModule):
         return z
 
     def mse_loss(self, x, dec_mu, dec_std):
+        dec_std = torch.clamp(dec_std, 1e-7)
         distribution = torch.distributions.Normal(dec_mu, dec_std)
         outputs = distribution.sample()
-        MSE = torch.nn.MSELoss(reduction='mean')(outputs, x)
-        return MSE
+        MSE_fun = torch.nn.MSELoss(reduction='mean')
+        MSE_loss = MSE_fun(outputs, x)
+        return torch.tensor(MSE_loss, requires_grad=True)
 
     def loss(self, x):
 
-        #TODO: mu and std get to nan after a few iterations
         mu, log_var = self.encoder(x)
         z = self.reparameterize(mu, log_var)
 
         dec_mu, dec_log_var = self.decoder(z)
         # reconstruction loss
         #recon_loss = self.gaussian_likelihood(dec_mu, dec_std, x)
-        recon_loss = -self.mse_loss(x, dec_mu, torch.exp(dec_log_var))
+        recon_loss = self.mse_loss(x, dec_mu, torch.exp(dec_log_var))
         # kl
         kl = self.kl_divergence(z, mu, log_var)
 
-        elbo = (kl - recon_loss)
+        elbo = (kl + recon_loss)
         elbo = elbo.mean()
 
         self.log_dict({
             'elbo': elbo,
             'kl': kl.mean(),
-            'recon_loss': recon_loss.mean(),
-            'reconstruction': recon_loss.mean()
+            'recon_loss': recon_loss.mean()
         })
 
         return elbo
@@ -184,7 +205,7 @@ class VAE_full(pl.LightningModule):
         if batch_idx % 500 == 0:
             self.log(f'\n[batch: {batch_idx}]\ntraining loss', loss)
 
-            distribution = torch.distributions.Normal(mean, torch.exp(log_var))
+            distribution = torch.distributions.Normal(mean, torch.clamp(torch.exp(log_var), 1e-7))
             outputs = distribution.sample()
 
             self.plot_prediction(prediction_tensors=outputs, target_tensors=batch, batch_idx=batch_idx,
