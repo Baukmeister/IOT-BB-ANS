@@ -1,6 +1,7 @@
 from torch.utils import data
 
 from models.vae import *
+from models.vanilla_vae import *
 from util.WIDSMDataLoader import WISDMDataset
 from util.io import vae_model_name
 
@@ -67,7 +68,7 @@ def main():
 
     model_name = vae_model_name("./models", dicretize, hidden_dim, latent_dim, pooling_factor)
     dataSet = WISDMDataset("data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=dicretize,
-                           scaling_factor=50, data_set_size="single")
+                           scaling_factor=1000, data_set_size="single")
 
     testSetSize = int(len(dataSet) * test_set_ratio)
     trainSetSize = len(dataSet) - testSetSize
@@ -79,15 +80,26 @@ def main():
         hidden_size=hidden_dim,
         latent_size=latent_dim,
         lr=learning_rate,
-        wc=weight_decay)
+        wc=weight_decay
+    )
+
+    vanilla_vae = Vanilla_VAE(
+        n_features=input_dim,
+        batch_size=train_batch_size,
+        hidden_dims=None,
+        latent_dim=latent_dim,
+        lr=learning_rate,
+        wc=weight_decay
+    )
+
+    model = vanilla_vae
+
     trainDataLoader = data.DataLoader(train_set, batch_size=train_batch_size, shuffle=True, num_workers=1)
     testDataLoader = data.DataLoader(test_set)
 
-    trainer = pl.Trainer(limit_train_batches=100000, max_epochs=1, accelerator='gpu', devices=1)
-    trainer.fit(model=vae, train_dataloaders=trainDataLoader)
-    torch.save(vae.state_dict(), model_name)
-
-
+    trainer = pl.Trainer(limit_train_batches=1000000, max_epochs=5, accelerator='gpu', devices=1)
+    trainer.fit(model=vanilla_vae, train_dataloaders=trainDataLoader)
+    #torch.save(vanilla_vae.state_dict(), model_name)
 
 
 if __name__ == '__main__':
