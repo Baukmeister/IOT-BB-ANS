@@ -8,11 +8,14 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
 
+from models.model_util import plot_prediction
+
 
 class Encoder(torch.nn.Module):
     def __init__(self, D_in, H, latent_size):
         super(Encoder, self).__init__()
         self.linear1 = torch.nn.Linear(D_in, H)
+        self.batch_norm = torch.nn.BatchNorm1d(H)
         self.fc1 = torch.nn.Linear(H, H)
         self.fc2 = torch.nn.Linear(H, H)
         self.fc3 = torch.nn.Linear(H, H)
@@ -21,6 +24,7 @@ class Encoder(torch.nn.Module):
 
     def forward(self, x):
         x = F.relu(self.linear1(x))
+        x = self.batch_norm(x)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
@@ -51,11 +55,10 @@ class Decoder(torch.nn.Module):
         x = self.output_linear(x)
         mean, log_var = torch.split(x, self.D_out, dim=1)
 
-        #TODO: This torch.exp() call generates nan and inf values
         return mean, log_var
 
 
-#TODO: Figure out why the predictions seem to be very clustered around 0
+# TODO: Figure out why the predictions seem to be very clustered around 0
 # Seems like eitehr mean or scale are screwed (not the same for each iteration)
 class VAE_full(pl.LightningModule):
     def __init__(self, n_features, batch_size, hidden_size, latent_size, device=None, lr=0.001, wc=0):
@@ -104,53 +107,11 @@ class VAE_full(pl.LightningModule):
         kl = (log_qzx - log_pz)
         kl = kl.sum(-1)
 
-        alt = torch.distributions.kl.kl_divergence(p,q)
-        return alt.mean()
-
-    def plot_prediction(self, prediction_tensors, target_tensors, batch_idx, loss):
-        fig = plt.figure(figsize=(4, 4))
-
-        ax = fig.add_subplot(projection='3d')
-
-        # select a random subset of the target and predictions to not overcrowd the plot
-        predictions = sample(
-            [prediction.cpu().detach().numpy() for prediction in prediction_tensors],
-            min(500, prediction_tensors.shape[1]) // prediction_tensors.shape[1]
-        )
-        targets = sample(
-            [target.cpu().detach().numpy() for target in target_tensors],
-            min(500, target_tensors.shape[1]) // target_tensors.shape[1]
-        )
-
-        pred_x = [[pred[i] for i in range(0, len(pred), 3)] for pred in predictions]
-        pred_y = [[pred[i] for i in range(1, len(pred), 3)] for pred in predictions]
-        pred_z = [[pred[i] for i in range(2, len(pred), 3)] for pred in predictions]
-
-        # plot the points
-        pred_ax = ax.scatter(
-            [item for sublist in pred_x for item in sublist],
-            [item for sublist in pred_y for item in sublist],
-            [item for sublist in pred_z for item in sublist]
-            , c="blue")
-
-        target_x = [[target[i] for i in range(0, len(target), 3)] for target in targets]
-        target_y = [[target[i] for i in range(1, len(target), 3)] for target in targets]
-        target_z = [[target[i] for i in range(2, len(target), 3)] for target in targets]
-
-        target_ax = ax.scatter(
-            [item for sublist in target_x for item in sublist],
-            [item for sublist in target_y for item in sublist],
-            [item for sublist in target_z for item in sublist]
-            , c="red"
-            , alpha=0.3)
-
-        plt.legend([pred_ax, target_ax], ["Predictions", "Targets"])
-        plt.title(f"Batch: {batch_idx} - Training loss: {round(loss.item(), 3)}")
-        plt.show()
+        return kl.mean()
 
     def reparameterize(self, mu, log_var):
 
-        std = torch.exp(log_var)
+        std = torch.clamp(torch.exp(log_var), 1e-7)
 
         q = torch.distributions.Normal(mu, std)
         z = q.rsample()
@@ -172,7 +133,7 @@ class VAE_full(pl.LightningModule):
 
         dec_mu, dec_log_var = self.decoder(z)
         # reconstruction loss
-        #recon_loss = self.gaussian_likelihood(dec_mu, dec_std, x)
+        # recon_loss = self.gaussian_likelihood(dec_mu, dec_std, x)
         recon_loss = self.mse_loss(x, dec_mu, torch.exp(dec_log_var))
         # kl
         kl = self.kl_divergence(z, mu, log_var)
@@ -208,8 +169,8 @@ class VAE_full(pl.LightningModule):
             distribution = torch.distributions.Normal(mean, torch.clamp(torch.exp(log_var), 1e-7))
             outputs = distribution.sample()
 
-            self.plot_prediction(prediction_tensors=outputs, target_tensors=batch, batch_idx=batch_idx,
-                                 loss=loss)
+            plot_prediction(prediction_tensors=outputs, target_tensors=batch, batch_idx=batch_idx,
+                            loss=loss)
 
         return loss
 

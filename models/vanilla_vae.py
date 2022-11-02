@@ -6,14 +6,16 @@ import torch
 import torch.cuda
 import torch.nn.functional as F
 import torch.optim as optim
-from typing import List
+from typing import List, Tuple
 
 from torch import nn
+
+from train_VAE import plot_prediction
 
 
 # Seems like eitehr mean or scale are screwed (not the same for each iteration)
 class Vanilla_VAE(pl.LightningModule):
-    def __init__(self, n_features, batch_size, hidden_dims, latent_dim, device=None, lr=0.001, wc=0):
+    def __init__(self, n_features, scale_factor, hidden_dims, latent_dim, device=None, lr=0.001, wc=0):
 
         super(Vanilla_VAE, self).__init__()
 
@@ -24,7 +26,8 @@ class Vanilla_VAE(pl.LightningModule):
 
         self.lr = lr
         self.wc = wc
-
+        self.scale_factor = scale_factor
+        self.n_features = n_features
         self.latent_dim = latent_dim
 
         modules = []
@@ -63,11 +66,7 @@ class Vanilla_VAE(pl.LightningModule):
 
         self.decoder = nn.Sequential(*modules)
 
-        self.final_layer = nn.Sequential(
-            nn.Linear(in_features=hidden_dims[-1],
-                      out_features=n_features),
-            nn.LeakyReLU()
-        )
+        self.final_layer = nn.Linear(in_features=hidden_dims[-1],out_features=n_features*2)
 
         self.to(device)
 
@@ -83,12 +82,12 @@ class Vanilla_VAE(pl.LightningModule):
 
         # Split the result into mu and var components
         # of the latent Gaussian distribution
-        mu = self.fc_mu(result)
+        mu = self.fc_mu(result) * self.scale_factor*100
         log_var = self.fc_var(result)
 
         return [mu, log_var]
 
-    def decode(self, z: torch.Tensor) -> torch.Tensor:
+    def decode(self, z: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Maps the given latent codes
         onto the image space.
@@ -98,7 +97,9 @@ class Vanilla_VAE(pl.LightningModule):
         result = self.decoder_input(z)
         result = self.decoder(result)
         result = self.final_layer(result)
-        return result
+        mean, log_var = torch.split(result, self.n_features, dim=1)
+
+        return mean, log_var
 
     def reparameterize(self, mu: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
         """
@@ -112,47 +113,6 @@ class Vanilla_VAE(pl.LightningModule):
         eps = torch.randn_like(std)
         return eps * std + mu
 
-    def plot_prediction(self, prediction_tensors, target_tensors, batch_idx, loss):
-        fig = plt.figure(figsize=(4, 4))
-
-        ax = fig.add_subplot(projection='3d')
-
-        # select a random subset of the target and predictions to not overcrowd the plot
-        predictions = sample(
-            [prediction.cpu().detach().numpy() for prediction in prediction_tensors],
-            min(500, prediction_tensors.shape[1]) // prediction_tensors.shape[1]
-        )
-        targets = sample(
-            [target.cpu().detach().numpy() for target in target_tensors],
-            min(500, target_tensors.shape[1]) // target_tensors.shape[1]
-        )
-
-        pred_x = [[pred[i] for i in range(0, len(pred), 3)] for pred in predictions]
-        pred_y = [[pred[i] for i in range(1, len(pred), 3)] for pred in predictions]
-        pred_z = [[pred[i] for i in range(2, len(pred), 3)] for pred in predictions]
-
-        # plot the points
-        pred_ax = ax.scatter(
-            [item for sublist in pred_x for item in sublist],
-            [item for sublist in pred_y for item in sublist],
-            [item for sublist in pred_z for item in sublist]
-            , c="blue")
-
-        target_x = [[target[i] for i in range(0, len(target), 3)] for target in targets]
-        target_y = [[target[i] for i in range(1, len(target), 3)] for target in targets]
-        target_z = [[target[i] for i in range(2, len(target), 3)] for target in targets]
-
-        target_ax = ax.scatter(
-            [item for sublist in target_x for item in sublist],
-            [item for sublist in target_y for item in sublist],
-            [item for sublist in target_z for item in sublist]
-            , c="red"
-            , alpha=0.3)
-
-        plt.legend([pred_ax, target_ax], ["Predictions", "Targets"])
-        plt.title(f"Batch: {batch_idx} - Training loss: {loss}")
-        plt.show()
-
     def loss(self, recons, input, mu, log_var):
 
         recons_loss = F.mse_loss(recons, input)
@@ -161,13 +121,18 @@ class Vanilla_VAE(pl.LightningModule):
 
         # loss = recons_loss + kld_weight * kld_loss
 
-        loss = recons_loss + 0.00025 * kld_loss
+        loss = recons_loss + 0.0025 * kld_loss
+        print(f"KLD: {kld_loss}")
         return {'loss': loss, 'Reconstruction_Loss': recons_loss.detach(), 'KLD': -kld_loss.detach()}
 
     def forward(self, x_inputs):
         mu, log_var = self.encode(x_inputs)
         z = self.reparameterize(mu, log_var)
-        return [self.decode(z)*1000, x_inputs, mu, log_var]
+        output_mean, output_log_var = self.decode(z)
+        distribution = torch.distributions.Normal(output_mean, torch.clamp(torch.exp(output_log_var), 1e-7))
+        outputs = distribution.sample()
+
+        return [outputs, x_inputs, mu, log_var]
 
     def sample(self,
                num_samples: int,
@@ -195,7 +160,7 @@ class Vanilla_VAE(pl.LightningModule):
         if batch_idx % 500 == 0:
             self.log(f'\n[batch: {batch_idx}]\ntraining loss', loss)
 
-            self.plot_prediction(prediction_tensors=recon, target_tensors=batch, batch_idx=batch_idx,
+            plot_prediction(prediction_tensors=recon, target_tensors=batch, batch_idx=batch_idx,
                                  loss=loss)
 
         return loss
