@@ -56,14 +56,14 @@ def test_model(loss, dataLoader, model):
 
 def main():
     # CONFIG
-    pooling_factor = 15
+    pooling_factor = 35
     input_dim = 3 * int(pooling_factor)
     hidden_dim = 32
     latent_dim = 64
     test_set_ratio = 0.001
     train_batch_size = 4
     dicretize = True
-    learning_rate = 0.000001
+    learning_rate = 0.0001
     weight_decay = 0.01
 
     model_name = vae_model_name("./models", dicretize, hidden_dim, latent_dim, pooling_factor)
