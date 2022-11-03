@@ -32,16 +32,16 @@ def test_model(loss, dataLoader, model):
 
 def main():
     # CONFIG
-    pooling_factor = 10
+    pooling_factor = 15
     input_dim = 3 * int(pooling_factor)
     hidden_dim = 32
-    latent_dim = 4
-    val_set_ratio = 0.01
-    train_batch_size = 64
+    latent_dim = 5
+    val_set_ratio = 0.00
+    train_batch_size = 16
     dicretize = True
-    learning_rate = 0.0001
-    weight_decay = 0.0
-    scale_factor = 1000
+    learning_rate = 0.001
+    weight_decay = 0.01
+    scale_factor = 10000
     model_type = "full_vae"
 
     model_name = vae_model_name("./models", dicretize, hidden_dim, latent_dim, pooling_factor, scale_factor, model_type)
@@ -80,7 +80,7 @@ def main():
     trainDataLoader = data.DataLoader(train_set, batch_size=train_batch_size, shuffle=True, num_workers=1)
     valDataLoader = data.DataLoader(val_set)
 
-    trainer = pl.Trainer(limit_train_batches=1000000, max_epochs=5, accelerator='gpu', devices=1)
+    trainer = pl.Trainer(limit_train_batches=1000000, max_epochs=8, accelerator='gpu', devices=1)
     trainer.fit(model=model, train_dataloaders=trainDataLoader, val_dataloaders=valDataLoader)
     torch.save(model.state_dict(), model_name)
 

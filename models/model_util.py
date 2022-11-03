@@ -45,3 +45,16 @@ def plot_prediction(prediction_tensors, target_tensors, batch_idx, loss):
     plt.legend([pred_ax, target_ax], ["Predictions", "Targets"])
     plt.title(f"Batch: {batch_idx} - Training loss: { round(loss.item(), 5)}")
     plt.show()
+
+    ### PLOT ONLY GROUND TRUTH
+    fig = plt.figure(figsize=(4, 4))
+
+    ax = fig.add_subplot(projection='3d')
+
+    ax.scatter(
+        [item for sublist in target_x for item in sublist],
+        [item for sublist in target_y for item in sublist],
+        [item for sublist in target_z for item in sublist]
+        , c="red")
+
+    plt.title(f"Batch: {batch_idx} - Ground Truth")
