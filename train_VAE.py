@@ -32,24 +32,25 @@ def test_model(loss, dataLoader, model):
 
 def main():
     # CONFIG
-    pooling_factor = 3
+    pooling_factor = 10
     input_dim = 3 * int(pooling_factor)
     hidden_dim = 32
-    latent_dim = 64
-    test_set_ratio = 0.01
-    train_batch_size = 32
+    latent_dim = 4
+    val_set_ratio = 0.01
+    train_batch_size = 64
     dicretize = True
-    learning_rate = 0.001
-    weight_decay = 0.01
-    scale_factor = 100
+    learning_rate = 0.0001
+    weight_decay = 0.0
+    scale_factor = 1000
+    model_type = "full_vae"
 
-    model_name = vae_model_name("./models", dicretize, hidden_dim, latent_dim, pooling_factor)
+    model_name = vae_model_name("./models", dicretize, hidden_dim, latent_dim, pooling_factor, scale_factor, model_type)
     dataSet = WISDMDataset("data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=dicretize,
                            scaling_factor=scale_factor, data_set_size="single")
 
-    testSetSize = int(len(dataSet) * test_set_ratio)
-    trainSetSize = len(dataSet) - testSetSize
-    train_set, test_set = data.random_split(dataSet, [trainSetSize, testSetSize])
+    valSetSize = int(len(dataSet) * val_set_ratio)
+    trainSetSize = len(dataSet) - valSetSize
+    train_set, val_set = data.random_split(dataSet, [trainSetSize, valSetSize])
 
     vae = VAE_full(
         n_features=input_dim,
@@ -69,14 +70,19 @@ def main():
         wc=weight_decay
     )
 
-    model = vae
+    if model_type == "full_vae":
+        model = vae
+    elif model_type == "vanilla_vae":
+        model = vanilla_vae
+    else:
+        raise ValueError(f"No model defined for '{model_type}'")
 
     trainDataLoader = data.DataLoader(train_set, batch_size=train_batch_size, shuffle=True, num_workers=1)
-    testDataLoader = data.DataLoader(test_set)
+    valDataLoader = data.DataLoader(val_set)
 
-    trainer = pl.Trainer(limit_train_batches=1000000, max_epochs=30, accelerator='gpu', devices=1)
-    trainer.fit(model=model, train_dataloaders=trainDataLoader)
-    #torch.save(model.state_dict(), model_name)
+    trainer = pl.Trainer(limit_train_batches=1000000, max_epochs=5, accelerator='gpu', devices=1)
+    trainer.fit(model=model, train_dataloaders=trainDataLoader, val_dataloaders=valDataLoader)
+    torch.save(model.state_dict(), model_name)
 
 
 if __name__ == '__main__':

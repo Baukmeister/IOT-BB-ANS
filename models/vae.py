@@ -143,8 +143,9 @@ class VAE_full(pl.LightningModule):
         l = torch.sum(l.log_prob(x), dim=1)
         p_z = torch.sum(torch.distributions.Normal(0, 1).log_prob(z), dim=1)
         q_z = torch.sum(torch.distributions.Normal(mu, torch.exp(log_var)).log_prob(z), dim=1)
-        elbo = -torch.mean(l + p_z - q_z) * np.log2(np.e) / x.numel()
+        elbo = -torch.mean(l + p_z - q_z) * np.log2(np.e)
 
+        self.log("Elbo Loss", elbo)
         return elbo
 
     def forward(self, x_inputs):
@@ -162,7 +163,7 @@ class VAE_full(pl.LightningModule):
         loss = self.loss(batch)
 
         if batch_idx % 500 == 0:
-            self.log(f'\n[batch: {batch_idx}]\ntraining loss', round(loss, 5))
+            self.log(f'\n[batch: {batch_idx}]\ntraining loss', round(loss.item(), 5))
 
             distribution = torch.distributions.Normal(mean, torch.clamp(torch.exp(log_var), 1e-7))
             outputs = distribution.sample()
@@ -171,6 +172,16 @@ class VAE_full(pl.LightningModule):
                             loss=loss)
 
         return loss
+
+    def validation_step(self, batch, batch_idx):
+        mean, log_var = self.forward(batch)
+        loss = self.loss(batch)
+        return {'val_loss': loss}
+
+    def validation_epoch_end(self, outputs):
+        avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
+        log = {'val_loss': avg_loss}
+        return {'val_loss': avg_loss, 'log': log}
 
     def configure_optimizers(self):
         optimizer = optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.wc)
