@@ -1,6 +1,7 @@
 from random import sample
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pytorch_lightning as pl
 import torch
 import torch.cuda
@@ -21,6 +22,8 @@ class Encoder(torch.nn.Module):
         self.fc3 = torch.nn.Linear(H, H)
         self.enc_mu = torch.nn.Linear(H, latent_size)
         self.enc_log_var = torch.nn.Linear(H, latent_size)
+        self.bn_mu = torch.nn.BatchNorm1d(latent_size)
+        self.bn_log_var = torch.nn.BatchNorm1d(latent_size)
 
     def forward(self, x):
         x = F.relu(self.linear1(x))
@@ -28,16 +31,17 @@ class Encoder(torch.nn.Module):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
-        mu = self.enc_mu(x)
-        log_var = self.enc_log_var(x)
+        mu = self.bn_mu(self.enc_mu(x))
+        log_var = self.bn_log_var(self.enc_log_var(x))
         return mu, log_var
 
 
 class Decoder(torch.nn.Module):
-    def __init__(self, D_in, H, D_out):
+    def __init__(self, D_in, H, D_out, scale_factor):
         super(Decoder, self).__init__()
         self.D_out = D_out
         self.linear1 = torch.nn.Linear(D_in, H)
+        self.bn = torch.nn.BatchNorm1d(H)
         self.fc1 = torch.nn.Linear(H, H)
         self.fc2 = torch.nn.Linear(H, H)
         self.fc3 = torch.nn.Linear(H, H)
@@ -46,7 +50,7 @@ class Decoder(torch.nn.Module):
         self.output_linear = torch.nn.Linear(H, D_out * 2)
 
     def forward(self, z):
-        x = F.relu(self.linear1(z))
+        x = F.relu(self.bn(self.linear1(z)))
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
@@ -59,9 +63,9 @@ class Decoder(torch.nn.Module):
 
 
 # TODO: Figure out why the predictions seem to be very clustered around 0
-# Seems like eitehr mean or scale are screwed (not the same for each iteration)
+# Seems like eiter mean or scale are screwed (not the same for each iteration)
 class VAE_full(pl.LightningModule):
-    def __init__(self, n_features, batch_size, hidden_size, latent_size, device=None, lr=0.001, wc=0):
+    def __init__(self, n_features, scale_factor, hidden_size, latent_size, device=None, lr=0.001, wc=0):
         super(VAE_full, self).__init__()
         if self.device is None and torch.cuda.is_available():
             device = "cuda"
@@ -70,11 +74,12 @@ class VAE_full(pl.LightningModule):
 
         self.lr = lr
         self.wc = wc
+        self.scale_factor = scale_factor
 
         print(f"Using: {self.device}")
         self.n_features = n_features
         self.encoder = Encoder(D_in=n_features, H=hidden_size, latent_size=latent_size).to(device)
-        self.decoder = Decoder(D_in=latent_size, H=hidden_size, D_out=n_features).to(device)
+        self.decoder = Decoder(D_in=latent_size, H=hidden_size, D_out=n_features, scale_factor=scale_factor).to(device)
         self.to(device)
 
     def gaussian_likelihood(self, mean, log_var, x):
@@ -111,12 +116,13 @@ class VAE_full(pl.LightningModule):
 
     def reparameterize(self, mu, log_var):
 
-        std = torch.clamp(torch.exp(log_var), 1e-7)
+        std = torch.exp(log_var)
 
-        q = torch.distributions.Normal(mu, std)
-        z = q.rsample()
-
-        return z
+        if self.training:
+            eps = torch.randn_like(std)
+            return eps.mul(std).add_(mu)
+        else:
+            return mu
 
     def mse_loss(self, x, dec_mu, dec_std):
         dec_std = torch.clamp(dec_std, 1e-7)
@@ -132,20 +138,12 @@ class VAE_full(pl.LightningModule):
         z = self.reparameterize(mu, log_var)
 
         dec_mu, dec_log_var = self.decoder(z)
-        # reconstruction loss
-        # recon_loss = self.gaussian_likelihood(dec_mu, dec_std, x)
-        recon_loss = self.mse_loss(x, dec_mu, torch.exp(dec_log_var))
-        # kl
-        kl = self.kl_divergence(z, mu, log_var)
 
-        elbo = (kl + recon_loss)
-        elbo = elbo.mean()
-
-        self.log_dict({
-            'elbo': elbo,
-            'kl': kl.mean(),
-            'recon_loss': recon_loss.mean()
-        })
+        l = torch.distributions.Normal(dec_mu, torch.exp(dec_log_var))
+        l = torch.sum(l.log_prob(x), dim=1)
+        p_z = torch.sum(torch.distributions.Normal(0, 1).log_prob(z), dim=1)
+        q_z = torch.sum(torch.distributions.Normal(mu, torch.exp(log_var)).log_prob(z), dim=1)
+        elbo = -torch.mean(l + p_z - q_z) * np.log2(np.e) / x.numel()
 
         return elbo
 
@@ -164,7 +162,7 @@ class VAE_full(pl.LightningModule):
         loss = self.loss(batch)
 
         if batch_idx % 500 == 0:
-            self.log(f'\n[batch: {batch_idx}]\ntraining loss', loss)
+            self.log(f'\n[batch: {batch_idx}]\ntraining loss', round(loss, 5))
 
             distribution = torch.distributions.Normal(mean, torch.clamp(torch.exp(log_var), 1e-7))
             outputs = distribution.sample()

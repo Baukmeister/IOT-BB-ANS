@@ -37,10 +37,10 @@ def main():
     hidden_dim = 32
     latent_dim = 64
     test_set_ratio = 0.01
-    train_batch_size = 4
+    train_batch_size = 32
     dicretize = True
-    learning_rate = 0.1
-    weight_decay = 0.0001
+    learning_rate = 0.001
+    weight_decay = 0.01
     scale_factor = 100
 
     model_name = vae_model_name("./models", dicretize, hidden_dim, latent_dim, pooling_factor)
@@ -53,7 +53,7 @@ def main():
 
     vae = VAE_full(
         n_features=input_dim,
-        batch_size=train_batch_size,
+        scale_factor=scale_factor,
         hidden_size=hidden_dim,
         latent_size=latent_dim,
         lr=learning_rate,
