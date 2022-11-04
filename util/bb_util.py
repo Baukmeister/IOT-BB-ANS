@@ -349,7 +349,10 @@ def generate_beta_binomial_probs(a, b, n):
 def generate_gaussian_probs(mean, log_var, n):
     #TODO fix this
 
-    #TODO CONTINUE WORK HERE
+    #TODO --> CONTINUE WORK HERE <--
+
+    # 1. Figure out what these probs are exactly used for and how to generate it
+
     probs = np.arange(0, 1, 1 / n)
     return np.tile(probs, (10,24,1))
 
