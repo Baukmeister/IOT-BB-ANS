@@ -22,10 +22,12 @@ batch_size = 1
 data_set_size = 600
 obs_precision = 16
 
+# MODEL CONFIG
 pooling_factor = 15
 input_dim = 3 * int(pooling_factor)
 hidden_dim = 32
-latent_dim = 5
+latent_dim = 15
+val_set_ratio = 0.00
 train_batch_size = 16
 dicretize = True
 learning_rate = 0.001
@@ -60,8 +62,8 @@ model.eval()
 rec_net = tvae_utils.torch_fun_to_numpy_fun(model.encoder)
 gen_net = tvae_utils.torch_fun_to_numpy_fun(model.decoder)
 
-obs_append = tvae_utils.gaussian_obs_append(scale_factor*2, obs_precision)
-obs_pop = tvae_utils.gaussian_obs_pop(scale_factor*20, obs_precision)
+obs_append = tvae_utils.gaussian_obs_append(scale_factor * 2, obs_precision)
+obs_pop = tvae_utils.gaussian_obs_pop(scale_factor * 20, obs_precision)
 
 vae_append = bb_util.vae_append(latent_shape, gen_net, rec_net, obs_append,
                                 prior_precision, q_precision)
@@ -69,7 +71,8 @@ vae_pop = bb_util.vae_pop(latent_shape, gen_net, rec_net, obs_pop,
                           prior_precision, q_precision)
 
 ## Load biometrics data
-data_set = WISDMDataset("../data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=True, scaling_factor=scale_factor)
+data_set = WISDMDataset("../data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=True,
+                        scaling_factor=scale_factor)
 data_points_singles = [data_set.__getitem__(i).cpu().numpy() for i in range(data_set_size)]
 num_batches = len(data_points_singles) // batch_size
 
