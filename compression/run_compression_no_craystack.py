@@ -48,7 +48,7 @@ model = VAE_full(n_features=3 * int(pooling_factor), scale_factor=scale_factor, 
                  latent_size=latent_dim,
                  device="cpu")
 model.load_state_dict(torch.load(vae_model_name(
-    model_folder="../models",
+    model_folder="../models/trained_models",
     dicretize=dicretize,
     hidden_dim=hidden_dim,
     latent_dim=latent_dim,

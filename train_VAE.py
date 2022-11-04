@@ -44,7 +44,7 @@ def main():
     scale_factor = 10000
     model_type = "full_vae"
 
-    model_name = vae_model_name("./models", dicretize, hidden_dim, latent_dim, pooling_factor, scale_factor, model_type)
+    model_name = vae_model_name("./models/trained_models", dicretize, hidden_dim, latent_dim, pooling_factor, scale_factor, model_type)
     dataSet = WISDMDataset("data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=dicretize,
                            scaling_factor=scale_factor, data_set_size="single")
 
