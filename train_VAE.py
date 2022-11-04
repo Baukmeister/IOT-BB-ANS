@@ -35,7 +35,7 @@ def main():
     pooling_factor = 15
     input_dim = 3 * int(pooling_factor)
     hidden_dim = 32
-    latent_dim = 5
+    latent_dim = 15
     val_set_ratio = 0.00
     train_batch_size = 16
     dicretize = True
@@ -80,7 +80,7 @@ def main():
     trainDataLoader = data.DataLoader(train_set, batch_size=train_batch_size, shuffle=True, num_workers=1)
     valDataLoader = data.DataLoader(val_set)
 
-    trainer = pl.Trainer(limit_train_batches=1000000, max_epochs=8, accelerator='gpu', devices=1)
+    trainer = pl.Trainer(limit_train_batches=1000000, max_epochs=3, accelerator='gpu', devices=1)
     trainer.fit(model=model, train_dataloaders=trainDataLoader, val_dataloaders=valDataLoader)
     torch.save(model.state_dict(), model_name)
 

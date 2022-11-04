@@ -142,6 +142,8 @@ def gaussian_latent_cdf(mean, stdd, prior_prec, post_prec):
     return cdf
 
 
+# TODO: crazy mean and prior values are supplied here.
+# I think the means and priors should be from a N(0,1) distribution as they sample the latent!
 def gaussian_latent_ppf(mean, stdd, prior_prec, post_prec):
     def ppf(cf):
         x = norm.ppf((cf + 0.5) / (1 << post_prec), mean, stdd)

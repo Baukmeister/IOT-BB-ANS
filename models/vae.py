@@ -143,7 +143,7 @@ class VAE_full(pl.LightningModule):
         l = torch.sum(l.log_prob(x), dim=1)
         p_z = torch.sum(torch.distributions.Normal(0, 1).log_prob(z), dim=1)
         q_z = torch.sum(torch.distributions.Normal(mu, torch.clamp(torch.exp(log_var),1e-9)).log_prob(z), dim=1)
-        elbo = -torch.mean(l + p_z - q_z) * np.log2(np.e)
+        elbo = -torch.mean(l + p_z - q_z) * np.log2(np.e) / float(x.numel())
 
         self.log("Elbo Loss", elbo)
         return elbo

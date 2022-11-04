@@ -14,33 +14,44 @@ from util.io import vae_model_name
 
 rng = np.random.RandomState(0)
 
-prior_precision = 16
-q_precision = 16
+prior_precision = 25
+q_precision = 25
 
 batch_size = 1
 data_set_size = 1000
-pooling_factor = 1
-hidden_dim = 32
-latent_dim = 2
-discretize = True
-obs_precision = 20
+obs_precision = 25
 compress_lengths = []
+
+
+
+pooling_factor = 10
+input_dim = 3 * int(pooling_factor)
+hidden_dim = 32
+latent_dim = 5
+train_batch_size = 16
+dicretize = True
+scale_factor = 10000
+model_type = "full_vae"
+
 
 latent_shape = (batch_size, latent_dim)
 latent_size = np.prod(latent_shape)
 obs_shape = (batch_size, 3 * int(pooling_factor))
 obs_size = np.prod(obs_shape)
 
+
 ## Setup codecs
 # VAE codec
-model = VAE_full(n_features=3 * int(pooling_factor), batch_size=batch_size, hidden_size=hidden_dim, latent_size=latent_dim,
+model = VAE_full(n_features=3 * int(pooling_factor), scale_factor=scale_factor, hidden_size=hidden_dim, latent_size=latent_dim,
                  device="cpu")
 model.load_state_dict(torch.load(vae_model_name(
     model_folder="../models",
-    dicretize=discretize,
+    dicretize=dicretize,
     hidden_dim=hidden_dim,
     latent_dim=latent_dim,
-    pooling_factor=pooling_factor
+    pooling_factor=pooling_factor,
+    scale_factor=scale_factor,
+    model_type=model_type
 )))
 
 model.eval()
@@ -52,16 +63,18 @@ decoder_net = torch_fun_to_numpy_fun(model.decoder)
 # obs_codec is used to generate the likelihood function P(X|Z).
 # mean and stdd are for a distribution over the output X variable based on a specific z value!
 def obs_codec(res):
-    return cs.DiagGaussian_UnifBins(mean=res[0], stdd=res[1], bin_min=-20, bin_max=20, n_bins=1000, coding_prec=obs_precision)
-
+    #return cs.DiagGaussian_UnifBins(mean=res[0], stdd=res[1], bin_min=-20, bin_max=20, n_bins=1000, coding_prec=obs_precision)
+    #return cs.DiagGaussian_StdBins(mean=res[0], stdd=res[1], coding_prec=obs_precision, bin_prec=20)
+    return cs.Uniform(obs_precision)
 def vae_view(head):
     return ag_tuple((np.reshape(head[:latent_size], latent_shape),
                      np.reshape(head[latent_size:], obs_shape)))
 
 
 ## Load biometrics data
-data_set = WISDMDataset("../data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=discretize, scaling_factor=1)
+data_set = WISDMDataset("../data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=dicretize, scaling_factor=scale_factor)
 data_points_singles = [data_set.__getitem__(i).cpu().numpy() for i in range(data_set_size)]
+data_points_singles = abs(data_points_singles)
 num_batches = len(data_points_singles) // batch_size
 
 vae_append, vae_pop = cs.repeat(cs.substack(
