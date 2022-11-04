@@ -64,9 +64,9 @@ def beta_binomial_obs_pop(n, precision):
 
 def gaussian_obs_append(n, precision):
     def obs_append(params):
-        mean, log_var = params
+        mean, std = params
         def append(state, data):
-            return gaussian_append(mean, log_var, n, precision)(
+            return gaussian_append(mean, std, n, precision)(
                 state, np.int64(data))
         return append
     return obs_append

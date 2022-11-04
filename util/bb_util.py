@@ -348,7 +348,9 @@ def generate_beta_binomial_probs(a, b, n):
 
 def generate_gaussian_probs(mean, log_var, n):
     #TODO fix this
-    probs = np.arange(0, 1, 1 / 160)
+
+    #TODO CONTINUE WORK HERE
+    probs = np.arange(0, 1, 1 / n)
     return np.tile(probs, (10,24,1))
 
 
@@ -364,11 +366,11 @@ def beta_binomials_pop(a, b, n, precision):
     return categoricals_pop(probs, precision)
 
 
-def gaussian_append(mean, log_var, n, precision):
-    probs = generate_gaussian_probs(mean, log_var, n)
+def gaussian_append(mean, std, n, precision):
+    probs = generate_gaussian_probs(mean, std, n)
     return categoricals_append(probs, precision)
 
 
-def gaussian_pop(mean, log_var, n, precision):
-    probs = generate_gaussian_probs(mean, log_var, n)
+def gaussian_pop(mean, std, n, precision):
+    probs = generate_gaussian_probs(mean, std, n)
     return categoricals_pop(probs, precision)
