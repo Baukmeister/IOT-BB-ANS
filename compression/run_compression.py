@@ -14,22 +14,24 @@ from util.io import vae_model_name
 
 rng = np.random.RandomState(0)
 
-prior_precision = 25
-q_precision = 25
+prior_precision = 16
+q_precision = 16
 
 batch_size = 1
 data_set_size = 1000
-obs_precision = 25
+obs_precision = 27
 compress_lengths = []
 
-
-
-pooling_factor = 10
+# MODEL CONFIG
+pooling_factor = 15
 input_dim = 3 * int(pooling_factor)
 hidden_dim = 32
-latent_dim = 5
+latent_dim = 15
+val_set_ratio = 0.00
 train_batch_size = 16
 dicretize = True
+learning_rate = 0.001
+weight_decay = 0.01
 scale_factor = 10000
 model_type = "full_vae"
 
@@ -64,8 +66,8 @@ decoder_net = torch_fun_to_numpy_fun(model.decoder)
 # mean and stdd are for a distribution over the output X variable based on a specific z value!
 def obs_codec(res):
     #return cs.DiagGaussian_UnifBins(mean=res[0], stdd=res[1], bin_min=-20, bin_max=20, n_bins=1000, coding_prec=obs_precision)
-    #return cs.DiagGaussian_StdBins(mean=res[0], stdd=res[1], coding_prec=obs_precision, bin_prec=20)
-    return cs.Uniform(obs_precision)
+    return cs.DiagGaussian_StdBins(mean=res[0], stdd=res[1], coding_prec=obs_precision, bin_prec=20)
+    #return cs.Uniform(obs_precision)
 def vae_view(head):
     return ag_tuple((np.reshape(head[:latent_size], latent_shape),
                      np.reshape(head[latent_size:], obs_shape)))
@@ -74,7 +76,6 @@ def vae_view(head):
 ## Load biometrics data
 data_set = WISDMDataset("../data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=dicretize, scaling_factor=scale_factor)
 data_points_singles = [data_set.__getitem__(i).cpu().numpy() for i in range(data_set_size)]
-data_points_singles = abs(data_points_singles)
 num_batches = len(data_points_singles) // batch_size
 
 vae_append, vae_pop = cs.repeat(cs.substack(
@@ -101,7 +102,7 @@ print("All encoded in {:.2f}s.".format(encode_t))
 
 message_len = 32 * len(flat_message)
 print("Used {} bits.".format(message_len))
-print("This is {:.4f} bits per data_point.".format(message_len / len(data_points)))
+print("This is {:.4f} bits per data_point.".format(message_len / np.size(data_points)))
 
 ## Decode
 decode_t0 = time.time()

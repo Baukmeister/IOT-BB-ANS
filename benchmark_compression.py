@@ -16,15 +16,18 @@ def bench_compressor(compress_fun, decompress_fun, compressor_name, data_points)
     recon = np.ndarray(data_points.shape, np.uint8, decompress_fun(byts))
     assert np.equal(data_points, recon).all()
 
+
 def gzip_compress(data_points):
     original_size = np.size(data_points)
     assert data_points.dtype is np.dtype('uint8')
     return gzip.compress(data_points.tobytes())
 
+
 def bz2_compress(data_points):
     original_size = np.size(data_points)
     assert data_points.dtype is np.dtype('uint8')
     return bz2.compress(data_points.tobytes())
+
 
 def lzma_compress(data_points):
     original_size = np.size(data_points)
@@ -34,9 +37,9 @@ def lzma_compress(data_points):
 
 if __name__ == "__main__":
     # Biometrics data
-    dataSet = WISDMDataset("data/wisdm-dataset/raw", pooling_factor=1, discretize=True, scaling_factor=1).WISDMdf.to_numpy().astype(np.uint8)
-    bench_compressor(gzip_compress, gzip.decompress, "gzip", dataSet)
-    bench_compressor(bz2_compress, bz2.decompress, "bz2", dataSet)
-    bench_compressor(lzma_compress, lzma.decompress, "lzma", dataSet)
-
-
+    data_set_size = 600
+    dataSet = WISDMDataset("data/wisdm-dataset/raw", pooling_factor=15, discretize=True, scaling_factor=10000)
+    data = np.array([dataSet.__getitem__(i).cpu().numpy() for i in range(data_set_size)]).astype("uint8")
+    bench_compressor(gzip_compress, gzip.decompress, "gzip", data)
+    bench_compressor(bz2_compress, bz2.decompress, "bz2", data)
+    bench_compressor(lzma_compress, lzma.decompress, "lzma", data)
