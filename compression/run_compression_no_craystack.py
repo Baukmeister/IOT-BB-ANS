@@ -19,7 +19,7 @@ bernoulli_precision = 16
 q_precision = 8
 
 batch_size = 1
-data_set_size = 600
+data_set_size = 100
 obs_precision = 16
 
 # MODEL CONFIG
@@ -32,7 +32,7 @@ train_batch_size = 16
 dicretize = True
 learning_rate = 0.001
 weight_decay = 0.01
-scale_factor = 10000
+scale_factor = 100
 shift = True
 model_type = "full_vae"
 
