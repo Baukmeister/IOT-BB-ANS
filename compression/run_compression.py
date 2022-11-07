@@ -30,9 +30,9 @@ latent_dim = 15
 val_set_ratio = 0.00
 train_batch_size = 16
 dicretize = True
-learning_rate = 0.0001
-weight_decay = 0.02
-scale_factor = 10000
+learning_rate = 0.001
+weight_decay = 0.01
+scale_factor = 100
 shift = True
 model_type = "full_vae"
 
@@ -68,7 +68,7 @@ decoder_net = torch_fun_to_numpy_fun(model.decoder)
 # mean and stdd are for a distribution over the output X variable based on a specific z value!
 def obs_codec(res):
     #return cs.DiagGaussian_UnifBins(mean=res[0], stdd=res[1], bin_min=-20, bin_max=20, n_bins=1000, coding_prec=obs_precision)
-    return cs.DiagGaussian_StdBins(mean=res[0], stdd=res[1], coding_prec=obs_precision, bin_prec=20)
+    return cs.DiagGaussian_UnifBins(mean=res[0], stdd=res[1], bin_min=0, bin_max=16000, coding_prec=obs_precision, n_bins=100000)
     #return cs.Uniform(obs_precision)
 def vae_view(head):
     return ag_tuple((np.reshape(head[:latent_size], latent_shape),
