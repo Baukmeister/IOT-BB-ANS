@@ -7,7 +7,6 @@ from util.WIDSMDataLoader import WISDMDataset
 from util.io import vae_model_name
 
 
-
 def test_model(loss, dataLoader, model):
     targets = []
     preds = []
@@ -41,12 +40,14 @@ def main():
     dicretize = True
     learning_rate = 0.001
     weight_decay = 0.01
-    scale_factor = 10000
+    scale_factor = 100
+    shift = True
     model_type = "full_vae"
 
-    model_name = vae_model_name("./models/trained_models", dicretize, hidden_dim, latent_dim, pooling_factor, scale_factor, model_type)
+    model_name = vae_model_name("./models/trained_models", dicretize, hidden_dim, latent_dim, pooling_factor,
+                                scale_factor, model_type, shift)
     dataSet = WISDMDataset("data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=dicretize,
-                           scaling_factor=scale_factor, data_set_size="single")
+                           scaling_factor=scale_factor, shift=True, data_set_size="all")
 
     valSetSize = int(len(dataSet) * val_set_ratio)
     trainSetSize = len(dataSet) - valSetSize

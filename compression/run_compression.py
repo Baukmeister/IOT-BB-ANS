@@ -30,9 +30,10 @@ latent_dim = 15
 val_set_ratio = 0.00
 train_batch_size = 16
 dicretize = True
-learning_rate = 0.001
-weight_decay = 0.01
+learning_rate = 0.0001
+weight_decay = 0.02
 scale_factor = 10000
+shift = True
 model_type = "full_vae"
 
 
@@ -53,7 +54,8 @@ model.load_state_dict(torch.load(vae_model_name(
     latent_dim=latent_dim,
     pooling_factor=pooling_factor,
     scale_factor=scale_factor,
-    model_type=model_type
+    model_type=model_type,
+    shift=shift
 )))
 
 model.eval()
@@ -74,7 +76,7 @@ def vae_view(head):
 
 
 ## Load biometrics data
-data_set = WISDMDataset("../data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=dicretize, scaling_factor=scale_factor)
+data_set = WISDMDataset("../data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=dicretize, scaling_factor=scale_factor, shift=shift)
 data_points_singles = [data_set.__getitem__(i).cpu().numpy() for i in range(data_set_size)]
 num_batches = len(data_points_singles) // batch_size
 

@@ -346,15 +346,20 @@ def generate_beta_binomial_probs(a, b, n):
     return probs / np.sum(probs, axis=-1, keepdims=True)
 
 
-def generate_gaussian_probs(mean, log_var, n):
+def generate_gaussian_probs(mean, std, n):
     #TODO fix this
 
     #TODO --> CONTINUE WORK HERE <--
 
     # 1. Figure out what these probs are exactly used for and how to generate it
+    dims = mean.shape[1]
+    vals = np.transpose(np.tile(np.arange(n), (dims, 1)))
 
-    probs = np.arange(0, 1, 1 / n)
-    return np.tile(probs, (10,24,1))
+
+    probs = np.transpose(norm.pdf(vals, mean, std))
+    probs = np.expand_dims(probs, axis=0)
+    probs = np.clip(probs, 1e-10, 1.)
+    return probs / np.sum(probs, axis=-1, keepdims=True)
 
 
 def beta_binomials_append(a, b, n, precision):

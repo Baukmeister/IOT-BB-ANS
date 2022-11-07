@@ -16,7 +16,7 @@ class WISDMDataset(Dataset):
     def __len__(self) -> int:
         return self.WISDMdf.shape[0] // self.pooling_factor
 
-    def __init__(self, path, pooling_factor=1, discretize=False, scaling_factor=1000, data_set_size="single") -> None:
+    def __init__(self, path, pooling_factor=1, discretize=False, scaling_factor=1000, shift=False, data_set_size="single") -> None:
 
         self.pooling_factor = pooling_factor
         self.discretize = discretize
@@ -48,6 +48,14 @@ class WISDMDataset(Dataset):
 
         self._load()
 
+        if (shift):
+            mins = abs(self.WISDMdf.min())
+
+            self.WISDMdf['x'] += mins['x']
+            self.WISDMdf['y'] += mins['y']
+            self.WISDMdf['z'] += mins['z']
+
+        print()
     def _load(self):
 
         for path in self.paths:
