@@ -81,7 +81,7 @@ def main():
     trainDataLoader = data.DataLoader(train_set, batch_size=train_batch_size, shuffle=True, num_workers=1)
     valDataLoader = data.DataLoader(val_set)
 
-    trainer = pl.Trainer(limit_train_batches=1000000, max_epochs=3, accelerator='gpu', devices=1)
+    trainer = pl.Trainer(limit_train_batches=1000000, max_epochs=1, accelerator='gpu', devices=1)
     trainer.fit(model=model, train_dataloaders=trainDataLoader, val_dataloaders=valDataLoader)
     torch.save(model.state_dict(), model_name)
 
