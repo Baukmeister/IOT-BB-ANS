@@ -38,9 +38,9 @@ def main():
     val_set_ratio = 0.00
     train_batch_size = 16
     dicretize = True
-    learning_rate = 0.00001
-    weight_decay = 0.00
-    scale_factor = 100
+    learning_rate = 0.01
+    weight_decay = 0.001
+    scale_factor = 1000
     shift = True
     model_type = "full_vae"
     data_set_type = "accel"

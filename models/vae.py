@@ -81,17 +81,6 @@ class VAE_full(pl.LightningModule):
         self.encoder = Encoder(D_in=n_features, H=hidden_size, latent_size=latent_size).to(device)
         self.decoder = Decoder(D_in=latent_size, H=hidden_size, D_out=n_features, scale_factor=scale_factor).to(device)
         self.to(device)
-
-    def gaussian_likelihood(self, mean, std, x):
-
-        dist = torch.distributions.Normal(mean, std)
-
-        # measure prob of seeing data under p(x|z)
-        log_pxz = dist.log_prob(x)
-        # adapt these dimensions
-        output = log_pxz.sum(1)
-        return output
-
     def kl_divergence(self, z, mu, std):
 
         # --------------------------
@@ -138,11 +127,53 @@ class VAE_full(pl.LightningModule):
         dist = torch.distributions.Normal(dec_mu, dec_std)
         l = torch.sum(dist.log_prob(x), dim=1)
         p_z = torch.sum(torch.distributions.Normal(0, 1).log_prob(z), dim=1)
-        q_z = torch.sum(torch.distributions.Normal(mu, torch.clamp(std, 1e-9)).log_prob(z), dim=1)
+        q_z = torch.sum(torch.distributions.Normal(mu, std, 1e-9).log_prob(z), dim=1)
+
+        kl = p_z - q_z
+
         elbo = -torch.mean(l + p_z - q_z) * np.log2(np.e) / float(x.numel())
 
         self.log("Elbo Loss", elbo)
+        alt_elbo, alt_kl, alt_recon = self.alternate_loss(x)
         return elbo
+
+    def gaussian_likelihood(self, x_hat, scale, x):
+        mean = x_hat
+        dist = torch.distributions.Normal(mean, scale)
+
+        # measure prob of seeing image under p(x|z)
+        log_pxz = dist.log_prob(x)
+        return log_pxz.sum()
+    def alternate_loss(self, x):
+
+        mu, std = self.encoder(x)
+        z = self.reparameterize(mu, std)
+
+        dec_mu, dec_std = self.decoder(z)
+
+        p = torch.distributions.Normal(torch.zeros_like(mu), torch.ones_like(std))
+        q = torch.distributions.Normal(mu, std)
+
+        # 2. get the probabilities from the equation
+        log_qzx = q.log_prob(z)
+        log_pz = p.log_prob(z)
+
+        # kl
+        kl = (log_qzx - log_pz)
+        kl = kl.sum(-1)
+
+        distribution = torch.distributions.Normal(dec_mu, torch.clamp(dec_std, 1e-7))
+        x_hat = distribution.sample()
+
+        # reconstruction loss
+        log_scale = torch.Tensor([0.0]).to(self.device)
+        recon_loss = self.gaussian_likelihood(dec_mu, dec_std, x)
+
+        # elbo
+        elbo = (kl - recon_loss)
+        elbo = elbo.mean()
+
+        return elbo, kl, recon_loss
 
     def forward(self, x_inputs):
 
