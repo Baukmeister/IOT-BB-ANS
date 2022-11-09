@@ -39,10 +39,10 @@ def main():
     val_set_ratio = 0.00
     train_batch_size = 16
     dicretize = True
-    learning_rate = 0.001
-    weight_decay = 0.001
+    learning_rate = 0.0001
+    weight_decay = 0.00001
     scale_factor = 1000
-    shift = False
+    shift = True
     model_type = "full_vae"
     data_set_type = "accel"
 
@@ -83,7 +83,7 @@ def main():
     trainDataLoader = data.DataLoader(train_set, batch_size=train_batch_size, shuffle=True, num_workers=1)
     valDataLoader = data.DataLoader(val_set)
 
-    trainer = pl.Trainer(limit_train_batches=1000000, max_epochs=5, accelerator='gpu', devices=1)
+    trainer = pl.Trainer(limit_train_batches=1000000, max_epochs=3, accelerator='gpu', devices=1)
     trainer.fit(model=model, train_dataloaders=trainDataLoader, val_dataloaders=valDataLoader)
     torch.save(model.state_dict(), model_name)
 

@@ -125,6 +125,9 @@ class VAE_full(pl.LightningModule):
 
         dec_mu, dec_std = self.decoder(z)
 
+        self.log("Decoder MU - mean", torch.mean(dec_mu))
+        self.log("Decoder STD - mean", torch.mean(dec_std))
+
         l = torch.distributions.Normal(dec_mu, dec_std)
         l = torch.sum(l.log_prob(x), dim=1)
         p_z = torch.sum(torch.distributions.Normal(0, 1).log_prob(z), dim=1)
@@ -133,6 +136,7 @@ class VAE_full(pl.LightningModule):
 
         self.log("Elbo Loss", elbo)
         return elbo
+        #return self.mse_loss(x, dec_mu, dec_std)
 
     def forward(self, x_inputs):
 
@@ -149,8 +153,6 @@ class VAE_full(pl.LightningModule):
         loss = self.loss(batch)
 
         if batch_idx % 500 == 0:
-            self.log(f'\n[batch: {batch_idx}]\ntraining loss', round(loss.item(), 5))
-
             distribution = torch.distributions.Normal(mean, torch.clamp(std, 1e-7))
             outputs = distribution.sample()
 
