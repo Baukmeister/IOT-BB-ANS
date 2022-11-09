@@ -34,20 +34,21 @@ def main():
     pooling_factor = 15
     input_dim = 3 * int(pooling_factor)
     hidden_dim = 32
-    latent_dim = 15
+    latent_dim = 10
     val_set_ratio = 0.00
     train_batch_size = 16
     dicretize = True
-    learning_rate = 0.001
-    weight_decay = 0.01
+    learning_rate = 0.00001
+    weight_decay = 0.00
     scale_factor = 100
     shift = True
     model_type = "full_vae"
+    data_set_type = "accel"
 
     model_name = vae_model_name("./models/trained_models", dicretize, hidden_dim, latent_dim, pooling_factor,
-                                scale_factor, model_type, shift)
+                                scale_factor, model_type, shift, data_set_type)
     dataSet = WISDMDataset("data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=dicretize,
-                           scaling_factor=scale_factor, shift=True, data_set_size="all")
+                           scaling_factor=scale_factor, shift=True, data_set_size=data_set_type)
 
     valSetSize = int(len(dataSet) * val_set_ratio)
     trainSetSize = len(dataSet) - valSetSize
@@ -81,7 +82,7 @@ def main():
     trainDataLoader = data.DataLoader(train_set, batch_size=train_batch_size, shuffle=True, num_workers=1)
     valDataLoader = data.DataLoader(val_set)
 
-    trainer = pl.Trainer(limit_train_batches=1000000, max_epochs=1, accelerator='gpu', devices=1)
+    trainer = pl.Trainer(limit_train_batches=1000000, max_epochs=5, accelerator='gpu', devices=1)
     trainer.fit(model=model, train_dataloaders=trainDataLoader, val_dataloaders=valDataLoader)
     torch.save(model.state_dict(), model_name)
 

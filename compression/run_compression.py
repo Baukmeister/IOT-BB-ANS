@@ -18,8 +18,8 @@ prior_precision = 16
 q_precision = 16
 
 batch_size = 1
-data_set_size = 1000
-obs_precision = 27
+data_set_size = 10000
+obs_precision = 16
 compress_lengths = []
 
 # MODEL CONFIG
@@ -28,13 +28,14 @@ input_dim = 3 * int(pooling_factor)
 hidden_dim = 32
 latent_dim = 15
 val_set_ratio = 0.00
-train_batch_size = 16
+train_batch_size = 8
 dicretize = True
 learning_rate = 0.001
 weight_decay = 0.01
 scale_factor = 100
 shift = True
 model_type = "full_vae"
+data_set_type = "accel"
 
 latent_shape = (batch_size, latent_dim)
 latent_size = np.prod(latent_shape)
@@ -54,7 +55,8 @@ model.load_state_dict(torch.load(vae_model_name(
     pooling_factor=pooling_factor,
     scale_factor=scale_factor,
     model_type=model_type,
-    shift=shift
+    shift=shift,
+    data_set_type=data_set_type
 )))
 
 model.eval()
@@ -68,7 +70,7 @@ decoder_net = torch_fun_to_numpy_fun(model.decoder)
 def obs_codec(res):
     # return cs.DiagGaussian_StdBins(mean=res[0], stdd=res[1], coding_prec=obs_precision, bin_prec=16)
     # return cs.DiagGaussian_GaussianBins(mean=res[0], stdd=res[1],bin_mean=res[0], bin_stdd=res[1], coding_prec=obs_precision, bin_prec=16)
-    return cs.DiagGaussian_UnifBins(mean=res[0], stdd=res[1], bin_min=0, bin_max=16000, coding_prec=obs_precision, n_bins=160000)
+    return cs.DiagGaussian_UnifBins(mean=res[0], stdd=res[1], bin_min=0, bin_max=16000, coding_prec=obs_precision, n_bins=16000)
 
 
 def vae_view(head):

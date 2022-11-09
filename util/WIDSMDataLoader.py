@@ -43,6 +43,10 @@ class WISDMDataset(Dataset):
             self.paths = [self.phone_accel_path]
         elif self.data_set_size == "all":
             self.paths = [self.phone_accel_path, self.phone_gyro_path, self.watch_accel_path, self.watch_gyro_path]
+        elif self.data_set_size == "gyro":
+            self.paths = [self.phone_gyro_path, self.watch_gyro_path]
+        elif self.data_set_size == "accel":
+            self.paths = [self.phone_accel_path, self.watch_accel_path]
         else:
             raise ValueError(f"Invalid size option: {self.data_set_size}")
 

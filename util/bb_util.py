@@ -357,9 +357,11 @@ def generate_gaussian_probs(mean, std, n):
 
 
     probs = np.transpose(norm.pdf(vals, mean, std))
+    probs = np.concatenate([np.ones(dims).reshape(-1, 1), probs], axis=1)
     probs = np.expand_dims(probs, axis=0)
     probs = np.clip(probs, 1e-10, 1.)
-    #TODO ones column
+
+
     return probs / np.sum(probs, axis=-1, keepdims=True)
 
 

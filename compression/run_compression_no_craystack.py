@@ -19,7 +19,7 @@ bernoulli_precision = 16
 q_precision = 8
 
 batch_size = 1
-data_set_size = 100
+data_set_size = 75
 obs_precision = 16
 
 # MODEL CONFIG
@@ -35,6 +35,7 @@ weight_decay = 0.01
 scale_factor = 100
 shift = True
 model_type = "full_vae"
+data_set_type = "accel"
 
 compress_lengths = []
 
@@ -56,7 +57,8 @@ model.load_state_dict(torch.load(vae_model_name(
     pooling_factor=pooling_factor,
     scale_factor=scale_factor,
     model_type=model_type,
-    shift=shift
+    shift=shift,
+    data_set_type=data_set_type
 )))
 
 model.eval()
@@ -70,8 +72,8 @@ data_set = WISDMDataset("../data/wisdm-dataset/raw", pooling_factor=pooling_fact
 data_points_singles = [data_set.__getitem__(i).cpu().numpy() for i in range(data_set_size)]
 num_batches = len(data_points_singles) // batch_size
 
-obs_append = tvae_utils.gaussian_obs_append(15695, obs_precision)
-obs_pop = tvae_utils.gaussian_obs_pop(15695, obs_precision)
+obs_append = tvae_utils.gaussian_obs_append(160 * scale_factor, obs_precision)
+obs_pop = tvae_utils.gaussian_obs_pop(160 * scale_factor, obs_precision)
 
 vae_append = bb_util.vae_append(latent_shape, gen_net, rec_net, obs_append,
                                 prior_precision, q_precision)

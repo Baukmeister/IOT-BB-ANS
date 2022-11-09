@@ -135,8 +135,8 @@ class VAE_full(pl.LightningModule):
 
         dec_mu, dec_std = self.decoder(z)
 
-        l = torch.distributions.Normal(dec_mu, dec_std)
-        l = torch.sum(l.log_prob(x), dim=1)
+        dist = torch.distributions.Normal(dec_mu, dec_std)
+        l = torch.sum(dist.log_prob(x), dim=1)
         p_z = torch.sum(torch.distributions.Normal(0, 1).log_prob(z), dim=1)
         q_z = torch.sum(torch.distributions.Normal(mu, torch.clamp(std, 1e-9)).log_prob(z), dim=1)
         elbo = -torch.mean(l + p_z - q_z) * np.log2(np.e) / float(x.numel())
