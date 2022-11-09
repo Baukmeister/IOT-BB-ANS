@@ -52,14 +52,13 @@ class WISDMDataset(Dataset):
 
         self._load()
 
-        if (shift):
+        if shift:
             mins = abs(self.WISDMdf.min())
 
             self.WISDMdf['x'] += mins['x']
             self.WISDMdf['y'] += mins['y']
             self.WISDMdf['z'] += mins['z']
 
-        print()
     def _load(self):
 
         for path in self.paths:

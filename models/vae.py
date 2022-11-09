@@ -47,7 +47,8 @@ class Decoder(torch.nn.Module):
         self.fc3 = torch.nn.Linear(H, H)
         self.fc4 = torch.nn.Linear(H, H)
         self.fc5 = torch.nn.Linear(H, H)
-        self.output_linear = torch.nn.Linear(H, D_out * 2)
+        self.output_mu = torch.nn.Linear(H, D_out)
+        self.output_log_var = torch.nn.Linear(H, D_out)
 
     def forward(self, z):
         x = F.relu(self.bn(self.linear1(z)))
@@ -56,10 +57,10 @@ class Decoder(torch.nn.Module):
         x = F.relu(self.fc3(x))
         x = F.relu(self.fc4(x))
         x = F.relu(self.fc5(x))
-        x = self.output_linear(x)
-        mean, log_var = torch.split(x, self.D_out, dim=1)
+        mu = self.output_mu(x)
+        log_var = self.output_log_var(x)
 
-        return mean, torch.exp(log_var)
+        return mu, torch.exp(log_var)
 
 
 # TODO: Figure out why the predictions seem to be very clustered around 0
@@ -81,6 +82,7 @@ class VAE_full(pl.LightningModule):
         self.encoder = Encoder(D_in=n_features, H=hidden_size, latent_size=latent_size).to(device)
         self.decoder = Decoder(D_in=latent_size, H=hidden_size, D_out=n_features, scale_factor=scale_factor).to(device)
         self.to(device)
+
     def kl_divergence(self, z, mu, std):
 
         # --------------------------
@@ -101,7 +103,6 @@ class VAE_full(pl.LightningModule):
         return kl.mean()
 
     def reparameterize(self, mu, std):
-
 
         if self.training:
             eps = torch.randn_like(std)
@@ -124,56 +125,14 @@ class VAE_full(pl.LightningModule):
 
         dec_mu, dec_std = self.decoder(z)
 
-        dist = torch.distributions.Normal(dec_mu, dec_std)
-        l = torch.sum(dist.log_prob(x), dim=1)
+        l = torch.distributions.Normal(dec_mu, dec_std)
+        l = torch.sum(l.log_prob(x), dim=1)
         p_z = torch.sum(torch.distributions.Normal(0, 1).log_prob(z), dim=1)
-        q_z = torch.sum(torch.distributions.Normal(mu, std, 1e-9).log_prob(z), dim=1)
-
-        kl = p_z - q_z
-
+        q_z = torch.sum(torch.distributions.Normal(mu, torch.clamp(std, 1e-9)).log_prob(z), dim=1)
         elbo = -torch.mean(l + p_z - q_z) * np.log2(np.e) / float(x.numel())
 
         self.log("Elbo Loss", elbo)
-        alt_elbo, alt_kl, alt_recon = self.alternate_loss(x)
         return elbo
-
-    def gaussian_likelihood(self, x_hat, scale, x):
-        mean = x_hat
-        dist = torch.distributions.Normal(mean, scale)
-
-        # measure prob of seeing image under p(x|z)
-        log_pxz = dist.log_prob(x)
-        return log_pxz.sum()
-    def alternate_loss(self, x):
-
-        mu, std = self.encoder(x)
-        z = self.reparameterize(mu, std)
-
-        dec_mu, dec_std = self.decoder(z)
-
-        p = torch.distributions.Normal(torch.zeros_like(mu), torch.ones_like(std))
-        q = torch.distributions.Normal(mu, std)
-
-        # 2. get the probabilities from the equation
-        log_qzx = q.log_prob(z)
-        log_pz = p.log_prob(z)
-
-        # kl
-        kl = (log_qzx - log_pz)
-        kl = kl.sum(-1)
-
-        distribution = torch.distributions.Normal(dec_mu, torch.clamp(dec_std, 1e-7))
-        x_hat = distribution.sample()
-
-        # reconstruction loss
-        log_scale = torch.Tensor([0.0]).to(self.device)
-        recon_loss = self.gaussian_likelihood(dec_mu, dec_std, x)
-
-        # elbo
-        elbo = (kl - recon_loss)
-        elbo = elbo.mean()
-
-        return elbo, kl, recon_loss
 
     def forward(self, x_inputs):
 
