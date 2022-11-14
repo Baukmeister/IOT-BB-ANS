@@ -23,14 +23,14 @@ obs_precision = 24
 compress_lengths = []
 
 # MODEL CONFIG
-pooling_factor = 10
+pooling_factor = 20
 input_dim = 3 * int(pooling_factor)
 hidden_dim = 32
-latent_dim = 5
+latent_dim = 30
 val_set_ratio = 0.00
 train_batch_size = 16
 dicretize = True
-learning_rate = 0.001
+learning_rate = 0.0001
 weight_decay = 0.00001
 scale_factor = 1000
 shift = True

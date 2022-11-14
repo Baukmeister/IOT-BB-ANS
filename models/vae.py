@@ -66,7 +66,8 @@ class Decoder(torch.nn.Module):
 # TODO: Figure out why the predictions seem to be very clustered around 0
 # Seems like eiter mean or scale are screwed (not the same for each iteration)
 class VAE_full(pl.LightningModule):
-    def __init__(self, n_features, scale_factor, hidden_size, latent_size, device=None, lr=0.001, wc=0):
+    def __init__(self, n_features, scale_factor, hidden_size, latent_size, device=None, lr=0.001, wc=0,
+                 plot_preds=True):
         super(VAE_full, self).__init__()
         if self.device is None and torch.cuda.is_available():
             device = "cuda"
@@ -76,6 +77,7 @@ class VAE_full(pl.LightningModule):
         self.lr = lr
         self.wc = wc
         self.scale_factor = scale_factor
+        self.plot_preds = plot_preds
 
         print(f"Using: {self.device}")
         self.n_features = n_features
@@ -136,7 +138,7 @@ class VAE_full(pl.LightningModule):
 
         self.log("Elbo Loss", elbo)
         return elbo
-        #return self.mse_loss(x, dec_mu, dec_std)
+        # return self.mse_loss(x, dec_mu, dec_std)
 
     def forward(self, x_inputs):
 
@@ -152,7 +154,7 @@ class VAE_full(pl.LightningModule):
         mean, std = self.forward(batch)
         loss = self.loss(batch)
 
-        if batch_idx % 500 == 0:
+        if self.plot_preds and batch_idx % 500 == 0:
             distribution = torch.distributions.Normal(mean, torch.clamp(std, 1e-7))
             outputs = distribution.sample()
 

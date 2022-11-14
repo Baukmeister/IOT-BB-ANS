@@ -1,44 +1,18 @@
 from torch.utils import data
 
-from models.model_util import plot_prediction
 from models.vae import *
 from models.vanilla_vae import *
-from util.WIDSMDataLoader import WISDMDataset
-from util.io import vae_model_name
-
-
-
-def test_model(loss, dataLoader, model):
-    targets = []
-    preds = []
-    losses = []
-
-    for data in dataLoader:
-        output, mean, log_var, z = model(data)
-
-        targets.append(data)
-        preds.append(output)
-        losses.append(loss.item())
-
-    mean_loss = sum(losses) / len(losses)
-    # plot preds and targets
-    plot_prediction(preds, targets)
-
-    # print test loss
-    print(f"\nMean test set loss: {mean_loss}")
-
-    return mean_loss
+from util.SimpleDataLoader import SimpleDataSet
 
 
 def main():
     # CONFIG
     pooling_factor = 5
-    input_dim = 3 * int(pooling_factor)
+    input_dim = 1 * int(pooling_factor)
     hidden_dim = 32
-    latent_dim = 10
+    latent_dim = 1
     val_set_ratio = 0.00
     train_batch_size = 16
-    dicretize = True
     learning_rate = 0.0001
     weight_decay = 0.00001
     scale_factor = 1000
@@ -46,11 +20,8 @@ def main():
     model_type = "full_vae"
     data_set_type = "accel"
 
-    model_name = vae_model_name("./models/trained_models", dicretize, hidden_dim, latent_dim, pooling_factor,
-                                scale_factor, model_type, shift, data_set_type)
-    dataSet = WISDMDataset("data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=dicretize,
-                           scaling_factor=scale_factor, shift=shift, data_set_size=data_set_type)
-
+    model_name = "./models/simple/trained_models/simple_model"
+    dataSet = SimpleDataSet(pooling_factor=pooling_factor, data_set_size=int(1e7))
     valSetSize = int(len(dataSet) * val_set_ratio)
     trainSetSize = len(dataSet) - valSetSize
     train_set, val_set = data.random_split(dataSet, [trainSetSize, valSetSize])
@@ -61,7 +32,8 @@ def main():
         hidden_size=hidden_dim,
         latent_size=latent_dim,
         lr=learning_rate,
-        wc=weight_decay
+        wc=weight_decay,
+        plot_preds=False
     )
 
     vanilla_vae = Vanilla_VAE(
