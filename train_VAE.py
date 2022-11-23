@@ -1,3 +1,4 @@
+from pytorch_lightning.profilers import SimpleProfiler, AdvancedProfiler, PyTorchProfiler
 from torch.utils import data
 
 from models.model_util import plot_prediction
@@ -39,7 +40,7 @@ def main():
     val_set_ratio = 0.00
     train_batch_size = 16
     dicretize = True
-    learning_rate = 0.0001
+    learning_rate = 0.00
     weight_decay = 0.00001
     scale_factor = 1000
     shift = True
@@ -83,7 +84,10 @@ def main():
     trainDataLoader = data.DataLoader(train_set, batch_size=train_batch_size, shuffle=True, num_workers=1)
     valDataLoader = data.DataLoader(val_set)
 
-    trainer = pl.Trainer(limit_train_batches=1000000, max_epochs=2, accelerator='gpu', devices=1)
+    # profiler = SimpleProfiler()
+    profiler = PyTorchProfiler()
+
+    trainer = pl.Trainer(limit_train_batches=10000, max_epochs=1, accelerator='gpu', devices=1, profiler=profiler)
     trainer.fit(model=model, train_dataloaders=trainDataLoader, val_dataloaders=valDataLoader)
     torch.save(model.state_dict(), model_name)
 

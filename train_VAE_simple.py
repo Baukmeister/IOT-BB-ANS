@@ -15,20 +15,17 @@ def main():
     train_batch_size = 16
     learning_rate = 0.0001
     weight_decay = 0.00001
-    scale_factor = 1000
-    shift = True
     model_type = "full_vae"
-    data_set_type = "accel"
 
     model_name = "./models/simple/trained_models/simple_model"
-    dataSet = SimpleDataSet(pooling_factor=pooling_factor, data_set_size=int(1e7))
+    dataSet = SimpleDataSet(pooling_factor=pooling_factor, data_set_size=int(1e6))
     valSetSize = int(len(dataSet) * val_set_ratio)
     trainSetSize = len(dataSet) - valSetSize
     train_set, val_set = data.random_split(dataSet, [trainSetSize, valSetSize])
 
     vae = VAE_full(
         n_features=input_dim,
-        scale_factor=scale_factor,
+        scale_factor=1,
         hidden_size=hidden_dim,
         latent_size=latent_dim,
         lr=learning_rate,
@@ -38,7 +35,7 @@ def main():
 
     vanilla_vae = Vanilla_VAE(
         n_features=input_dim,
-        scale_factor=scale_factor,
+        scale_factor=1,
         hidden_dims=None,
         latent_dim=latent_dim,
         lr=learning_rate,
