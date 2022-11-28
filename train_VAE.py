@@ -8,29 +8,6 @@ from util.WIDSMDataLoader import WISDMDataset
 from util.io import vae_model_name
 
 
-
-def test_model(loss, dataLoader, model):
-    targets = []
-    preds = []
-    losses = []
-
-    for data in dataLoader:
-        output, mean, log_var, z = model(data)
-
-        targets.append(data)
-        preds.append(output)
-        losses.append(loss.item())
-
-    mean_loss = sum(losses) / len(losses)
-    # plot preds and targets
-    plot_prediction(preds, targets)
-
-    # print test loss
-    print(f"\nMean test set loss: {mean_loss}")
-
-    return mean_loss
-
-
 def main():
     # CONFIG
     pooling_factor = 5
@@ -50,7 +27,7 @@ def main():
     model_name = vae_model_name("./models/trained_models", dicretize, hidden_dim, latent_dim, pooling_factor,
                                 scale_factor, model_type, shift, data_set_type)
     dataSet = WISDMDataset("data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=dicretize,
-                           scaling_factor=scale_factor, shift=shift, data_set_size=data_set_type)
+                           scaling_factor=scale_factor, shift=shift, data_set_size=data_set_type, caching=True)
 
     valSetSize = int(len(dataSet) * val_set_ratio)
     trainSetSize = len(dataSet) - valSetSize
@@ -84,10 +61,10 @@ def main():
     trainDataLoader = data.DataLoader(train_set, batch_size=train_batch_size, shuffle=True, num_workers=1)
     valDataLoader = data.DataLoader(val_set)
 
-    # profiler = SimpleProfiler()
-    profiler = PyTorchProfiler()
+    profiler = SimpleProfiler()
+    #profiler = PyTorchProfiler()
 
-    trainer = pl.Trainer(limit_train_batches=10000, max_epochs=1, accelerator='gpu', devices=1, profiler=profiler)
+    trainer = pl.Trainer(limit_train_batches=1000000, max_epochs=1, accelerator='gpu', devices=1, profiler=profiler)
     trainer.fit(model=model, train_dataloaders=trainDataLoader, val_dataloaders=valDataLoader)
     torch.save(model.state_dict(), model_name)
 
