@@ -1,5 +1,6 @@
 import os
 import pickle
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -12,18 +13,18 @@ class WISDMDataset(Dataset):
 
     def __getitem__(self, index) -> T_co:
         if not self.caching:
-            item = torch.tensor(self.WISDMdf.iloc[index:index + self.pooling_factor, 2:5].values.flatten()).float()
+            item = self.WISDMdf.iloc[index:index + self.pooling_factor, 2:5].values.flatten()
         else:
-            item = self.cached_data_samples[index]
+            with open(self._cached_file_name(index), "rb") as f:
+                item = pickle.load(f)
 
-        return item.to(self.device)
+        return torch.tensor(item).float().to(self.device)
 
     def __len__(self) -> int:
         if self.caching:
-            return len(self.cached_data_samples)
+            return len(self.cached_file_list)
         else:
             return self.WISDMdf.shape[0] // self.pooling_factor
-
 
     def __init__(self, path, pooling_factor=1, discretize=False, scaling_factor=1000, shift=False,
                  data_set_size="single", caching=True) -> None:
@@ -33,10 +34,11 @@ class WISDMDataset(Dataset):
         self.scaling_factor = scaling_factor
         self.path = path
         self.caching = caching
-        self.pkl_name = f"pf_{pooling_factor}disc_{discretize}scale_{scaling_factor}shift_{shift}ds_{data_set_size}.pkl"
-        self.pkl_path = f"{self.path}/{self.pkl_name}"
+        self.pkl_name = f"pf_{pooling_factor}-disc_{discretize}-scale_{scaling_factor}-shift_{shift}-ds_{data_set_size}"
+        self.pkl_path = f"{self.path}/cache/{self.pkl_name}"
         self.data_set_size = data_set_size
         self.columns = ['user', 'time', 'x', 'y', 'z']
+        self.shift = shift
 
         self.phone_accel_path = f"{self.path}/phone/accel"
         self.phone_gyro_path = f"{self.path}/phone/gyro"
@@ -65,24 +67,19 @@ class WISDMDataset(Dataset):
             raise ValueError(f"Invalid size option: {self.data_set_size}")
 
         if self.caching and os.path.exists(self.pkl_path):
-            print("\nLoading cached data samples ...")
-            with open(self.pkl_path, 'rb') as f:
-                self.cached_data_samples = pickle.load(f)
+            print("\nSkip data loading in favour of caching ...")
         else:
-            self._load()
-            if self.caching:
-                self._set_up_cache()
-                with open(self.pkl_path, 'wb') as f:
-                    pickle.dump(self.cached_data_samples, f)
+            self._load(caching=self.caching)
 
-        if shift:
-            mins = abs(self.WISDMdf.min())
+        if self.caching:
+            self.cached_file_list = os.listdir(self.pkl_path)
 
-            self.WISDMdf['x'] += mins['x']
-            self.WISDMdf['y'] += mins['y']
-            self.WISDMdf['z'] += mins['z']
+    def _load(self, caching=False):
 
-    def _load(self):
+        if caching:
+            if not os.path.exists(self.pkl_path):
+                path = Path(self.pkl_path)
+                path.mkdir(parents=True)
 
         for path in self.paths:
 
@@ -110,8 +107,20 @@ class WISDMDataset(Dataset):
 
                         self.WISDMdf = pd.concat([self.WISDMdf, temp])
 
-    def _set_up_cache(self):
-        print("\nCaching data samples ...")
-        for idx in tqdm(range(self.__len__())):
-            item = torch.tensor(self.WISDMdf.iloc[idx:idx + self.pooling_factor, 2:5].values.flatten()).float()
-            self.cached_data_samples.append(item)
+                        if self.shift:
+                            shift_vals = abs(self.WISDMdf.min())
+
+                            self.WISDMdf['x'] += shift_vals['x']
+                            self.WISDMdf['y'] += shift_vals['y']
+                            self.WISDMdf['z'] += shift_vals['z']
+
+        if self.caching:
+            print("Storing samples in cache...")
+            for idx in tqdm(range(self.WISDMdf.shape[0] // self.pooling_factor)):
+                item = self.WISDMdf.iloc[idx:idx + self.pooling_factor, 2:5].values.flatten()
+
+                with open(self._cached_file_name(idx), "wb") as f:
+                    pickle.dump(item, f)
+
+    def _cached_file_name(self, idx):
+        return f"{self.pkl_path}/{idx}.pkl"
