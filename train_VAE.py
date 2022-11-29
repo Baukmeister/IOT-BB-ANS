@@ -1,6 +1,7 @@
 from pytorch_lightning.profilers import SimpleProfiler, AdvancedProfiler, PyTorchProfiler
 from torch.utils import data
 
+from models.beta_binomial_vae import BetaBinomialVAE_sbs
 from models.model_util import plot_prediction
 from models.vae import *
 from models.vanilla_vae import *
@@ -17,17 +18,17 @@ def main():
     val_set_ratio = 0.00
     train_batch_size = 16
     dicretize = True
-    learning_rate = 0.00
+    learning_rate = 0.0001
     weight_decay = 0.00001
     scale_factor = 1000
     shift = True
-    model_type = "full_vae"
+    model_type = "beta_binomial_vae"
     data_set_type = "accel"
 
     model_name = vae_model_name("./models/trained_models", dicretize, hidden_dim, latent_dim, pooling_factor,
                                 scale_factor, model_type, shift, data_set_type)
     dataSet = WISDMDataset("data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=dicretize,
-                           scaling_factor=scale_factor, shift=shift, data_set_size=data_set_type, caching=True)
+                           scaling_factor=scale_factor, shift=shift, data_set_size=data_set_type, caching=False)
 
     valSetSize = int(len(dataSet) * val_set_ratio)
     trainSetSize = len(dataSet) - valSetSize
@@ -51,10 +52,20 @@ def main():
         wc=weight_decay
     )
 
+    beta_binomial_vae = BetaBinomialVAE_sbs(
+        n_features=input_dim,
+        scale_factor=scale_factor,
+        batch_size=train_batch_size,
+        lr=learning_rate,
+        wc=weight_decay
+    )
+
     if model_type == "full_vae":
         model = vae
     elif model_type == "vanilla_vae":
         model = vanilla_vae
+    elif model_type == "beta_binomial_vae":
+        model = beta_binomial_vae
     else:
         raise ValueError(f"No model defined for '{model_type}'")
 
