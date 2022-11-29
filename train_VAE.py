@@ -16,11 +16,11 @@ def main():
     hidden_dim = 32
     latent_dim = 10
     val_set_ratio = 0.00
-    train_batch_size = 16
+    train_batch_size = 4
     dicretize = True
     learning_rate = 0.0001
     weight_decay = 0.00001
-    scale_factor = 1000
+    scale_factor = 10
     shift = True
     model_type = "beta_binomial_vae"
     data_set_type = "accel"

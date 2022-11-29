@@ -25,7 +25,7 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
         super(BetaBinomialVAE_sbs, self).__init__()
         self.n_features = n_features
         self.scale_factor = scale_factor
-        self.range = float(80 * scale_factor)
+        self.range = float(800 * scale_factor)
         self.batch_size = batch_size
         self.wc = wc
         self.lr = lr
@@ -103,6 +103,9 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
         #TODO: plot image
 
     def training_step(self, batch, batch_idx):
+
+        if (abs(batch) > self.range).any():
+            raise Warning("Batch values are out of range!")
 
 
         loss = self.loss(batch)

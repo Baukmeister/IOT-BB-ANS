@@ -107,12 +107,12 @@ class WISDMDataset(Dataset):
 
                         self.WISDMdf = pd.concat([self.WISDMdf, temp])
 
-                        if self.shift:
-                            shift_vals = abs(self.WISDMdf.min())
+        if self.shift:
+            shift_vals = abs(self.WISDMdf.min())
 
-                            self.WISDMdf['x'] += shift_vals['x']
-                            self.WISDMdf['y'] += shift_vals['y']
-                            self.WISDMdf['z'] += shift_vals['z']
+            self.WISDMdf['x'] += shift_vals['x']
+            self.WISDMdf['y'] += shift_vals['y']
+            self.WISDMdf['z'] += shift_vals['z']
 
         if self.caching:
             print("Storing samples in cache...")
