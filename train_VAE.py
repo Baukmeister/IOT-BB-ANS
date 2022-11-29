@@ -1,8 +1,7 @@
-from pytorch_lightning.profilers import SimpleProfiler, AdvancedProfiler, PyTorchProfiler
+from pytorch_lightning.profilers import SimpleProfiler
 from torch.utils import data
 
 from models.beta_binomial_vae import BetaBinomialVAE_sbs
-from models.model_util import plot_prediction
 from models.vae import *
 from models.vanilla_vae import *
 from util.WIDSMDataLoader import WISDMDataset
@@ -13,14 +12,14 @@ def main():
     # CONFIG
     pooling_factor = 5
     input_dim = 3 * int(pooling_factor)
-    hidden_dim = 500
-    latent_dim = 30
+    hidden_dim = 50
+    latent_dim = 5
     val_set_ratio = 0.00
-    train_batch_size = 64
+    train_batch_size = 32
     dicretize = True
-    learning_rate = 0.001
+    learning_rate = 0.01
     weight_decay = 0.00001
-    scale_factor = 1000
+    scale_factor = 10
     shift = True
     model_type = "beta_binomial_vae"
     data_set_type = "accel"
@@ -56,6 +55,8 @@ def main():
         n_features=input_dim,
         scale_factor=scale_factor,
         batch_size=train_batch_size,
+        hidden_dim=hidden_dim,
+        latent_dim=latent_dim,
         lr=learning_rate,
         wc=weight_decay
     )
@@ -73,9 +74,9 @@ def main():
     valDataLoader = data.DataLoader(val_set)
 
     profiler = SimpleProfiler()
-    #profiler = PyTorchProfiler()
+    # profiler = PyTorchProfiler()
 
-    trainer = pl.Trainer(limit_train_batches=1000000, max_epochs=1, accelerator='gpu', devices=1, profiler=profiler)
+    trainer = pl.Trainer(limit_train_batches=10000, max_epochs=1, accelerator='gpu', devices=1, profiler=profiler)
     trainer.fit(model=model, train_dataloaders=trainDataLoader, val_dataloaders=valDataLoader)
     torch.save(model.state_dict(), model_name)
 

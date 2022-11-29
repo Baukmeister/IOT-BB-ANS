@@ -8,7 +8,9 @@ from autograd.builtins import tuple as ag_tuple
 import craystack as cs
 from compression.torch_util import torch_fun_to_numpy_fun
 from craystack import bb_ans
+from models.beta_binomial_vae import BetaBinomialVAE_sbs
 from models.vae import VAE_full
+from models.vanilla_vae import Vanilla_VAE
 from util.WIDSMDataLoader import WISDMDataset
 from util.io import vae_model_name
 
@@ -23,18 +25,18 @@ obs_precision = 24
 compress_lengths = []
 
 # MODEL CONFIG
-pooling_factor = 20
+pooling_factor = 5
 input_dim = 3 * int(pooling_factor)
-hidden_dim = 32
+hidden_dim = 500
 latent_dim = 30
 val_set_ratio = 0.00
-train_batch_size = 16
+train_batch_size = 64
 dicretize = True
-learning_rate = 0.0001
+learning_rate = 0.001
 weight_decay = 0.00001
 scale_factor = 1000
 shift = True
-model_type = "full_vae"
+model_type = "beta_binomial_vae"
 data_set_type = "accel"
 
 latent_shape = (batch_size, latent_dim)
@@ -44,9 +46,41 @@ obs_size = np.prod(obs_shape)
 
 ## Setup codecs
 # VAE codec
-model = VAE_full(n_features=3 * int(pooling_factor), scale_factor=scale_factor, hidden_size=hidden_dim,
-                 latent_size=latent_dim,
-                 device="cpu")
+vae = VAE_full(
+    n_features=input_dim,
+    scale_factor=scale_factor,
+    hidden_size=hidden_dim,
+    latent_size=latent_dim,
+    lr=learning_rate,
+    wc=weight_decay
+)
+
+vanilla_vae = Vanilla_VAE(
+    n_features=input_dim,
+    scale_factor=scale_factor,
+    hidden_dims=None,
+    latent_dim=latent_dim,
+    lr=learning_rate,
+    wc=weight_decay
+)
+
+beta_binomial_vae = BetaBinomialVAE_sbs(
+    n_features=input_dim,
+    scale_factor=scale_factor,
+    batch_size=train_batch_size,
+    lr=learning_rate,
+    wc=weight_decay
+)
+
+if model_type == "full_vae":
+    model = vae
+elif model_type == "vanilla_vae":
+    model = vanilla_vae
+elif model_type == "beta_binomial_vae":
+    model = beta_binomial_vae
+else:
+    raise ValueError(f"No model defined for '{model_type}'")
+
 model.load_state_dict(torch.load(vae_model_name(
     model_folder="../models/trained_models",
     dicretize=dicretize,
@@ -58,6 +92,8 @@ model.load_state_dict(torch.load(vae_model_name(
     shift=shift,
     data_set_type=data_set_type
 )))
+
+
 
 model.eval()
 

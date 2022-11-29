@@ -11,16 +11,16 @@ import torch.optim as optim
 from typing import List, Tuple
 from torch.distributions import Normal, Categorical, Beta, Binomial
 
-
 from torch import nn
 
 from models.model_util import plot_prediction
 
 
 def beta_binomial_log_pdf(k, n, alpha, beta):
-    numer = lgamma(n+1) + lgamma(k + alpha) + lgamma(n - k + beta) + lgamma(alpha + beta)
-    denom = lgamma(k+1) + lgamma(n - k + 1) + lgamma(n + alpha + beta) + lgamma(alpha) + lgamma(beta)
+    numer = lgamma(n + 1) + lgamma(k + alpha) + lgamma(n - k + beta) + lgamma(alpha + beta)
+    denom = lgamma(k + 1) + lgamma(n - k + 1) + lgamma(n + alpha + beta) + lgamma(alpha) + lgamma(beta)
     return numer - denom
+
 
 class BetaBinomialVAE_sbs(pl.LightningModule):
     def __init__(self, n_features, scale_factor, batch_size, wc=0.0, lr=5e-4, hidden_dim=200, latent_dim=50):
@@ -48,7 +48,7 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
 
         self.fc3 = nn.Linear(self.latent_dim, self.hidden_dim)
         self.bn3 = nn.BatchNorm1d(self.hidden_dim)
-        self.fc4 = nn.Linear(self.hidden_dim, n_features*2)
+        self.fc4 = nn.Linear(self.hidden_dim, n_features * 2)
 
     def encode(self, x):
         """Return mu, sigma on latent"""
@@ -89,7 +89,7 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
         binomial = Binomial(self.range, p)
         x_sample = binomial.sample()
         x_sample = x_sample.float() / float(self.range)
-        #TODO: plot image
+        # TODO: plot image
 
     def reconstruct(self, x, device):
         x = x.view(-1, self.n_features).float().to(device)
@@ -107,14 +107,12 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
         if (abs(batch) > self.range).any():
             raise Warning("Batch values are out of range!")
 
-
         loss = self.loss(batch)
 
         if batch_idx % 500 == 0:
-            self.log(f'\n[batch: {batch_idx}]\ntraining loss', loss)
-
+            self.log(f'ELBO LOSS', loss)
             recon = self.reconstruct(batch, self.device)
-            plot_prediction(prediction_tensors=recon, target_tensors=batch, batch_idx=batch_idx,loss=loss)
+            plot_prediction(prediction_tensors=recon, target_tensors=batch, batch_idx=batch_idx, loss=loss)
 
         return loss
 
