@@ -14,6 +14,8 @@ from torch.distributions import Normal, Categorical, Beta, Binomial
 
 from torch import nn
 
+from models.model_util import plot_prediction
+
 
 def beta_binomial_log_pdf(k, n, alpha, beta):
     numer = lgamma(n+1) + lgamma(k + alpha) + lgamma(n - k + beta) + lgamma(alpha + beta)
@@ -25,7 +27,7 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
         super(BetaBinomialVAE_sbs, self).__init__()
         self.n_features = n_features
         self.scale_factor = scale_factor
-        self.range = float(800 * scale_factor)
+        self.range = float(160 * scale_factor)
         self.batch_size = batch_size
         self.wc = wc
         self.lr = lr
@@ -89,7 +91,7 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
         x_sample = x_sample.float() / float(self.range)
         #TODO: plot image
 
-    def reconstruct(self, x, device, epoch):
+    def reconstruct(self, x, device):
         x = x.view(-1, self.n_features).float().to(device)
         z_mu, z_logvar = self.encode(x)
         z = self.reparameterize(z_mu, z_logvar)  # sample zs
@@ -98,9 +100,7 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
         p = beta.sample()
         binomial = Binomial(self.range, p)
         x_recon = binomial.sample()
-        x_recon = x_recon.float() / float(self.range)
-        x_with_recon = torch.cat((x, x_recon))
-        #TODO: plot image
+        return x_recon
 
     def training_step(self, batch, batch_idx):
 
@@ -113,7 +113,8 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
         if batch_idx % 500 == 0:
             self.log(f'\n[batch: {batch_idx}]\ntraining loss', loss)
 
-            #plot_prediction(prediction_tensors=recon, target_tensors=batch, batch_idx=batch_idx,loss=loss)
+            recon = self.reconstruct(batch, self.device)
+            plot_prediction(prediction_tensors=recon, target_tensors=batch, batch_idx=batch_idx,loss=loss)
 
         return loss
 

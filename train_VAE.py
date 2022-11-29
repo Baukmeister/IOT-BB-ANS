@@ -13,14 +13,14 @@ def main():
     # CONFIG
     pooling_factor = 5
     input_dim = 3 * int(pooling_factor)
-    hidden_dim = 32
-    latent_dim = 10
+    hidden_dim = 500
+    latent_dim = 30
     val_set_ratio = 0.00
-    train_batch_size = 4
+    train_batch_size = 64
     dicretize = True
-    learning_rate = 0.0001
+    learning_rate = 0.001
     weight_decay = 0.00001
-    scale_factor = 10
+    scale_factor = 1000
     shift = True
     model_type = "beta_binomial_vae"
     data_set_type = "accel"
