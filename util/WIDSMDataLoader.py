@@ -1,5 +1,4 @@
 import os
-import pickle
 from pathlib import Path
 
 import numpy as np
@@ -16,7 +15,7 @@ class WISDMDataset(Dataset):
             item = self.WISDMdf.iloc[index:index + self.pooling_factor, 2:5].values.flatten()
         else:
             with open(self._cached_file_name(index), "rb") as f:
-                item = pickle.load(f)
+                item = np.load(f)
 
         return torch.tensor(item).float().to(self.device)
 
@@ -120,7 +119,7 @@ class WISDMDataset(Dataset):
                 item = self.WISDMdf.iloc[idx:idx + self.pooling_factor, 2:5].values.flatten()
 
                 with open(self._cached_file_name(idx), "wb") as f:
-                    pickle.dump(item, f)
+                    np.save(f, item)
 
     def _cached_file_name(self, idx):
-        return f"{self.pkl_path}/{idx}.pkl"
+        return f"{self.pkl_path}/{idx}.npy"

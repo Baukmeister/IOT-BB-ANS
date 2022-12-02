@@ -106,6 +106,7 @@ decoder_net = torch_fun_to_numpy_fun(model.decoder)
 def obs_codec(res):
     # return cs.DiagGaussian_StdBins(mean=res[0], stdd=res[1], coding_prec=obs_precision, bin_prec=20)
     # return cs.DiagGaussian_GaussianBins(mean=res[0], stdd=res[1],bin_mean=res[0], bin_stdd=res[1], coding_prec=obs_precision, bin_prec=16)
+    return cs.Logistic_UnifBins()
     return cs.DiagGaussian_UnifBins(mean=res[0], stdd=res[1], bin_min=0, bin_max=160 * scale_factor, coding_prec=obs_precision, n_bins=160 * scale_factor)
 
 

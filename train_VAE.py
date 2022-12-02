@@ -12,14 +12,14 @@ def main():
     # CONFIG
     pooling_factor = 5
     input_dim = 3 * int(pooling_factor)
-    hidden_dim = 50
-    latent_dim = 5
+    hidden_dim = 500
+    latent_dim = 10
     val_set_ratio = 0.00
     train_batch_size = 32
     dicretize = True
     learning_rate = 0.01
     weight_decay = 0.00001
-    scale_factor = 10
+    scale_factor = 1
     shift = True
     model_type = "beta_binomial_vae"
     data_set_type = "accel"
@@ -27,7 +27,7 @@ def main():
     model_name = vae_model_name("./models/trained_models", dicretize, hidden_dim, latent_dim, pooling_factor,
                                 scale_factor, model_type, shift, data_set_type)
     dataSet = WISDMDataset("data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=dicretize,
-                           scaling_factor=scale_factor, shift=shift, data_set_size=data_set_type, caching=False)
+                           scaling_factor=scale_factor, shift=shift, data_set_size=data_set_type, caching=True)
 
     valSetSize = int(len(dataSet) * val_set_ratio)
     trainSetSize = len(dataSet) - valSetSize

@@ -41,8 +41,36 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
         self.fc1 = nn.Linear(n_features, self.hidden_dim)
         self.bn1 = nn.BatchNorm1d(self.hidden_dim)
 
+        #Extra Layers
+
+        self.encoderExtraLayers = nn.Sequential(
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.BatchNorm1d(self.hidden_dim)
+        )
+
+        self.decoderExtraLayers = nn.Sequential(
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.BatchNorm1d(self.hidden_dim)
+        )
+
+
         self.fc21 = nn.Linear(self.hidden_dim, self.latent_dim)
         self.fc22 = nn.Linear(self.hidden_dim, self.latent_dim)
+
         self.bn21 = nn.BatchNorm1d(self.latent_dim)
         self.bn22 = nn.BatchNorm1d(self.latent_dim)
 
@@ -54,6 +82,7 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
         """Return mu, sigma on latent"""
         h = x / self.range  # otherwise we will have numerical issues
         h = F.relu(self.bn1(self.fc1(h)))
+        h = F.relu(self.encoderExtraLayers(h))
         return self.bn21(self.fc21(h)), torch.exp(self.bn22(self.fc22(h)))
 
     def reparameterize(self, mu, std):
@@ -65,6 +94,7 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
 
     def decode(self, z):
         h = F.relu(self.bn3(self.fc3(z)))
+        h = F.relu(self.decoderExtraLayers(h))
         h = self.fc4(h)
         log_alpha, log_beta = torch.split(h, self.n_features, dim=1)
         return torch.exp(log_alpha), torch.exp(log_beta)
