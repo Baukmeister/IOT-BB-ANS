@@ -28,7 +28,7 @@ input_dim = 3 * int(pooling_factor)
 hidden_dim = 500
 latent_dim = 10
 val_set_ratio = 0.00
-train_batch_size = 32
+train_batch_size = 256
 dicretize = True
 learning_rate = 0.01
 weight_decay = 0.00001
@@ -146,11 +146,12 @@ np.savetxt('compressed_lengths_cts', np.array(compress_lengths))
 
 state = rans.unflatten(compressed_message)
 decode_start_time = time.time()
+reconstructed_data_points = []
 
 for n in range(len(data_points)):
     state, data_point_ = vae_pop(state)
     original_data_point = data_points[len(data_points) - n - 1]
-    np.testing.assert_allclose(original_data_point, data_point_)
+    reconstructed_data_points.insert(0, data_point_.numpy()[0])
 
     if not n % print_interval:
         print('Decoded {}'.format(n))
@@ -159,4 +160,5 @@ print('\nAll decoded in {:.2f}s'.format(time.time() - decode_start_time))
 
 recovered_bits = rans.flatten(state)
 assert all(other_bits == recovered_bits)
-np.testing.assert_equal(data_point, data_point_)
+np.testing.assert_equal(reconstructed_data_points, data_points_singles)
+print('\nLossless reconstruction!')
