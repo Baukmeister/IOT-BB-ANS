@@ -4,6 +4,8 @@ import lzma
 import numpy as np
 import io
 
+from tqdm import tqdm
+
 from util.WIDSMDataLoader import WISDMDataset
 
 
@@ -37,9 +39,17 @@ def lzma_compress(data_points):
 
 if __name__ == "__main__":
     # Biometrics data
-    data_set_size = 600
-    dataSet = WISDMDataset("data/wisdm-dataset/raw", pooling_factor=15, discretize=True, scaling_factor=10000)
-    data = np.array([dataSet.__getitem__(i).cpu().numpy() for i in range(data_set_size)]).astype("uint8")
+    data_set_size = 1000
+    dataSet = WISDMDataset(
+        "data/wisdm-dataset/raw",
+        pooling_factor=1,
+        discretize=True,
+        scaling_factor=1,
+        caching=False
+    )
+
+    print("\nCollecting data for compression benchmark ...")
+    data = np.array([dataSet.__getitem__(i).cpu().numpy() for i in tqdm(range(data_set_size))]).astype("uint8")
     bench_compressor(gzip_compress, gzip.decompress, "gzip", data)
     bench_compressor(bz2_compress, bz2.decompress, "bz2", data)
     bench_compressor(lzma_compress, lzma.decompress, "lzma", data)

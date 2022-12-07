@@ -13,25 +13,26 @@ import time
 
 from util.WIDSMDataLoader import WISDMDataset
 from util.io import vae_model_name
+from tqdm import tqdm
 
 rng = np.random.RandomState(1)
 
 prior_precision = 8
-obs_precision = 14
+obs_precision = 24
 q_precision = 14
 
-data_set_size = 100
+data_set_size = 1000
 
 # MODEL CONFIG
-pooling_factor = 5
+pooling_factor = 1
 input_dim = 3 * int(pooling_factor)
-hidden_dim = 500
-latent_dim = 10
+hidden_dim = 200
+latent_dim = 25
 val_set_ratio = 0.00
-train_batch_size = 256
+train_batch_size = 32
 dicretize = True
-learning_rate = 0.01
-weight_decay = 0.00001
+learning_rate = 0.005
+weight_decay = 0.0001
 scale_factor = 1
 shift = True
 model_type = "beta_binomial_vae"
@@ -121,14 +122,11 @@ other_bits = rng.randint(low=1 << 16, high=1 << 31, size=50, dtype=np.uint32)
 state = rans.unflatten(other_bits)
 data_points = np.split(np.reshape(data_points_singles, (len(data_points_singles), -1)), len(data_points_singles))
 
-print_interval = 100
 
 encode_start_time = time.time()
-for i, data_point in enumerate(data_points):
+print("\nEncoding data points ...")
+for i, data_point in tqdm(enumerate(data_points), total=data_set_size):
     state = vae_append(state, data_point)
-
-    if not i % print_interval:
-        print('Encoded {}'.format(i))
 
     compressed_length = 32 * (len(rans.flatten(state)) - len(other_bits)) / (i + 1)
     compress_lengths.append(compressed_length)
@@ -148,13 +146,10 @@ state = rans.unflatten(compressed_message)
 decode_start_time = time.time()
 reconstructed_data_points = []
 
-for n in range(len(data_points)):
+print("\nDecoding data points ...")
+for n in tqdm(range(len(data_points))):
     state, data_point_ = vae_pop(state)
-    original_data_point = data_points[len(data_points) - n - 1]
     reconstructed_data_points.insert(0, data_point_.numpy()[0])
-
-    if not n % print_interval:
-        print('Decoded {}'.format(n))
 
 print('\nAll decoded in {:.2f}s'.format(time.time() - decode_start_time))
 

@@ -10,15 +10,15 @@ from util.io import vae_model_name
 
 def main():
     # CONFIG
-    pooling_factor = 5
+    pooling_factor = 1
     input_dim = 3 * int(pooling_factor)
-    hidden_dim = 500
-    latent_dim = 10
+    hidden_dim = 200
+    latent_dim = 25
     val_set_ratio = 0.00
     train_batch_size = 32
     dicretize = True
     learning_rate = 0.01
-    weight_decay = 0.00001
+    weight_decay = 0.0001
     scale_factor = 1
     shift = True
     model_type = "beta_binomial_vae"
@@ -27,7 +27,7 @@ def main():
     model_name = vae_model_name("./models/trained_models", dicretize, hidden_dim, latent_dim, pooling_factor,
                                 scale_factor, model_type, shift, data_set_type)
     dataSet = WISDMDataset("data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=dicretize,
-                           scaling_factor=scale_factor, shift=shift, data_set_size=data_set_type, caching=True)
+                           scaling_factor=scale_factor, shift=shift, data_set_size=data_set_type, caching=False)
 
     valSetSize = int(len(dataSet) * val_set_ratio)
     trainSetSize = len(dataSet) - valSetSize
@@ -76,7 +76,7 @@ def main():
     profiler = SimpleProfiler()
     # profiler = PyTorchProfiler()
 
-    trainer = pl.Trainer(limit_train_batches=10000, max_epochs=1, accelerator='gpu', devices=1, profiler=profiler)
+    trainer = pl.Trainer(limit_train_batches=2000, max_epochs=1, accelerator='gpu', devices=1, profiler=profiler)
     trainer.fit(model=model, train_dataloaders=trainDataLoader, val_dataloaders=valDataLoader)
     torch.save(model.state_dict(), model_name)
 

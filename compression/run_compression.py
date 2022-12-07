@@ -25,16 +25,16 @@ obs_precision = 24
 compress_lengths = []
 
 # MODEL CONFIG
-pooling_factor = 5
+pooling_factor = 1
 input_dim = 3 * int(pooling_factor)
-hidden_dim = 500
-latent_dim = 30
+hidden_dim = 200
+latent_dim = 25
 val_set_ratio = 0.00
-train_batch_size = 64
+train_batch_size = 32
 dicretize = True
 learning_rate = 0.001
-weight_decay = 0.00001
-scale_factor = 1000
+weight_decay = 0.0001
+scale_factor = 10
 shift = True
 model_type = "beta_binomial_vae"
 data_set_type = "accel"
