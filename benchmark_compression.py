@@ -6,6 +6,7 @@ import io
 
 from tqdm import tqdm
 
+from util.SimpleDataLoader import SimpleDataSet
 from util.WIDSMDataLoader import WISDMDataset
 
 
@@ -40,16 +41,24 @@ def lzma_compress(data_points):
 if __name__ == "__main__":
     # Biometrics data
     data_set_size = 1000
-    dataSet = WISDMDataset(
-        "data/wisdm-dataset/raw",
-        pooling_factor=1,
-        discretize=True,
-        scaling_factor=1,
-        caching=False
-    )
+    data_set_name = "simple"
+
+    if data_set_name == "WISDM":
+        dataSet = WISDMDataset(
+            "data/wisdm-dataset/raw",
+            pooling_factor=10,
+            discretize=True,
+            scaling_factor=10,
+            caching=False
+        )
+
+    elif data_set_name == "simple":
+        dataSet = SimpleDataSet(
+
+        )
 
     print("\nCollecting data for compression benchmark ...")
-    data = np.array([dataSet.__getitem__(i).cpu().numpy() for i in tqdm(range(data_set_size))]).astype("uint8")
+    data = np.array([dataSet.__getitem__(i).cpu().numpy()[0] for i in tqdm(range(data_set_size))]).astype("uint8")
     bench_compressor(gzip_compress, gzip.decompress, "gzip", data)
     bench_compressor(bz2_compress, bz2.decompress, "bz2", data)
     bench_compressor(lzma_compress, lzma.decompress, "lzma", data)

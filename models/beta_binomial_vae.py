@@ -18,16 +18,17 @@ def beta_binomial_log_pdf(k, n, alpha, beta):
 
 
 class BetaBinomialVAE_sbs(pl.LightningModule):
-    def __init__(self, n_features, scale_factor, batch_size, wc=0.0, lr=5e-4, hidden_dim=200, latent_dim=50):
+    def __init__(self, n_features, scale_factor, batch_size, wc=0.0, lr=5e-4, hidden_dim=200, latent_dim=50, plot=True):
         super(BetaBinomialVAE_sbs, self).__init__()
         self.n_features = n_features
         self.scale_factor = scale_factor
-        self.range = float(160 * scale_factor)
+        self.range = self.scale_factor #float(160 * scale_factor)
         self.batch_size = batch_size
         self.wc = wc
         self.lr = lr
         self.hidden_dim = hidden_dim
         self.latent_dim = latent_dim
+        self.plot = plot
 
         self.register_buffer('prior_mean', torch.zeros(1))
         self.register_buffer('prior_std', torch.ones(1))
@@ -114,7 +115,6 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
         binomial = Binomial(self.range, p)
         x_sample = binomial.sample()
         x_sample = x_sample.float() / float(self.range)
-        # TODO: plot image
 
     def reconstruct(self, x, device):
         x = x.view(-1, self.n_features).float().to(device)
@@ -134,7 +134,7 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
 
         loss = self.loss(batch)
 
-        if batch_idx % 500 == 0:
+        if self.plot and batch_idx % 500 == 0:
             self.log(f'ELBO LOSS', loss)
             recon = self.reconstruct(batch, self.device)
             plot_prediction(prediction_tensors=recon, target_tensors=batch, batch_idx=batch_idx, loss=loss)

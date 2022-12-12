@@ -10,16 +10,16 @@ from util.io import vae_model_name
 
 def main():
     # CONFIG
-    pooling_factor = 1
+    pooling_factor = 10
     input_dim = 3 * int(pooling_factor)
     hidden_dim = 200
     latent_dim = 25
     val_set_ratio = 0.00
     train_batch_size = 32
     dicretize = True
-    learning_rate = 0.01
+    learning_rate = 0.005
     weight_decay = 0.0001
-    scale_factor = 1
+    scale_factor = 10
     shift = True
     model_type = "beta_binomial_vae"
     data_set_type = "accel"
@@ -76,7 +76,7 @@ def main():
     profiler = SimpleProfiler()
     # profiler = PyTorchProfiler()
 
-    trainer = pl.Trainer(limit_train_batches=2000, max_epochs=2, accelerator='gpu', devices=1, profiler=profiler)
+    trainer = pl.Trainer(limit_train_batches=10000, max_epochs=10, accelerator='gpu', devices=1, profiler=profiler)
     trainer.fit(model=model, train_dataloaders=trainDataLoader, val_dataloaders=valDataLoader)
     torch.save(model.state_dict(), model_name)
 

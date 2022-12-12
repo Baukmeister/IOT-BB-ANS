@@ -1,16 +1,11 @@
-from random import sample
+from typing import List, Tuple
 
-import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 import torch.cuda
 import torch.nn.functional as F
 import torch.optim as optim
-from typing import List, Tuple
-
 from torch import nn
-
-from train_VAE import plot_prediction
 
 
 # Seems like eitehr mean or scale are screwed (not the same for each iteration)
