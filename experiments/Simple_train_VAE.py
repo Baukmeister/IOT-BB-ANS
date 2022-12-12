@@ -21,7 +21,7 @@ def main():
     weight_decay = 0.001
     model_type = "beta_binomial_vae"
 
-    model_name = "./models/simple/trained_models/simple_model"
+    model_name = "../models/simple/trained_models/simple_model"
     dataSet = SimpleDataSet(data_range=scale_factor, pooling_factor=pooling_factor, data_set_size=int(1e8))
     valSetSize = int(len(dataSet) * val_set_ratio)
     trainSetSize = len(dataSet) - valSetSize
@@ -71,7 +71,7 @@ def main():
     profiler = SimpleProfiler()
     # profiler = PyTorchProfiler()
 
-    trainer = pl.Trainer(limit_train_batches=10000, max_epochs=5, accelerator='gpu', devices=1, profiler=profiler)
+    trainer = pl.Trainer(limit_train_batches=10000, max_epochs=1, accelerator='gpu', devices=1, profiler=profiler)
     trainer.fit(model=model, train_dataloaders=trainDataLoader, val_dataloaders=valDataLoader)
     torch.save(model.state_dict(), model_name)
 

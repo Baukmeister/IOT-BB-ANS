@@ -1,42 +1,38 @@
 import os
-import torch
-import numpy as np
-import util
-from util import bb_util
-import rans
-from compression import tvae_utils
-
-from models.vae import VAE_full
 import time
 
+import numpy as np
+import torch
+from tqdm import tqdm
+
+import rans
+from compression import tvae_utils
+from models.beta_binomial_vae import BetaBinomialVAE_sbs
+from util import bb_util
 from util.SimpleDataLoader import SimpleDataSet
-from util.WIDSMDataLoader import WISDMDataset
-from util.io import vae_model_name
 
 rng = np.random.RandomState(0)
 
 prior_precision = 8
+obs_precision = 24
 q_precision = 14
 
-batch_size = 1
-data_set_size = 5000
-obs_precision = 14
-# MODEL CONFIG
-pooling_factor = 5
+data_set_size = 1000
+
+batch_size=1
+pooling_factor = 15
 input_dim = 1 * int(pooling_factor)
-hidden_dim = 32
-latent_dim = 1
+scale_factor = 100
+hidden_dim = 300
+latent_dim = 20
 val_set_ratio = 0.00
-train_batch_size = 16
+train_batch_size = 64
 learning_rate = 0.0001
-weight_decay = 0.00001
-scale_factor = 1000
-shift = True
-model_type = "full_vae"
-data_set_type = "accel"
+weight_decay = 0.001
+model_type = "beta_binomial_vae"
 
 model_name = "../models/simple/trained_models/simple_model"
-dataSet = SimpleDataSet(pooling_factor=pooling_factor, data_set_size=int(1e6))
+dataSet = SimpleDataSet(data_range=scale_factor, pooling_factor=pooling_factor, data_set_size=int(1e6))
 
 compress_lengths = []
 
@@ -47,23 +43,31 @@ obs_size = np.prod(obs_shape)
 
 ## Setup codecs
 # VAE codec
-model = VAE_full(n_features=input_dim, scale_factor=1, hidden_size=hidden_dim,
-                 latent_size=latent_dim,
-                 device="cpu")
+model = BetaBinomialVAE_sbs(
+        n_features=input_dim,
+        scale_factor=scale_factor,
+        batch_size=train_batch_size,
+        hidden_dim=hidden_dim,
+        latent_dim=latent_dim,
+        lr=learning_rate,
+        wc=weight_decay,
+        plot=False
+    )
+
 model.load_state_dict(torch.load(model_name))
 
 model.eval()
 
-rec_net = tvae_utils.torch_fun_to_numpy_fun(model.encoder)
-gen_net = tvae_utils.torch_fun_to_numpy_fun(model.decoder)
+rec_net = tvae_utils.torch_fun_to_numpy_fun(model.encode)
+gen_net = tvae_utils.torch_fun_to_numpy_fun(model.decode)
 
 ## Load simple data
 data_set = SimpleDataSet(pooling_factor=pooling_factor, data_set_size=int(1e6))
 data_points_singles = [data_set.__getitem__(i).cpu().numpy() for i in range(data_set_size)]
 num_batches = len(data_points_singles) // batch_size
 
-obs_append = tvae_utils.gaussian_obs_append(100, obs_precision)
-obs_pop = tvae_utils.gaussian_obs_pop(100, obs_precision)
+obs_append = tvae_utils.beta_binomial_obs_append(scale_factor, obs_precision)
+obs_pop = tvae_utils.beta_binomial_obs_pop(scale_factor, obs_precision)
 
 vae_append = bb_util.vae_append(latent_shape, gen_net, rec_net, obs_append,
                                 prior_precision, q_precision)
@@ -99,17 +103,16 @@ np.savetxt('compressed_lengths_cts', np.array(compress_lengths))
 
 state = rans.unflatten(compressed_message)
 decode_start_time = time.time()
+reconstructed_data_points = []
 
-for n in range(len(data_points)):
+print("\nDecoding data points ...")
+for n in tqdm(range(len(data_points))):
     state, data_point_ = vae_pop(state)
-    original_data_point = data_points[len(data_points) - n - 1]
-    np.testing.assert_allclose(original_data_point, data_point_)
-
-    if not n % print_interval:
-        print('Decoded {}'.format(n))
+    reconstructed_data_points.insert(0, data_point_.numpy()[0])
 
 print('\nAll decoded in {:.2f}s'.format(time.time() - decode_start_time))
 
 recovered_bits = rans.flatten(state)
 assert all(other_bits == recovered_bits)
-np.testing.assert_equal(data_point, data_point_)
+np.testing.assert_equal(reconstructed_data_points, data_points_singles)
+print('\nLossless reconstruction!')
