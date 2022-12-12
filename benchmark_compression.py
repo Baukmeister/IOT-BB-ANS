@@ -6,6 +6,7 @@ import io
 
 from tqdm import tqdm
 
+from util.IntelLabDataLoader import IntelLabDataset
 from util.SimpleDataLoader import SimpleDataSet
 from util.WIDSMDataLoader import WISDMDataset
 
@@ -41,7 +42,7 @@ def lzma_compress(data_points):
 if __name__ == "__main__":
     # Biometrics data
     data_set_size = 1000
-    data_set_name = "simple"
+    data_set_name = "intelLab"
 
     if data_set_name == "WISDM":
         dataSet = WISDMDataset(
@@ -53,9 +54,10 @@ if __name__ == "__main__":
         )
 
     elif data_set_name == "simple":
-        dataSet = SimpleDataSet(
+        dataSet = SimpleDataSet()
 
-        )
+    elif data_set_name == "intelLab":
+        dataSet = IntelLabDataset(path="data/IntelLabData", pooling_factor=5, caching=False)
 
     print("\nCollecting data for compression benchmark ...")
     data = np.array([dataSet.__getitem__(i).cpu().numpy()[0] for i in tqdm(range(data_set_size))]).astype("uint8")

@@ -69,7 +69,7 @@ beta_binomial_vae = BetaBinomialVAE_sbs(
     n_features=input_dim,
     hidden_dim=hidden_dim,
     latent_dim=latent_dim,
-    scale_factor=scale_factor,
+    range=160 * scale_factor,
     batch_size=train_batch_size,
     lr=learning_rate,
     wc=weight_decay
@@ -86,7 +86,7 @@ else:
 
 
 model.load_state_dict(torch.load(vae_model_name(
-    model_folder="../models/trained_models",
+    model_folder="../models/trained_models/WISDM",
     dicretize=dicretize,
     hidden_dim=hidden_dim,
     latent_dim=latent_dim,

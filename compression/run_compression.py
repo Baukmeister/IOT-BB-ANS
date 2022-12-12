@@ -66,7 +66,7 @@ vanilla_vae = Vanilla_VAE(
 
 beta_binomial_vae = BetaBinomialVAE_sbs(
     n_features=input_dim,
-    scale_factor=scale_factor,
+    range=160 * scale_factor,
     batch_size=train_batch_size,
     lr=learning_rate,
     wc=weight_decay

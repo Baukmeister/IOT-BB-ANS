@@ -31,7 +31,7 @@ learning_rate = 0.0001
 weight_decay = 0.001
 model_type = "beta_binomial_vae"
 
-model_name = "../models/simple/trained_models/simple_model"
+model_name = "../models/trained_models/simple/simple_model"
 dataSet = SimpleDataSet(data_range=scale_factor, pooling_factor=pooling_factor, data_set_size=int(1e6))
 
 compress_lengths = []
@@ -45,7 +45,7 @@ obs_size = np.prod(obs_shape)
 # VAE codec
 model = BetaBinomialVAE_sbs(
     n_features=input_dim,
-    scale_factor=scale_factor,
+    range=scale_factor,
     batch_size=train_batch_size,
     hidden_dim=hidden_dim,
     latent_dim=latent_dim,

@@ -24,7 +24,7 @@ def main():
     model_type = "beta_binomial_vae"
     data_set_type = "accel"
 
-    model_name = vae_model_name("../models/trained_models", dicretize, hidden_dim, latent_dim, pooling_factor,
+    model_name = vae_model_name("../models/trained_models/WISDM", dicretize, hidden_dim, latent_dim, pooling_factor,
                                 scale_factor, model_type, shift, data_set_type)
     dataSet = WISDMDataset("data/wisdm-dataset/raw", pooling_factor=pooling_factor, discretize=dicretize,
                            scaling_factor=scale_factor, shift=shift, data_set_size=data_set_type, caching=False)
