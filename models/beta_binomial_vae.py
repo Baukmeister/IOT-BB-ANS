@@ -1,17 +1,12 @@
-from random import sample
-
-import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
 import torch
-from torch import nn, optim, lgamma
 import torch.cuda
 import torch.nn.functional as F
 import torch.optim as optim
-from typing import List, Tuple
-from torch.distributions import Normal, Categorical, Beta, Binomial
-
+from torch import lgamma
 from torch import nn
+from torch.distributions import Normal, Beta, Binomial
 
 from models.model_util import plot_prediction
 

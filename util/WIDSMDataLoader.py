@@ -17,7 +17,7 @@ class WISDMDataset(Dataset):
             with open(self._cached_file_name(index), "rb") as f:
                 item = np.load(f)
 
-        return torch.tensor(item).float().to(self.device)
+        return torch.tensor(item).float()
 
     def __len__(self) -> int:
         if self.caching:
@@ -49,10 +49,6 @@ class WISDMDataset(Dataset):
         self.userDfs = []
         self.cached_data_samples = []
 
-        if torch.cuda.is_available():
-            self.device = "cuda"
-        else:
-            self.device = "cpu"
 
         if self.data_set_size == "single":
             self.paths = [self.phone_accel_path]
