@@ -19,7 +19,7 @@ q_precision = 14
 
 data_set_size = 1000
 
-batch_size=1
+batch_size = 1
 pooling_factor = 15
 input_dim = 1 * int(pooling_factor)
 scale_factor = 100
@@ -44,15 +44,15 @@ obs_size = np.prod(obs_shape)
 ## Setup codecs
 # VAE codec
 model = BetaBinomialVAE_sbs(
-        n_features=input_dim,
-        scale_factor=scale_factor,
-        batch_size=train_batch_size,
-        hidden_dim=hidden_dim,
-        latent_dim=latent_dim,
-        lr=learning_rate,
-        wc=weight_decay,
-        plot=False
-    )
+    n_features=input_dim,
+    scale_factor=scale_factor,
+    batch_size=train_batch_size,
+    hidden_dim=hidden_dim,
+    latent_dim=latent_dim,
+    lr=learning_rate,
+    wc=weight_decay,
+    plot=False
+)
 
 model.load_state_dict(torch.load(model_name))
 
