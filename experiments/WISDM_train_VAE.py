@@ -15,7 +15,8 @@ def main():
     input_dim = 3 * int(pooling_factor)
     hidden_dim = 20
     latent_dim = 5
-    val_set_ratio = 0.1
+    train_set_ratio = 0.3
+    val_set_ratio = 0.08
     train_batch_size = 32
     dicretize = True
     learning_rate = 0.0005
@@ -78,7 +79,7 @@ def main():
     # profiler = PyTorchProfiler()
 
     trainer = pl.Trainer(
-        limit_train_batches=10000,
+        limit_train_batches=int((train_set_ratio * trainSetSize)/train_batch_size),
         max_epochs=10,
         accelerator='gpu',
         devices=1,
