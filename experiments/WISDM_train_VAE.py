@@ -1,3 +1,4 @@
+from pytorch_lightning.callbacks import EarlyStopping
 from pytorch_lightning.profilers import SimpleProfiler
 from torch.utils import data
 
@@ -10,16 +11,16 @@ from util.io import vae_model_name
 
 def main():
     # CONFIG
-    pooling_factor = 10
+    pooling_factor = 2
     input_dim = 3 * int(pooling_factor)
-    hidden_dim = 200
-    latent_dim = 25
-    val_set_ratio = 0.00
+    hidden_dim = 20
+    latent_dim = 5
+    val_set_ratio = 0.1
     train_batch_size = 32
     dicretize = True
-    learning_rate = 0.005
+    learning_rate = 0.0005
     weight_decay = 0.0001
-    scale_factor = 10
+    scale_factor = 1
     shift = True
     model_type = "beta_binomial_vae"
     data_set_type = "accel"
@@ -53,7 +54,7 @@ def main():
 
     beta_binomial_vae = BetaBinomialVAE_sbs(
         n_features=input_dim,
-        scale_factor=scale_factor,
+        range=160 * scale_factor,
         batch_size=train_batch_size,
         hidden_dim=hidden_dim,
         latent_dim=latent_dim,
@@ -70,13 +71,21 @@ def main():
     else:
         raise ValueError(f"No model defined for '{model_type}'")
 
-    trainDataLoader = data.DataLoader(train_set, batch_size=train_batch_size, shuffle=True, num_workers=1)
-    valDataLoader = data.DataLoader(val_set)
+    trainDataLoader = data.DataLoader(train_set, batch_size=train_batch_size, shuffle=True, num_workers=8)
+    valDataLoader = data.DataLoader(val_set, batch_size=train_batch_size)
 
     profiler = SimpleProfiler()
     # profiler = PyTorchProfiler()
 
-    trainer = pl.Trainer(limit_train_batches=10000, max_epochs=10, accelerator='gpu', devices=1, profiler=profiler)
+    trainer = pl.Trainer(
+        limit_train_batches=10000,
+        max_epochs=10,
+        accelerator='gpu',
+        devices=1,
+        callbacks=[EarlyStopping(monitor="val_loss")],
+        profiler=profiler
+    )
+
     trainer.fit(model=model, train_dataloaders=trainDataLoader, val_dataloaders=valDataLoader)
     torch.save(model.state_dict(), model_name)
 

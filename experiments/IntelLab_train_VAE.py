@@ -13,14 +13,14 @@ def main():
     # CONFIG
     pooling_factor = 5
     input_dim = 4 * int(pooling_factor)
-    hidden_dim = 200
-    latent_dim = 25
+    hidden_dim = 50
+    latent_dim = 10
     val_set_ratio = 0.00
-    train_batch_size = 2
+    train_batch_size = 4
     dicretize = True
-    learning_rate = 0.005
-    weight_decay = 0.0001
-    scale_factor = 100
+    learning_rate = 0.0001
+    weight_decay = 0.001
+    scale_factor = 10
     shift = True
     model_type = "beta_binomial_vae"
     data_set_type = "accel"
@@ -71,13 +71,13 @@ def main():
     else:
         raise ValueError(f"No model defined for '{model_type}'")
 
-    trainDataLoader = data.DataLoader(train_set, batch_size=train_batch_size, shuffle=True, num_workers=1)
+    trainDataLoader = data.DataLoader(train_set, batch_size=train_batch_size, shuffle=False, num_workers=1)
     valDataLoader = data.DataLoader(val_set)
 
     profiler = SimpleProfiler()
     # profiler = PyTorchProfiler()
 
-    trainer = pl.Trainer(limit_train_batches=10000, max_epochs=10, accelerator='gpu', devices=1, profiler=profiler)
+    trainer = pl.Trainer(limit_train_batches=10000, max_epochs=1, accelerator='gpu', devices=1, profiler=profiler)
     trainer.fit(model=model, train_dataloaders=trainDataLoader, val_dataloaders=valDataLoader)
     torch.save(model.state_dict(), model_name)
 

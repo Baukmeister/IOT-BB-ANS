@@ -41,22 +41,10 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
         self.encoderExtraLayers = nn.Sequential(
             nn.Linear(self.hidden_dim, self.hidden_dim),
             nn.Linear(self.hidden_dim, self.hidden_dim),
-            nn.Linear(self.hidden_dim, self.hidden_dim),
-            nn.Linear(self.hidden_dim, self.hidden_dim),
-            nn.Linear(self.hidden_dim, self.hidden_dim),
-            nn.Linear(self.hidden_dim, self.hidden_dim),
-            nn.Linear(self.hidden_dim, self.hidden_dim),
-            nn.Linear(self.hidden_dim, self.hidden_dim),
             nn.BatchNorm1d(self.hidden_dim)
         )
 
         self.decoderExtraLayers = nn.Sequential(
-            nn.Linear(self.hidden_dim, self.hidden_dim),
-            nn.Linear(self.hidden_dim, self.hidden_dim),
-            nn.Linear(self.hidden_dim, self.hidden_dim),
-            nn.Linear(self.hidden_dim, self.hidden_dim),
-            nn.Linear(self.hidden_dim, self.hidden_dim),
-            nn.Linear(self.hidden_dim, self.hidden_dim),
             nn.Linear(self.hidden_dim, self.hidden_dim),
             nn.Linear(self.hidden_dim, self.hidden_dim),
             nn.BatchNorm1d(self.hidden_dim)
@@ -139,6 +127,10 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
             plot_prediction(prediction_tensors=recon, target_tensors=batch, batch_idx=batch_idx, loss=loss)
 
         return loss
+
+    def validation_step(self, batch, batch_idx):
+        loss = self.loss(batch)
+        self.log("val_loss", loss)
 
     def configure_optimizers(self):
         optimizer = optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.wc)
