@@ -11,6 +11,7 @@ from compression import tvae_utils
 from models.vae import VAE_full
 import time
 
+from util.HouseholdPowerDataLoader import HouseholdPowerDataset
 from util.IntelLabDataLoader import IntelLabDataset
 from util.WIDSMDataLoader import WISDMDataset
 from util.io import vae_model_name
@@ -37,11 +38,11 @@ weight_decay = 0.01
 scale_factor = 10
 shift = True
 model_type = "beta_binomial_vae"
-metric = "temperature"
+metric = "all"
 
 
 if metric == "all":
-    input_dim = 4 * int(pooling_factor)
+    input_dim = 7 * int(pooling_factor)
 else:
     input_dim = 1 * int(pooling_factor)
 
@@ -50,13 +51,12 @@ compress_lengths = []
 latent_shape = (1, latent_dim)
 latent_size = np.prod(latent_shape)
 
-data_set = IntelLabDataset(
-    "../data/IntelLabData",
+data_set = HouseholdPowerDataset(
+    "../data/household_power_consumption",
     pooling_factor=pooling_factor,
     scaling_factor=scale_factor,
     caching=False,
     metric=metric)
-
 
 vae = VAE_full(
     n_features=input_dim,
@@ -97,7 +97,7 @@ else:
 
 
 model.load_state_dict(torch.load(vae_model_name(
-    model_folder="../models/trained_models/IntelLab",
+    model_folder="../models/trained_models/HouseholdPower",
     dicretize=dicretize,
     hidden_dim=hidden_dim,
     latent_dim=latent_dim,
