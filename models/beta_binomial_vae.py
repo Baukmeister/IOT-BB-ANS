@@ -124,9 +124,9 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
             raise Warning("Batch values are out of range!")
 
         loss = self.loss(batch)
+        self.log(f'ELBO LOSS', loss)
 
         if self.plot and batch_idx % 500 == 0:
-            self.log(f'ELBO LOSS', loss)
             recon = self.reconstruct(batch, self.device)
             plot_prediction(prediction_tensors=recon, target_tensors=batch, batch_idx=batch_idx, loss=loss)
 

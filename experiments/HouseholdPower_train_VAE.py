@@ -14,7 +14,7 @@ def main():
     pooling_factor = 5
     hidden_dim = 50
     latent_dim = 10
-    train_set_ratio = 1.0
+    train_set_ratio = 0.7
     val_set_ratio = 0.01
     train_batch_size = 8
     dicretize = True
@@ -99,7 +99,7 @@ def main():
 
     trainer = pl.Trainer(
         limit_train_batches=int((train_set_ratio * trainSetSize) / train_batch_size),
-        max_epochs=5,
+        max_epochs=1,
         accelerator='gpu',
         devices=1,
         callbacks=[EarlyStopping(monitor="val_loss")],

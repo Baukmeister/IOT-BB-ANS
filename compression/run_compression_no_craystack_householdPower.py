@@ -23,13 +23,13 @@ prior_precision = 8
 obs_precision = 24
 q_precision = 14
 
-data_set_size = 100
+data_set_size = 1000
 
 # MODEL CONFIG
-pooling_factor = 100
+pooling_factor = 5
 hidden_dim = 50
 latent_dim = 10
-train_set_ratio = 1.0
+train_set_ratio = 0.7
 val_set_ratio = 0.01
 train_batch_size = 8
 dicretize = True

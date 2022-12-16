@@ -87,7 +87,7 @@ class HouseholdPowerDataset(Dataset):
 
 
 
-        self.HouseholdPowerDf = pd.read_csv(f"{self.path}/household_power_consumption.txt", sep=";")
+        self.HouseholdPowerDf = pd.read_csv(f"{self.path}/household_power_consumption.txt", sep=";", low_memory=False)
 
 
         #remove '?' rows
