@@ -1,3 +1,4 @@
+from pytorch_lightning.callbacks import EarlyStopping
 from pytorch_lightning.profilers import SimpleProfiler
 from torch.utils import data
 
@@ -5,29 +6,44 @@ from models.beta_binomial_vae import BetaBinomialVAE_sbs
 from models.vae import *
 from models.vanilla_vae import *
 from util.IntelLabDataLoader import IntelLabDataset
-from util.WIDSMDataLoader import WISDMDataset
 from util.io import vae_model_name
 
 
 def main():
     # CONFIG
-    pooling_factor = 5
-    input_dim = 4 * int(pooling_factor)
+    pooling_factor = 100
     hidden_dim = 50
     latent_dim = 10
-    val_set_ratio = 0.00
-    train_batch_size = 4
+    train_set_ratio = 1.0
+    val_set_ratio = 0.01
+    train_batch_size = 8
     dicretize = True
     learning_rate = 0.0001
-    weight_decay = 0.001
+    weight_decay = 0.01
     scale_factor = 10
     shift = True
     model_type = "beta_binomial_vae"
-    data_set_type = "accel"
+    metric = "temperature"
 
-    model_name = vae_model_name("../models/trained_models", dicretize, hidden_dim, latent_dim, pooling_factor,
-                                scale_factor, model_type, shift, data_set_type)
-    dataSet = IntelLabDataset("../data/IntelLabData", pooling_factor=pooling_factor, caching=False)
+    if metric == "all":
+        input_dim = 4 * int(pooling_factor)
+    else:
+        input_dim = 1 * int(pooling_factor)
+
+    model_name = vae_model_name(
+        "../models/trained_models/IntelLab",
+        dicretize,
+        hidden_dim,
+        latent_dim,
+        pooling_factor,
+        scale_factor,
+        model_type,
+        shift,
+        data_set_type=metric
+    )
+
+    dataSet = IntelLabDataset("../data/IntelLabData", pooling_factor=pooling_factor, scaling_factor=scale_factor,
+                              caching=False, metric=metric)
 
     valSetSize = int(len(dataSet) * val_set_ratio)
     trainSetSize = len(dataSet) - valSetSize
@@ -53,7 +69,7 @@ def main():
 
     beta_binomial_vae = BetaBinomialVAE_sbs(
         n_features=input_dim,
-        range=600*scale_factor,
+        range=dataSet.range,
         batch_size=train_batch_size,
         hidden_dim=hidden_dim,
         latent_dim=latent_dim,
@@ -71,13 +87,20 @@ def main():
     else:
         raise ValueError(f"No model defined for '{model_type}'")
 
-    trainDataLoader = data.DataLoader(train_set, batch_size=train_batch_size, shuffle=False, num_workers=1)
+    trainDataLoader = data.DataLoader(train_set, batch_size=train_batch_size, shuffle=True, num_workers=8)
     valDataLoader = data.DataLoader(val_set)
 
     profiler = SimpleProfiler()
     # profiler = PyTorchProfiler()
 
-    trainer = pl.Trainer(limit_train_batches=10000, max_epochs=1, accelerator='gpu', devices=1, profiler=profiler)
+    trainer = pl.Trainer(
+        limit_train_batches=int((train_set_ratio * trainSetSize) / train_batch_size),
+        max_epochs=5,
+        accelerator='gpu',
+        devices=1,
+        callbacks=[EarlyStopping(monitor="val_loss")],
+        profiler=profiler
+    )
     trainer.fit(model=model, train_dataloaders=trainDataLoader, val_dataloaders=valDataLoader)
     torch.save(model.state_dict(), model_name)
 

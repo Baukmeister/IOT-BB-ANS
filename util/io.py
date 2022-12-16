@@ -7,7 +7,7 @@ def vae_model_name(
         scale_factor,
         model_type,
         shift,
-        data_set_type
+        data_set_type = ""
 ):
     model_name = f"{model_folder}/trained_vae_pooling{pooling_factor}" \
                  f"_l{latent_dim}" \

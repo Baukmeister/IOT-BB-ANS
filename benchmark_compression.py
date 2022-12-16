@@ -47,17 +47,24 @@ if __name__ == "__main__":
     if data_set_name == "WISDM":
         dataSet = WISDMDataset(
             "data/wisdm-dataset/raw",
-            pooling_factor=10,
+            pooling_factor=100,
             discretize=True,
-            scaling_factor=10,
-            caching=False
+            scaling_factor=100,
+            caching=False,
+            data_set_size="all"
         )
 
     elif data_set_name == "simple":
         dataSet = SimpleDataSet()
 
     elif data_set_name == "intelLab":
-        dataSet = IntelLabDataset(path="data/IntelLabData", pooling_factor=5, caching=False)
+        dataSet = IntelLabDataset(
+            path="data/IntelLabData",
+            pooling_factor=5,
+            scaling_factor=10,
+            caching=False,
+            metric="temperature"
+        )
 
     print("\nCollecting data for compression benchmark ...")
     data = np.array([dataSet.__getitem__(i).cpu().numpy()[0] for i in tqdm(range(data_set_size))]).astype("uint8")

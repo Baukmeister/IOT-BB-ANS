@@ -21,19 +21,20 @@ prior_precision = 8
 obs_precision = 24
 q_precision = 14
 
-data_set_size = 1000
+data_set_size = 100
 
 # MODEL CONFIG
-pooling_factor = 1
+pooling_factor = 100
 input_dim = 3 * int(pooling_factor)
 hidden_dim = 200
-latent_dim = 25
-val_set_ratio = 0.00
-train_batch_size = 32
+latent_dim = 50
+train_set_ratio = 1.0
+val_set_ratio = 0.1
+train_batch_size = 64
 dicretize = True
-learning_rate = 0.005
+learning_rate = 0.001
 weight_decay = 0.0001
-scale_factor = 1
+scale_factor = 100
 shift = True
 model_type = "beta_binomial_vae"
 data_set_type = "accel"

@@ -8,7 +8,7 @@ from torch.utils.data.dataset import T_co, Dataset
 from tqdm import tqdm
 
 
-class IntelLabDataset(Dataset):
+class HouseholdPowerDataset(Dataset):
 
     def __getitem__(self, index) -> T_co:
         if not self.caching:
@@ -28,23 +28,33 @@ class IntelLabDataset(Dataset):
 
     def __init__(self, path, pooling_factor=1, discretize=True, scaling_factor=1, caching=True, metric="all") -> None:
 
-
         self.path = path
         self.pooling_factor = pooling_factor
         self.discretize = discretize
         self.scaling_factor = scaling_factor
         self.caching = caching
         self.metric = metric
-        self.pkl_name = f"intel_lab_data"
+        self.pkl_name = f"household_power_data"
         self.pkl_path = f"{self.path}/cache/{self.pkl_name}"
-        self.columns = ['date', 'time', 'epoch', 'mote_id', 'temperature', 'humidity', 'light', 'voltage']
+        self.columns = [
+            "Date",
+            "Time",
+            "Global_active_power",
+            "Global_reactive_power",
+            "Voltage",
+            "Global_intensity",
+            "Sub_metering_1",
+            "Sub_metering_2",
+            "Sub_metering_3"
+        ]
 
         self.IntelDataDf = pd.DataFrame(columns=self.columns)
         self.userDfs = []
         self.cached_data_samples = []
 
+        #TODO: Adapt
         if self.metric == "all":
-            self.item_indices = [4,5,6,7]
+            self.item_indices = [4, 5, 6, 7]
         elif self.metric == "temperature":
             self.item_indices = 4
         elif self.metric == "humidity":
@@ -69,7 +79,6 @@ class IntelLabDataset(Dataset):
                 path = Path(self.pkl_path)
                 path.mkdir(parents=True)
 
-
         self.IntelDataDf = pd.read_csv(f"{self.path}/data.txt", sep=" ", names=self.columns)
         self.IntelDataDf['humidity'].clip(lower=0, upper=100, inplace=True)
         self.IntelDataDf['humidity'].fillna(0, inplace=True)
@@ -79,11 +88,10 @@ class IntelLabDataset(Dataset):
 
         if self.discretize:
             self.IntelDataDf['humidity'] = (self.IntelDataDf['humidity'].astype(np.float) * self.scaling_factor).round()
-            self.IntelDataDf['temperature'] = (self.IntelDataDf['temperature'].astype(np.float) * self.scaling_factor).round()
+            self.IntelDataDf['temperature'] = (
+                        self.IntelDataDf['temperature'].astype(np.float) * self.scaling_factor).round()
             self.IntelDataDf['light'] = (self.IntelDataDf['light'].astype(np.float) * self.scaling_factor).round()
             self.IntelDataDf['voltage'] = (self.IntelDataDf['voltage'].astype(np.float) * self.scaling_factor).round()
-
-
 
         if self.caching:
             print("Storing samples in cache...")
@@ -93,8 +101,8 @@ class IntelLabDataset(Dataset):
                 with open(self._cached_file_name(idx), "wb") as f:
                     np.save(f, item)
 
-        self.range = self.IntelDataDf.iloc[:,self.item_indices].max().max() - self.IntelDataDf.iloc[:,self.item_indices].min().min()
-
+        self.range = self.IntelDataDf.iloc[:, self.item_indices].max().max() - self.IntelDataDf.iloc[:,
+                                                                               self.item_indices].min().min()
 
     def _cached_file_name(self, idx):
         return f"{self.pkl_path}/{idx}.npy"

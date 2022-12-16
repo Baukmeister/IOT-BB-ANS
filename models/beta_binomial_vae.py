@@ -90,6 +90,10 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
         l = beta_binomial_log_pdf(x.view(-1, self.n_features), self.n,
                                   x_alpha, x_beta)
         l = torch.sum(l, dim=1)
+
+        if torch.isnan(z).any():
+            print("NAN values in encoder output!")
+
         p_z = torch.sum(Normal(self.prior_mean, self.prior_std).log_prob(z), dim=1)
         q_z = torch.sum(Normal(z_mu, z_std).log_prob(z), dim=1)
         return -torch.mean(l + p_z - q_z) * np.log2(np.e) / float(self.n_features)
@@ -129,8 +133,14 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        loss = self.loss(batch)
-        self.log("val_loss", loss)
+
+        if batch.shape[0] == self.batch_size or batch.shape[0] == 1:
+            loss = self.loss(batch)
+            self.log("val_loss", loss)
+        else:
+            # Deals with the issue of non-batch-sized tensors returned by validation DataLoader
+            print("\n Skipping validation loss calculation because of shape divergence")
+            pass
 
     def configure_optimizers(self):
         optimizer = optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.wc)
