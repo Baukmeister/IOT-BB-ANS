@@ -12,7 +12,7 @@ class HouseholdPowerDataset(Dataset):
 
     def __getitem__(self, index) -> T_co:
         if not self.caching:
-            item = self.IntelDataDf.iloc[index:index + self.pooling_factor, self.item_indices].values.flatten()
+            item = self.HouseholdPowerDf.iloc[index:index + self.pooling_factor, self.item_indices].values.flatten()
 
         else:
             with open(self._cached_file_name(index), "rb") as f:
@@ -24,7 +24,7 @@ class HouseholdPowerDataset(Dataset):
         if self.caching:
             return len(self.cached_file_list)
         else:
-            return self.IntelDataDf.shape[0] // self.pooling_factor
+            return self.HouseholdPowerDf.shape[0] // self.pooling_factor
 
     def __init__(self, path, pooling_factor=1, discretize=True, scaling_factor=1, caching=True, metric="all") -> None:
 
@@ -48,21 +48,27 @@ class HouseholdPowerDataset(Dataset):
             "Sub_metering_3"
         ]
 
-        self.IntelDataDf = pd.DataFrame(columns=self.columns)
+        self.HouseholdPowerDf = pd.DataFrame(columns=self.columns)
         self.userDfs = []
         self.cached_data_samples = []
 
-        #TODO: Adapt
+        # TODO: Adapt
         if self.metric == "all":
-            self.item_indices = [4, 5, 6, 7]
-        elif self.metric == "temperature":
+            self.item_indices = [2, 3, 4, 5, 6, 7, 8]
+        elif self.metric == "Global_active_power":
+            self.item_indices = 2
+        elif self.metric == "Global_reactive_power":
+            self.item_indices = 3
+        elif self.metric == "Voltage":
             self.item_indices = 4
-        elif self.metric == "humidity":
+        elif self.metric == "Global_intensity":
             self.item_indices = 5
-        elif self.metric == "light":
+        elif self.metric == "Sub_metering_1":
             self.item_indices = 6
-        elif self.metric == "voltage":
+        elif self.metric == "Sub_metering_2":
             self.item_indices = 7
+        elif self.metric == "Sub_metering_8":
+            self.item_indices = 8
 
         if self.caching and os.path.exists(self.pkl_path):
             print("\nSkip data loading in favour of caching ...")
@@ -79,30 +85,49 @@ class HouseholdPowerDataset(Dataset):
                 path = Path(self.pkl_path)
                 path.mkdir(parents=True)
 
-        self.IntelDataDf = pd.read_csv(f"{self.path}/data.txt", sep=" ", names=self.columns)
-        self.IntelDataDf['humidity'].clip(lower=0, upper=100, inplace=True)
-        self.IntelDataDf['humidity'].fillna(0, inplace=True)
-        self.IntelDataDf['temperature'].clip(lower=0, upper=100, inplace=True)
-        self.IntelDataDf['temperature'].fillna(0, inplace=True)
-        self.IntelDataDf['light'].fillna(0, inplace=True)
+
+
+        self.HouseholdPowerDf = pd.read_csv(f"{self.path}/household_power_consumption.txt", sep=";")
+
+
+        #remove '?' rows
+        self.HouseholdPowerDf = self.HouseholdPowerDf.where(self.HouseholdPowerDf['Global_active_power'] != '?')
+
+        self.HouseholdPowerDf['Global_active_power'].fillna(0, inplace=True)
+        self.HouseholdPowerDf['Global_reactive_power'].fillna(0, inplace=True)
+        self.HouseholdPowerDf['Voltage'].fillna(0, inplace=True)
+        self.HouseholdPowerDf['Global_intensity'].fillna(0, inplace=True)
+        self.HouseholdPowerDf['Sub_metering_1'].fillna(0, inplace=True)
+        self.HouseholdPowerDf['Sub_metering_2'].fillna(0, inplace=True)
+        self.HouseholdPowerDf['Sub_metering_3'].fillna(0, inplace=True)
+
 
         if self.discretize:
-            self.IntelDataDf['humidity'] = (self.IntelDataDf['humidity'].astype(np.float) * self.scaling_factor).round()
-            self.IntelDataDf['temperature'] = (
-                        self.IntelDataDf['temperature'].astype(np.float) * self.scaling_factor).round()
-            self.IntelDataDf['light'] = (self.IntelDataDf['light'].astype(np.float) * self.scaling_factor).round()
-            self.IntelDataDf['voltage'] = (self.IntelDataDf['voltage'].astype(np.float) * self.scaling_factor).round()
+            self.HouseholdPowerDf['Global_active_power'] = (
+                        self.HouseholdPowerDf['Global_active_power'].astype(np.float) * self.scaling_factor).round()
+            self.HouseholdPowerDf['Global_reactive_power'] = (
+                        self.HouseholdPowerDf['Global_reactive_power'].astype(np.float) * self.scaling_factor).round()
+            self.HouseholdPowerDf['Voltage'] = (
+                        self.HouseholdPowerDf['Voltage'].astype(np.float) * self.scaling_factor).round()
+            self.HouseholdPowerDf['Global_intensity'] = (
+                        self.HouseholdPowerDf['Global_intensity'].astype(np.float) * self.scaling_factor).round()
+            self.HouseholdPowerDf['Sub_metering_1'] = (
+                        self.HouseholdPowerDf['Sub_metering_1'].astype(np.float) * self.scaling_factor).round()
+            self.HouseholdPowerDf['Sub_metering_2'] = (
+                        self.HouseholdPowerDf['Sub_metering_2'].astype(np.float) * self.scaling_factor).round()
+            self.HouseholdPowerDf['Sub_metering_3'] = (
+                        self.HouseholdPowerDf['Sub_metering_3'].astype(np.float) * self.scaling_factor).round()
 
         if self.caching:
             print("Storing samples in cache...")
-            for idx in tqdm(range(self.IntelDataDf.shape[0] // self.pooling_factor)):
-                item = self.IntelDataDf.iloc[idx:idx + self.pooling_factor, 4:8].values.flatten()
+            for idx in tqdm(range(self.HouseholdPowerDf.shape[0] // self.pooling_factor)):
+                item = self.HouseholdPowerDf.iloc[idx:idx + self.pooling_factor, 2:9].values.flatten()
 
                 with open(self._cached_file_name(idx), "wb") as f:
                     np.save(f, item)
 
-        self.range = self.IntelDataDf.iloc[:, self.item_indices].max().max() - self.IntelDataDf.iloc[:,
-                                                                               self.item_indices].min().min()
+        self.range = self.HouseholdPowerDf.iloc[:, self.item_indices].max().max() - self.HouseholdPowerDf.iloc[:,
+                                                                                    self.item_indices].min().min()
 
     def _cached_file_name(self, idx):
         return f"{self.pkl_path}/{idx}.npy"

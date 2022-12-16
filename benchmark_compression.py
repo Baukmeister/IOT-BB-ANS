@@ -6,6 +6,7 @@ import io
 
 from tqdm import tqdm
 
+from util.HouseholdPowerDataLoader import HouseholdPowerDataset
 from util.IntelLabDataLoader import IntelLabDataset
 from util.SimpleDataLoader import SimpleDataSet
 from util.WIDSMDataLoader import WISDMDataset
@@ -42,7 +43,7 @@ def lzma_compress(data_points):
 if __name__ == "__main__":
     # Biometrics data
     data_set_size = 1000
-    data_set_name = "intelLab"
+    data_set_name = "householdPower"
 
     if data_set_name == "WISDM":
         dataSet = WISDMDataset(
@@ -65,6 +66,14 @@ if __name__ == "__main__":
             caching=False,
             metric="temperature"
         )
+
+    elif data_set_name == "householdPower":
+        dataSet = HouseholdPowerDataset(
+            "data/household_power_consumption",
+            pooling_factor=5,
+            scaling_factor=10,
+            caching=False,
+            metric="all")
 
     print("\nCollecting data for compression benchmark ...")
     data = np.array([dataSet.__getitem__(i).cpu().numpy()[0] for i in tqdm(range(data_set_size))]).astype("uint8")
