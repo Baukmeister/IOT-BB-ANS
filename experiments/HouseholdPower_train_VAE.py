@@ -7,6 +7,8 @@ from models.vae import *
 from models.vanilla_vae import *
 from util.HouseholdPowerDataLoader import HouseholdPowerDataset
 from util.io import vae_model_name
+from pytorch_lightning import loggers as pl_loggers
+
 
 
 def main():
@@ -14,13 +16,13 @@ def main():
     pooling_factor = 5
     hidden_dim = 50
     latent_dim = 10
-    train_set_ratio = 0.7
+    train_set_ratio = 0.4
     val_set_ratio = 0.01
     train_batch_size = 8
     dicretize = True
     learning_rate = 0.0001
     weight_decay = 0.01
-    scale_factor = 10
+    scale_factor = 100
     shift = True
     model_type = "beta_binomial_vae"
     metric = "all"
@@ -96,14 +98,16 @@ def main():
 
     profiler = SimpleProfiler()
     # profiler = PyTorchProfiler()
+    tb_logger = pl_loggers.TensorBoardLogger(save_dir="household_power_logs/")
 
     trainer = pl.Trainer(
         limit_train_batches=int((train_set_ratio * trainSetSize) / train_batch_size),
-        max_epochs=1,
+        max_epochs=3,
         accelerator='gpu',
         devices=1,
         callbacks=[EarlyStopping(monitor="val_loss")],
-        profiler=profiler
+        profiler=profiler,
+        logger=tb_logger
     )
     trainer.fit(model=model, train_dataloaders=trainDataLoader, val_dataloaders=valDataLoader)
     torch.save(model.state_dict(), model_name)

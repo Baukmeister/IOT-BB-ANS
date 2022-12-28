@@ -43,7 +43,7 @@ def lzma_compress(data_points):
 if __name__ == "__main__":
     # Biometrics data
     data_set_size = 1000
-    data_set_name = "householdPower"
+    data_set_name = "intelLab"
 
     if data_set_name == "WISDM":
         dataSet = WISDMDataset(
@@ -61,8 +61,8 @@ if __name__ == "__main__":
     elif data_set_name == "intelLab":
         dataSet = IntelLabDataset(
             path="data/IntelLabData",
-            pooling_factor=5,
-            scaling_factor=10,
+            pooling_factor=10,
+            scaling_factor=100,
             caching=False,
             metric="temperature"
         )
@@ -71,7 +71,7 @@ if __name__ == "__main__":
         dataSet = HouseholdPowerDataset(
             "data/household_power_consumption",
             pooling_factor=5,
-            scaling_factor=10,
+            scaling_factor=100,
             caching=False,
             metric="all")
 

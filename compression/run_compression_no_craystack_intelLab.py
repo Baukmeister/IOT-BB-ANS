@@ -22,10 +22,10 @@ prior_precision = 8
 obs_precision = 24
 q_precision = 14
 
-data_set_size = 100
+data_set_size = 1000
 
 # MODEL CONFIG
-pooling_factor = 100
+pooling_factor = 10
 hidden_dim = 50
 latent_dim = 10
 train_set_ratio = 1.0
@@ -34,7 +34,7 @@ train_batch_size = 8
 dicretize = True
 learning_rate = 0.0001
 weight_decay = 0.01
-scale_factor = 10
+scale_factor = 109
 shift = True
 model_type = "beta_binomial_vae"
 metric = "temperature"
