@@ -1,25 +1,26 @@
 import torch
 from pytorch_lightning.profilers import SimpleProfiler
 from torch.utils import data
+from torch.utils.data import Dataset
 
+from experiment_pipelines.experiment_params import Params
 from model_training.VAE_Trainer import VaeTrainer
 import pytorch_lightning as pl
 
 
 class SimpleVaeTrainer(VaeTrainer):
 
-    def __int__(self, params, **kwargs):
-
+    def __init__(self, params: Params, dataSet: Dataset):
         input_dim = int(1 * params.pooling_factor)
-        super().__int__(params, "Simple", input_dim)
+        super().__init__(params, "Simple", input_dim)
         self.params = params
+        self.dataSet = dataSet
 
     def train_model(self):
         # CONFIG
-        dataSet = self.dataSet
-        valSetSize = int(len(dataSet) * self.val_set_ratio)
-        trainSetSize = len(dataSet) - valSetSize
-        train_set, val_set = data.random_split(dataSet, [trainSetSize, valSetSize])
+        valSetSize = int(len(self.dataSet) * self.val_set_ratio)
+        trainSetSize = len(self.dataSet) - valSetSize
+        train_set, val_set = data.random_split(self.dataSet, [trainSetSize, valSetSize])
 
         trainDataLoader = data.DataLoader(train_set, batch_size=self.params.train_batch_size, shuffle=True, num_workers=1)
         valDataLoader = data.DataLoader(val_set)

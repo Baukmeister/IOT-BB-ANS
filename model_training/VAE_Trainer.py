@@ -6,7 +6,7 @@ from torch.utils import data
 
 
 class VaeTrainer():
-    def __int__(self, params, name, dataset, input_dim):
+    def __init__(self, params, name, input_dim):
 
         # extract params
         self.pooling_factor = params.pooling_factor
@@ -24,7 +24,7 @@ class VaeTrainer():
         self.metric = params.metric
 
         self.name = name
-        self.dataset = dataset
+        self.input_dim = input_dim
 
         self.model_name = vae_model_name(
             f"../models/trained_models/{self.name}",
@@ -60,6 +60,7 @@ class VaeTrainer():
 
         beta_binomial_vae = BetaBinomialVAE_sbs(
             n_features=self.input_dim,
+            range=self.scale_factor,
             batch_size=self.train_batch_size,
             hidden_dim=self.hidden_dim,
             latent_dim=self.latent_dim,
