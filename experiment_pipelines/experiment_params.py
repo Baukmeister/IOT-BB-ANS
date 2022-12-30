@@ -15,4 +15,4 @@ class Params:
     shift: bool = False
     model_type: str = "beta_binomial_vae"
     metric: str = None
-    train_batches: int = 16
+    train_batches: int = 10000
