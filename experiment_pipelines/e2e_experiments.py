@@ -15,7 +15,9 @@ def main():
         print("Running model training for simple data ...")
 
         simple_data_params = Params(
-            input_dim=1
+            input_dim=1,
+            train_set_ratio=0.2,
+            val_set_ratio=0.01
         )
 
         simpleDataSet = SimpleDataSet(
@@ -32,9 +34,10 @@ def main():
         simple_vae_trainer = SimpleVaeTrainer(simple_data_params, train_set)
         simple_vae_trainer.train_model()
 
-        #Todo: figure out bug in this call
         simple_neural_compressor = NeuralCompressor(simple_data_params,test_set, "simple")
         simple_neural_compressor.run_compression()
+
+
         #Todo: Add benchmark compression on test_set
 
 if __name__ == "__main__":

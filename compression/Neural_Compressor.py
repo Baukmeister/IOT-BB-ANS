@@ -22,6 +22,7 @@ class NeuralCompressor():
 
         self.dataSet = dataSet
         self.name = name
+        self.n_features = int(self.params.input_dim * self.params.pooling_factor)
 
         self.model_name = vae_model_name(
             f"../models/trained_models/{self.name}",
@@ -39,7 +40,7 @@ class NeuralCompressor():
         self.num_batches = len(self.data_points_singles) // self.params.compression_batch_size
 
         vae = VAE_full(
-            n_features=self.params.input_dim,
+            n_features=self.n_features,
             scale_factor=self.params.scale_factor,
             hidden_size=self.params.hidden_dim,
             latent_size=self.params.latent_dim,
@@ -48,7 +49,7 @@ class NeuralCompressor():
         )
 
         vanilla_vae = Vanilla_VAE(
-            n_features=self.params.input_dim,
+            n_features=self.n_features,
             scale_factor=self.params.scale_factor,
             hidden_dims=None,
             latent_dim=self.params.latent_dim,
@@ -57,7 +58,7 @@ class NeuralCompressor():
         )
 
         beta_binomial_vae = BetaBinomialVAE_sbs(
-            n_features=self.params.input_dim,
+            n_features=self.n_features,
             range=self.params.scale_factor,
             batch_size=self.params.train_batch_size,
             hidden_dim=self.params.hidden_dim,
@@ -77,14 +78,13 @@ class NeuralCompressor():
             raise ValueError(f"No model defined for '{self.params.model_type}'")
 
         self.model.load_state_dict(torch.load(self.model_name))
+        self.model.eval()
+
         rec_net = tvae_utils.torch_fun_to_numpy_fun(self.model.encode)
         gen_net = tvae_utils.torch_fun_to_numpy_fun(self.model.decode)
 
         # set up compression methods
         latent_shape = (self.params.compression_batch_size, self.params.latent_dim)
-        latent_size = np.prod(latent_shape)
-        obs_shape = (self.params.compression_batch_size, self.params.input_dim * int(self.params.pooling_factor))
-        obs_size = np.prod(obs_shape)
 
         obs_append = tvae_utils.beta_binomial_obs_append(self.params.scale_factor, self.params.obs_precision)
         obs_pop = tvae_utils.beta_binomial_obs_pop(self.params.scale_factor, self.params.obs_precision)

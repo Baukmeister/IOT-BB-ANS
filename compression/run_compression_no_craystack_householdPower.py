@@ -129,7 +129,6 @@ other_bits = rng.randint(low=1 << 16, high=1 << 31, size=50, dtype=np.uint32)
 state = rans.unflatten(other_bits)
 data_points = np.split(np.reshape(data_points_singles, (len(data_points_singles), -1)), len(data_points_singles))
 
-
 encode_start_time = time.time()
 print("\nEncoding data points ...")
 for i, data_point in tqdm(enumerate(data_points), total=data_set_size):

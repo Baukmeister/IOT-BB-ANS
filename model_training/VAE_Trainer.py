@@ -1,4 +1,5 @@
 import torch
+from pytorch_lightning.callbacks import EarlyStopping
 from pytorch_lightning.profilers import SimpleProfiler
 
 from experiment_pipelines.experiment_params import Params
@@ -8,6 +9,7 @@ from models.vanilla_vae import Vanilla_VAE
 from util.io import vae_model_name
 import pytorch_lightning as pl
 from torch.utils import data
+from pytorch_lightning import loggers as pl_loggers
 
 
 class VaeTrainer():
@@ -90,12 +92,22 @@ class VaeTrainer():
         self.trainSetSize = len(self.dataSet) - self.valSetSize
         self.train_set, self.val_set = data.random_split(self.dataSet, [self.trainSetSize, self.valSetSize])
 
-    def train_model(self):
+    def train_model(self,):
         trainDataLoader = data.DataLoader(self.train_set, batch_size=self.params.train_batch_size,  shuffle=True,
                                           drop_last=True)
         valDataLoader = data.DataLoader(self.val_set)
         profiler = SimpleProfiler()
-        trainer = pl.Trainer(limit_train_batches=self.params.train_batches, max_epochs=self.params.max_epochs, accelerator='gpu', devices=1,
-                             profiler=profiler)
+
+        tb_logger = pl_loggers.TensorBoardLogger(save_dir="household_power_logs/")
+
+        trainer = pl.Trainer(
+            limit_train_batches=int((self.params.train_set_ratio * self.trainSetSize) / self.params.train_batch_size),
+            max_epochs=self.params.max_epochs,
+            accelerator='gpu',
+            devices=1,
+            callbacks=[EarlyStopping(monitor="val_loss")],
+            profiler=profiler,
+            logger=tb_logger
+        )
         trainer.fit(model=self.model, train_dataloaders= trainDataLoader, val_dataloaders= valDataLoader,)
         torch.save(self.model.state_dict(), self.model_name)
