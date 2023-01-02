@@ -21,7 +21,7 @@ class VaeTrainer():
         self.train_set_ratio = self.params.train_set_ratio
         self.val_set_ratio = self.params.val_set_ratio
         self.train_batch_size = self.params.train_batch_size
-        self.dicretize = self.params.discretize
+        self.discretize = self.params.discretize
         self.learning_rate = self.params.learning_rate
         self.weight_decay = self.params.weight_decay
         self.scale_factor = self.params.scale_factor
@@ -36,7 +36,7 @@ class VaeTrainer():
 
         self.model_name = vae_model_name(
             f"../models/trained_models/{self.name}",
-            self.dicretize,
+            self.discretize,
             self.hidden_dim,
             self.latent_dim,
             self.pooling_factor,
@@ -46,7 +46,6 @@ class VaeTrainer():
             data_set_type=self.metric
         )
 
-        model_name = "../models/simple/trained_models/simple_model"
 
         vae = VAE_full(
             n_features=self.input_dim,

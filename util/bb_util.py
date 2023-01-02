@@ -1,7 +1,8 @@
 import numpy as np
 from scipy.stats import norm, beta, binom
 from scipy.special import gammaln
-import rans
+
+from compression import rans
 
 # ----------------------------------------------------------------------------
 # Statistics functions for encoding and decoding according to uniform and non-
