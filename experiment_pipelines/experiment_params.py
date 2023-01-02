@@ -2,7 +2,6 @@ from dataclasses import dataclass
 
 @dataclass
 class Params:
-    input_dim: int
     pooling_factor: int =15
     hidden_dim: int = 300
     latent_dim: int = 20
@@ -24,4 +23,4 @@ class Params:
     obs_precision = 24
     q_precision = 14
     compression_samples_num = 1000
-
+    range = None

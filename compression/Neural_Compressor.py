@@ -17,12 +17,12 @@ from util.io import vae_model_name
 
 class NeuralCompressor():
 
-    def __init__(self, params: Params, dataSet: torch.utils.data.Dataset, name: str):
+    def __init__(self, params: Params, dataSet: torch.utils.data.Dataset, name: str, input_dim):
         self.params = params
 
         self.dataSet = dataSet
         self.name = name
-        self.n_features = int(self.params.input_dim * self.params.pooling_factor)
+        self.n_features = input_dim
 
         self.model_name = vae_model_name(
             f"../models/trained_models/{self.name}",
@@ -105,11 +105,8 @@ class NeuralCompressor():
 
         print_interval = 100
         encode_start_time = time.time()
-        for i, data_point in enumerate(data_points):
+        for i, data_point in tqdm(enumerate(data_points), total=self.params.compression_samples_num):
             state = self.vae_append(state, data_point)
-
-            if not i % print_interval:
-                print('Encoded {}'.format(i))
 
             compressed_length = 32 * (len(rans.flatten(state)) - len(other_bits)) / (i + 1)
             compress_lengths.append(compressed_length)
