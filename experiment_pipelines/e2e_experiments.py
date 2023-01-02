@@ -1,3 +1,4 @@
+from benchmark_compression import benchmark_on_data
 from compression.Neural_Compressor import NeuralCompressor
 from experiment_pipelines.experiment_params import Params
 from model_training.Simple_train_VAE import SimpleVaeTrainer
@@ -6,12 +7,9 @@ from torch.utils import data
 
 
 def main():
-
     experiments_to_run = ["simple", "household"]
 
-
     if "simple" in experiments_to_run:
-
         print("Running model training for simple data ...")
 
         simple_data_params = Params(
@@ -34,11 +32,14 @@ def main():
         simple_vae_trainer = SimpleVaeTrainer(simple_data_params, train_set)
         simple_vae_trainer.train_model()
 
-        simple_neural_compressor = NeuralCompressor(simple_data_params,test_set, "simple")
+        print("Running neural compression for simple data ...")
+
+        simple_neural_compressor = NeuralCompressor(simple_data_params, test_set, "simple")
         simple_neural_compressor.run_compression()
 
+        print("Running benchmark compression for simple data ...")
+        benchmark_on_data(test_set)
 
-        #Todo: Add benchmark compression on test_set
 
 if __name__ == "__main__":
     main()

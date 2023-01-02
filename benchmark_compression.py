@@ -40,6 +40,14 @@ def lzma_compress(data_points):
     return lzma.compress(data_points.tobytes())
 
 
+def benchmark_on_data(custom_data_set):
+    custom_data = np.array([custom_data_set.__getitem__(i).cpu().numpy()[0] for i in tqdm(range(len(custom_data_set)))]).astype(
+        "uint8")
+    bench_compressor(gzip_compress, gzip.decompress, "gzip", custom_data)
+    bench_compressor(bz2_compress, bz2.decompress, "bz2", custom_data)
+    bench_compressor(lzma_compress, lzma.decompress, "lzma", custom_data)
+
+
 if __name__ == "__main__":
     # Biometrics data
     data_set_size = 1000
