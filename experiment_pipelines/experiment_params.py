@@ -16,3 +16,4 @@ class Params:
     model_type: str = "beta_binomial_vae"
     metric: str = None
     train_batches: int = 10000
+    max_epochs = 1
