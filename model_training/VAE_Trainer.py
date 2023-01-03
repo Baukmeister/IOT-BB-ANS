@@ -93,8 +93,12 @@ class VaeTrainer():
         self.train_set, self.val_set = data.random_split(self.dataSet, [self.trainSetSize, self.valSetSize])
 
     def train_model(self,):
-        trainDataLoader = data.DataLoader(self.train_set, batch_size=self.params.train_batch_size,  shuffle=True,
-                                          drop_last=True)
+        trainDataLoader = data.DataLoader(
+            self.train_set,
+            batch_size=self.params.train_batch_size,
+            shuffle=True,
+            drop_last=True
+        )
         valDataLoader = data.DataLoader(self.val_set)
         profiler = SimpleProfiler()
 

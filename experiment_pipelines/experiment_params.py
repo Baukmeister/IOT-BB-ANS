@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class Params:
-    pooling_factor: int =15
+    pooling_factor: int = 15
     hidden_dim: int = 300
     latent_dim: int = 20
     train_set_ratio: float = 1.0
@@ -17,10 +18,10 @@ class Params:
     model_type: str = "beta_binomial_vae"
     metric: str = None
     train_batches: int = 10000
-    max_epochs = 1
-    compression_batch_size = 1
-    prior_precision = 8
-    obs_precision = 24
-    q_precision = 14
-    compression_samples_num = 1000
-    range = None
+    max_epochs: int = 1
+    compression_batch_size: int = 1
+    prior_precision: int = 8
+    obs_precision: int = 24
+    q_precision: int = 14
+    compression_samples_num: int = 1000
+    data_set_type: str = None

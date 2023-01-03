@@ -3,6 +3,7 @@ from compression.Neural_Compressor import NeuralCompressor
 from experiment_pipelines.experiment_params import Params
 from model_training.VAE_Trainer import VaeTrainer
 from util.HouseholdPowerDataLoader import HouseholdPowerDataset
+from util.WIDSMDataLoader import WISDMDataset
 from util.SimpleDataLoader import SimpleDataSet
 from torch.utils import data
 
@@ -10,7 +11,8 @@ from torch.utils import data
 def main():
     experiments_to_run = [
         # "simple",
-        "household"
+        # "household",
+        "wisdm",
     ]
 
     if "simple" in experiments_to_run:
@@ -77,15 +79,15 @@ def main():
         trainSetSize = len(householdPowerDataSet) - (testSetSize)
         train_set, test_set = data.random_split(householdPowerDataSet, [trainSetSize, testSetSize])
 
-        # only provide the "real" train_set to the VAE trainer
         if household_power_params.metric == "all":
             householder_power_input_dim = 7 * int(household_power_params.pooling_factor)
         else:
             householder_power_input_dim = 1 * int(household_power_params.pooling_factor)
 
-        simple_vae_trainer = VaeTrainer(household_power_params, train_set, "HouseholdPower",
-                                        householder_power_input_dim)
-        simple_vae_trainer.train_model()
+        # only provide the "real" train_set to the VAE trainer
+        household_vae_trainer = VaeTrainer(household_power_params, train_set, "HouseholdPower",
+                                           householder_power_input_dim)
+        household_vae_trainer.train_model()
 
         print("Running neural compression for household_power data ...")
 
@@ -97,9 +99,60 @@ def main():
         benchmark_on_data(test_set)
         print("_" * 25)
 
-    elif "WISDM" in experiments_to_run:
-        # TODO
-        pass
+    elif "wisdm" in experiments_to_run:
+        print("_" * 25)
+        print("Running model training for WISDM data ...")
+
+        WISDM_params = Params(
+            pooling_factor=100,
+            compression_samples_num=100,
+            hidden_dim=200,
+            latent_dim=50,
+            train_set_ratio=1.0,
+            val_set_ratio=0.01,
+            train_batch_size=64,
+            discretize=True,
+            learning_rate=0.001,
+            weight_decay=0.0001,
+            scale_factor=100,
+            shift=True,
+            model_type="beta_binomial_vae",
+            data_set_type="accel"
+        )
+
+        wisdm_dataset = WISDMDataset(
+            "../data/wisdm-dataset/raw",
+            pooling_factor=WISDM_params.pooling_factor,
+            discretize=WISDM_params.discretize,
+            scaling_factor=WISDM_params.scale_factor,
+            shift=WISDM_params.shift,
+            data_set_size=WISDM_params.data_set_type,
+            caching=False
+        )
+
+        # TODO: check if range is implemented correctly
+        WISDM_params.scale_factor = wisdm_dataset.range
+
+        testSetSize = int(len(wisdm_dataset) * WISDM_params.test_set_ratio)
+        trainSetSize = len(wisdm_dataset) - (testSetSize)
+        train_set, test_set = data.random_split(wisdm_dataset, [trainSetSize, testSetSize])
+
+        wisdm_power_input_dim = 3 * int(WISDM_params.pooling_factor)
+
+        wisdm_vae_trainer = VaeTrainer(WISDM_params, train_set, "WISDM",
+                                       wisdm_power_input_dim)
+        wisdm_vae_trainer.train_model()
+
+        print("Running neural compression for WISDM data ...")
+
+        wisdm_power_neural_compressor = NeuralCompressor(WISDM_params, test_set, "WISDM",
+                                                             wisdm_power_input_dim)
+        wisdm_power_neural_compressor.run_compression()
+
+        print("Running benchmark compression for WISDM data ...")
+        benchmark_on_data(test_set)
+        print("_" * 25)
+
     elif "intel_lab" in experiments_to_run:
         # TODO
         pass

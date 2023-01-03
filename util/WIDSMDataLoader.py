@@ -49,7 +49,6 @@ class WISDMDataset(Dataset):
         self.userDfs = []
         self.cached_data_samples = []
 
-
         if self.data_set_size == "single":
             self.paths = [self.phone_accel_path]
         elif self.data_set_size == "all":
@@ -116,6 +115,8 @@ class WISDMDataset(Dataset):
 
                 with open(self._cached_file_name(idx), "wb") as f:
                     np.save(f, item)
+
+        self.range = self.WISDMdf.iloc[:, 2:5].max().max() - self.WISDMdf.iloc[:, 2:5].min().min()
 
     def _cached_file_name(self, idx):
         return f"{self.pkl_path}/{idx}.npy"
