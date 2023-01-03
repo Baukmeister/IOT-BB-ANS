@@ -25,3 +25,4 @@ class Params:
     q_precision: int = 14
     compression_samples_num: int = 1000
     data_set_type: str = None
+    caching: bool = False

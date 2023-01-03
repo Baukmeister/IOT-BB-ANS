@@ -44,8 +44,13 @@ def main():
         data_set_type=metric
     )
 
-    dataSet = IntelLabDataset("../data/IntelLabData", pooling_factor=pooling_factor, scaling_factor=scale_factor,
-                              caching=False, metric=metric)
+    dataSet = IntelLabDataset(
+        "../data/IntelLabData",
+        pooling_factor=pooling_factor,
+        scaling_factor=scale_factor,
+        caching=False,
+        metric=metric
+    )
 
     valSetSize = int(len(dataSet) * val_set_ratio)
     trainSetSize = len(dataSet) - valSetSize

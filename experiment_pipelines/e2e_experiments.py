@@ -3,6 +3,7 @@ from compression.Neural_Compressor import NeuralCompressor
 from experiment_pipelines.experiment_params import Params
 from model_training.VAE_Trainer import VaeTrainer
 from util.HouseholdPowerDataLoader import HouseholdPowerDataset
+from util.IntelLabDataLoader import IntelLabDataset
 from util.WIDSMDataLoader import WISDMDataset
 from util.SimpleDataLoader import SimpleDataSet
 from torch.utils import data
@@ -12,7 +13,8 @@ def main():
     experiments_to_run = [
         # "simple",
         # "household",
-        "wisdm",
+        #"wisdm",
+        "intel"
     ]
 
     if "simple" in experiments_to_run:
@@ -130,7 +132,6 @@ def main():
             caching=False
         )
 
-        # TODO: check if range is implemented correctly
         WISDM_params.scale_factor = wisdm_dataset.range
 
         testSetSize = int(len(wisdm_dataset) * WISDM_params.test_set_ratio)
@@ -145,17 +146,67 @@ def main():
 
         print("Running neural compression for WISDM data ...")
 
-        wisdm_power_neural_compressor = NeuralCompressor(WISDM_params, test_set, "WISDM",
-                                                             wisdm_power_input_dim)
-        wisdm_power_neural_compressor.run_compression()
+        wisdm_neural_compressor = NeuralCompressor(WISDM_params, test_set, "WISDM",
+                                                   wisdm_power_input_dim)
+        wisdm_neural_compressor.run_compression()
 
         print("Running benchmark compression for WISDM data ...")
         benchmark_on_data(test_set)
         print("_" * 25)
 
-    elif "intel_lab" in experiments_to_run:
-        # TODO
-        pass
+    elif "intel" in experiments_to_run:
+        print("_" * 25)
+        print("Running model training for Intel_Lab data ...")
+
+        intel_lab_params = Params(
+            pooling_factor=10,
+            hidden_dim=50,
+            latent_dim=10,
+            train_set_ratio=0.2,
+            val_set_ratio=0.001,
+            train_batch_size=8,
+            discretize=True,
+            learning_rate=0.0001,
+            weight_decay=0.01,
+            scale_factor=109,
+            shift=True,
+            model_type="beta_binomial_vae",
+            metric="temperature"
+        )
+
+        intel_lab_dataset = IntelLabDataset(
+            "../data/IntelLabData",
+            pooling_factor=intel_lab_params.pooling_factor,
+            scaling_factor=intel_lab_params.scale_factor,
+            caching=intel_lab_params.caching,
+            metric=intel_lab_params.metric
+        )
+
+        intel_lab_params.scale_factor = intel_lab_dataset.range
+
+        testSetSize = int(len(intel_lab_dataset) * intel_lab_params.test_set_ratio)
+        trainSetSize = len(intel_lab_dataset) - (testSetSize)
+        train_set, test_set = data.random_split(intel_lab_dataset, [trainSetSize, testSetSize])
+
+        if intel_lab_params.metric == "all":
+            intel_lab_input_dim = 4 * int(intel_lab_params.pooling_factor)
+        else:
+            intel_lab_input_dim = 1 * int(intel_lab_params.pooling_factor)
+
+
+        intel_lab_vae_trainer = VaeTrainer(intel_lab_params, train_set, "IntelLab",
+                                           intel_lab_input_dim)
+        intel_lab_vae_trainer.train_model()
+
+        print("Running neural compression for intel_lab data ...")
+
+        intel_lab_neural_compressor = NeuralCompressor(intel_lab_params, test_set, "IntelLab",
+                                                       intel_lab_input_dim)
+        intel_lab_neural_compressor.run_compression()
+
+        print("Running benchmark compression for intel_lab data ...")
+        benchmark_on_data(test_set)
+        print("_" * 25)
 
 
 if __name__ == "__main__":
