@@ -9,8 +9,8 @@ from models.vanilla_vae import Vanilla_VAE
 from util.io import vae_model_name
 import pytorch_lightning as pl
 from torch.utils import data
-from pytorch_lightning import loggers as pl_loggers
-
+from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning import Trainer
 
 class VaeTrainer():
     def __init__(self, params : Params, dataSet: torch.utils.data.Dataset, name, input_dim):
@@ -102,7 +102,7 @@ class VaeTrainer():
         valDataLoader = data.DataLoader(self.val_set)
         profiler = SimpleProfiler()
 
-        tb_logger = pl_loggers.TensorBoardLogger(save_dir="household_power_logs/")
+        wandb_logger = WandbLogger(name=self.name, save_dir=f"{self.name}_logs/")
 
         trainer = pl.Trainer(
             limit_train_batches=int((self.params.train_set_ratio * self.trainSetSize) / self.params.train_batch_size),
@@ -111,7 +111,7 @@ class VaeTrainer():
             devices=1,
             callbacks=[EarlyStopping(monitor="val_loss")],
             profiler=profiler,
-            logger=tb_logger
+            logger=wandb_logger
         )
         trainer.fit(model=self.model, train_dataloaders= trainDataLoader, val_dataloaders= valDataLoader,)
         torch.save(self.model.state_dict(), self.model_name)

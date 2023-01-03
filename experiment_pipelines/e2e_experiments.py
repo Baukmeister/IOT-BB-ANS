@@ -55,7 +55,7 @@ def main():
         print("Running model training for household_power data ...")
 
         household_power_params = Params(
-            train_set_ratio=0.1,
+            train_set_ratio=0.9,
             val_set_ratio=0.005,
             scale_factor=100,
             pooling_factor=5,
@@ -64,6 +64,7 @@ def main():
             train_batch_size=8,
             discretize=True,
             learning_rate=0.0001,
+            max_epochs=10,
             metric="all"
         )
 
@@ -118,6 +119,7 @@ def main():
             weight_decay=0.0001,
             scale_factor=100,
             shift=True,
+            max_epochs=8,
             model_type="beta_binomial_vae",
             data_set_type="accel"
         )
