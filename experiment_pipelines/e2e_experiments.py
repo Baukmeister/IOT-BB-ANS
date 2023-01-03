@@ -11,9 +11,9 @@ from torch.utils import data
 
 def main():
     experiments_to_run = [
-        # "simple",
-        # "household",
-        #"wisdm",
+        "simple",
+        "household",
+        "wisdm",
         "intel"
     ]
 

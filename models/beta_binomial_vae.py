@@ -61,6 +61,7 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
         self.bn3 = nn.BatchNorm1d(self.hidden_dim)
         self.fc4 = nn.Linear(self.hidden_dim, n_features * 2)
 
+
     def encode(self, x):
         """Return mu, sigma on latent"""
         h = x / self.range  # otherwise we will have numerical issues
@@ -124,7 +125,7 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
             raise Warning("Batch values are out of range!")
 
         loss = self.loss(batch)
-        self.log(f'ELBO LOSS', loss)
+        self.log(f'ELBO LOSS', loss, on_epoch=True)
 
         if self.plot and batch_idx % 500 == 0:
             recon = self.reconstruct(batch, self.device)
