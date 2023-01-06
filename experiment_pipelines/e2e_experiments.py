@@ -17,13 +17,19 @@ def main():
         "intel"
     ]
 
+    modes_to_evaluate = [
+        #"model_training",
+        "compression"
+    ]
+
     if "simple" in experiments_to_run:
         print("_" * 25)
-        print("Running model training for simple data ...")
 
         simple_params = Params(
-            train_set_ratio=0.2,
-            val_set_ratio=0.01
+            train_set_ratio=1.0,
+            train_batches=1000,
+            val_set_ratio=0.001,
+            max_epochs=1
         )
 
         simpleDataSet = SimpleDataSet(
@@ -38,24 +44,27 @@ def main():
 
         # only provide the "real" train_set to the VAE trainer
         simple_input_dim = int(1 * simple_params.pooling_factor)
-        simple_vae_trainer = VaeTrainer(simple_params, train_set, "simple", simple_input_dim)
-        simple_vae_trainer.train_model()
 
-        print("Running neural compression for simple data ...")
+        if "model_training" in modes_to_evaluate:
+            print("Running model training for simple data ...")
+            simple_vae_trainer = VaeTrainer(simple_params, train_set, "simple", simple_input_dim)
+            simple_vae_trainer.train_model()
 
-        simple_neural_compressor = NeuralCompressor(simple_params, test_set, "simple", simple_input_dim)
-        simple_neural_compressor.run_compression()
+        if "compression" in modes_to_evaluate:
+            print("Running neural compression for simple data ...")
 
-        print("Running benchmark compression for simple data ...")
-        benchmark_on_data(test_set)
+            simple_neural_compressor = NeuralCompressor(simple_params, test_set, "simple", simple_input_dim)
+            simple_neural_compressor.run_compression()
+
+            print("Running benchmark compression for simple data ...")
+            benchmark_on_data(test_set)
         print("_" * 25)
 
     if "household" in experiments_to_run:
         print("_" * 25)
-        print("Running model training for household_power data ...")
 
         household_power_params = Params(
-            train_set_ratio=0.9,
+            train_set_ratio=1.0,
             val_set_ratio=0.005,
             scale_factor=100,
             pooling_factor=5,
@@ -64,6 +73,7 @@ def main():
             train_batch_size=8,
             discretize=True,
             learning_rate=0.0001,
+            train_batches=100000,
             max_epochs=10,
             metric="all"
         )
@@ -87,24 +97,28 @@ def main():
         else:
             householder_power_input_dim = 1 * int(household_power_params.pooling_factor)
 
-        # only provide the "real" train_set to the VAE trainer
-        household_vae_trainer = VaeTrainer(household_power_params, train_set, "HouseholdPower",
-                                           householder_power_input_dim)
-        household_vae_trainer.train_model()
+        if "model_training" in modes_to_evaluate:
+            print("Running model training for household_power data ...")
 
-        print("Running neural compression for household_power data ...")
+            # only provide the "real" train_set to the VAE trainer
+            household_vae_trainer = VaeTrainer(household_power_params, train_set, "HouseholdPower",
+                                               householder_power_input_dim)
+            household_vae_trainer.train_model()
 
-        household_power_neural_compressor = NeuralCompressor(household_power_params, test_set, "HouseholdPower",
-                                                             householder_power_input_dim)
-        household_power_neural_compressor.run_compression()
+        if "compression" in modes_to_evaluate:
 
-        print("Running benchmark compression for household_power data ...")
-        benchmark_on_data(test_set)
+            print("Running neural compression for household_power data ...")
+
+            household_power_neural_compressor = NeuralCompressor(household_power_params, test_set, "HouseholdPower",
+                                                                 householder_power_input_dim)
+            household_power_neural_compressor.run_compression()
+
+            print("Running benchmark compression for household_power data ...")
+            benchmark_on_data(test_set)
         print("_" * 25)
 
-    elif "wisdm" in experiments_to_run:
+    if "wisdm" in experiments_to_run:
         print("_" * 25)
-        print("Running model training for WISDM data ...")
 
         WISDM_params = Params(
             pooling_factor=100,
@@ -142,23 +156,27 @@ def main():
 
         wisdm_power_input_dim = 3 * int(WISDM_params.pooling_factor)
 
-        wisdm_vae_trainer = VaeTrainer(WISDM_params, train_set, "WISDM",
-                                       wisdm_power_input_dim)
-        wisdm_vae_trainer.train_model()
+        if "model_training" in modes_to_evaluate:
+            print("Running model training for WISDM data ...")
 
-        print("Running neural compression for WISDM data ...")
+            wisdm_vae_trainer = VaeTrainer(WISDM_params, train_set, "WISDM",
+                                           wisdm_power_input_dim)
+            wisdm_vae_trainer.train_model()
 
-        wisdm_neural_compressor = NeuralCompressor(WISDM_params, test_set, "WISDM",
-                                                   wisdm_power_input_dim)
-        wisdm_neural_compressor.run_compression()
+        if "compression" in modes_to_evaluate:
 
-        print("Running benchmark compression for WISDM data ...")
-        benchmark_on_data(test_set)
+            print("Running neural compression for WISDM data ...")
+
+            wisdm_neural_compressor = NeuralCompressor(WISDM_params, test_set, "WISDM",
+                                                       wisdm_power_input_dim)
+            wisdm_neural_compressor.run_compression()
+
+            print("Running benchmark compression for WISDM data ...")
+            benchmark_on_data(test_set)
         print("_" * 25)
 
-    elif "intel" in experiments_to_run:
+    if "intel" in experiments_to_run:
         print("_" * 25)
-        print("Running model training for Intel_Lab data ...")
 
         intel_lab_params = Params(
             pooling_factor=10,
@@ -195,19 +213,23 @@ def main():
         else:
             intel_lab_input_dim = 1 * int(intel_lab_params.pooling_factor)
 
+        if "model_training" in modes_to_evaluate:
+            print("Running model training for Intel_Lab data ...")
 
-        intel_lab_vae_trainer = VaeTrainer(intel_lab_params, train_set, "IntelLab",
-                                           intel_lab_input_dim)
-        intel_lab_vae_trainer.train_model()
+            intel_lab_vae_trainer = VaeTrainer(intel_lab_params, train_set, "IntelLab",
+                                               intel_lab_input_dim)
+            intel_lab_vae_trainer.train_model()
 
-        print("Running neural compression for intel_lab data ...")
 
-        intel_lab_neural_compressor = NeuralCompressor(intel_lab_params, test_set, "IntelLab",
-                                                       intel_lab_input_dim)
-        intel_lab_neural_compressor.run_compression()
+        if "compression" in modes_to_evaluate:
+            print("Running neural compression for intel_lab data ...")
 
-        print("Running benchmark compression for intel_lab data ...")
-        benchmark_on_data(test_set)
+            intel_lab_neural_compressor = NeuralCompressor(intel_lab_params, test_set, "IntelLab",
+                                                           intel_lab_input_dim)
+            intel_lab_neural_compressor.run_compression()
+
+            print("Running benchmark compression for intel_lab data ...")
+            benchmark_on_data(test_set)
         print("_" * 25)
 
 

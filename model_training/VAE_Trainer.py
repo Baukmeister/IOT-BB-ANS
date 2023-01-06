@@ -1,4 +1,7 @@
+from datetime import datetime
+
 import torch
+import wandb
 from pytorch_lightning.callbacks import EarlyStopping
 from pytorch_lightning.profilers import SimpleProfiler
 
@@ -12,8 +15,9 @@ from torch.utils import data
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning import Trainer
 
+
 class VaeTrainer():
-    def __init__(self, params : Params, dataSet: torch.utils.data.Dataset, name, input_dim):
+    def __init__(self, params: Params, dataSet: torch.utils.data.Dataset, name, input_dim):
 
         # extract params
         self.params = params
@@ -47,7 +51,6 @@ class VaeTrainer():
             self.shift,
             data_set_type=self.metric
         )
-
 
         vae = VAE_full(
             n_features=self.input_dim,
@@ -87,12 +90,11 @@ class VaeTrainer():
         else:
             raise ValueError(f"No model defined for '{self.model_type}'")
 
-
         self.valSetSize = int(len(self.dataSet) * self.val_set_ratio)
         self.trainSetSize = len(self.dataSet) - self.valSetSize
         self.train_set, self.val_set = data.random_split(self.dataSet, [self.trainSetSize, self.valSetSize])
 
-    def train_model(self,):
+    def train_model(self):
         trainDataLoader = data.DataLoader(
             self.train_set,
             batch_size=self.params.train_batch_size,
@@ -102,7 +104,9 @@ class VaeTrainer():
         valDataLoader = data.DataLoader(self.val_set)
         profiler = SimpleProfiler()
 
-        wandb_logger = WandbLogger(name=self.name, save_dir=f"{self.name}_logs/")
+        date_time = datetime.now().strftime("%m/%d/%Y_%H:%M:%S")
+
+        wandb_logger = WandbLogger(name=date_time, project="e2e_experiments", group=self.name)
 
         trainer = pl.Trainer(
             limit_train_batches=int((self.params.train_set_ratio * self.trainSetSize) / self.params.train_batch_size),
@@ -113,5 +117,6 @@ class VaeTrainer():
             profiler=profiler,
             logger=wandb_logger
         )
-        trainer.fit(model=self.model, train_dataloaders= trainDataLoader, val_dataloaders= valDataLoader,)
+        trainer.fit(model=self.model, train_dataloaders=trainDataLoader, val_dataloaders=valDataLoader, )
         torch.save(self.model.state_dict(), self.model_name)
+        wandb.finish()

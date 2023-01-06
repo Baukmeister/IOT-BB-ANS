@@ -79,7 +79,6 @@ class VAE_full(pl.LightningModule):
         self.scale_factor = scale_factor
         self.plot_preds = plot_preds
 
-        print(f"Using: {self.device}")
         self.n_features = n_features
         self.encoder = Encoder(D_in=n_features, H=hidden_size, latent_size=latent_size).to(device)
         self.decoder = Decoder(D_in=latent_size, H=hidden_size, D_out=n_features, scale_factor=scale_factor).to(device)

@@ -118,9 +118,6 @@ class NeuralCompressor():
         print("Used " + str(compressed_bits) + " bits.")
         print(f'This is {compressed_bits / np.size(data_points)} bits per data point')
 
-        if not os.path.exists('results'):
-            os.mkdir('results')
-        np.savetxt('compressed_lengths_cts', np.array(compress_lengths))
 
         state = rans.unflatten(compressed_message)
         decode_start_time = time.time()
