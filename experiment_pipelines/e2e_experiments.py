@@ -29,7 +29,9 @@ def main():
             train_set_ratio=1.0,
             train_batches=1000,
             val_set_ratio=0.001,
-            max_epochs=1
+            scale_factor=10000,
+            max_epochs=8,
+            compression_samples_num=100
         )
 
         simpleDataSet = SimpleDataSet(
@@ -66,15 +68,16 @@ def main():
         household_power_params = Params(
             train_set_ratio=1.0,
             val_set_ratio=0.005,
-            scale_factor=100,
-            pooling_factor=5,
+            compression_samples_num=100,
+            scale_factor=1000,
+            pooling_factor=10,
             hidden_dim=50,
-            latent_dim=10,
+            latent_dim=30,
             train_batch_size=8,
             discretize=True,
             learning_rate=0.0001,
             train_batches=100000,
-            max_epochs=10,
+            max_epochs=2,
             metric="all"
         )
 
@@ -121,7 +124,7 @@ def main():
         print("_" * 25)
 
         WISDM_params = Params(
-            pooling_factor=100,
+            pooling_factor=5,
             compression_samples_num=100,
             hidden_dim=200,
             latent_dim=50,
@@ -131,7 +134,7 @@ def main():
             discretize=True,
             learning_rate=0.001,
             weight_decay=0.0001,
-            scale_factor=100,
+            scale_factor=10000,
             shift=True,
             max_epochs=8,
             model_type="beta_binomial_vae",
@@ -188,10 +191,10 @@ def main():
             discretize=True,
             learning_rate=0.0001,
             weight_decay=0.01,
-            scale_factor=109,
+            scale_factor=100,
             shift=True,
             model_type="beta_binomial_vae",
-            metric="temperature"
+            metric="all"
         )
 
         intel_lab_dataset = IntelLabDataset(

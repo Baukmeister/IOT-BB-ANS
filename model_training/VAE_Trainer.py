@@ -52,13 +52,15 @@ class VaeTrainer():
             data_set_type=self.metric
         )
 
-        vae = VAE_full(
+        vae_full = VAE_full(
             n_features=self.input_dim,
-            scale_factor=self.scale_factor,
-            hidden_size=self.hidden_dim,
-            latent_size=self.latent_dim,
+            range=self.scale_factor,
+            batch_size=self.train_batch_size,
+            hidden_dim=self.hidden_dim,
+            latent_dim=self.latent_dim,
             lr=self.learning_rate,
-            wc=self.weight_decay
+            wc=self.weight_decay,
+            plot=False
         )
 
         vanilla_vae = Vanilla_VAE(
@@ -82,7 +84,7 @@ class VaeTrainer():
         )
 
         if self.model_type == "full_vae":
-            self.model = vae
+            self.model = vae_full
         elif self.model_type == "vanilla_vae":
             self.model = vanilla_vae
         elif self.model_type == "beta_binomial_vae":

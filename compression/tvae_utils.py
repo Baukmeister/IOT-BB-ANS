@@ -59,8 +59,6 @@ def beta_binomial_obs_pop(n, precision):
         return pop
     return obs_pop
 
-# TODO: create pop and append operations for gaussian observation
-
 
 def gaussian_obs_append(n, precision):
     def obs_append(params):

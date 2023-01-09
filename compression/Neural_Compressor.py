@@ -39,13 +39,15 @@ class NeuralCompressor():
         self.data_points_singles = [self.dataSet.__getitem__(i).cpu().numpy() for i in range(self.params.compression_samples_num)]
         self.num_batches = len(self.data_points_singles) // self.params.compression_batch_size
 
-        vae = VAE_full(
+        vae_full = VAE_full(
             n_features=self.n_features,
-            scale_factor=self.params.scale_factor,
-            hidden_size=self.params.hidden_dim,
-            latent_size=self.params.latent_dim,
+            range=self.params.scale_factor,
+            batch_size=self.params.train_batch_size,
+            hidden_dim=self.params.hidden_dim,
+            latent_dim=self.params.latent_dim,
             lr=self.params.learning_rate,
-            wc=self.params.weight_decay
+            wc=self.params.weight_decay,
+            plot=False
         )
 
         vanilla_vae = Vanilla_VAE(
@@ -69,7 +71,7 @@ class NeuralCompressor():
         )
 
         if self.params.model_type == "full_vae":
-            self.model = vae
+            self.model = vae_full
         elif self.params.model_type == "vanilla_vae":
             self.model = vanilla_vae
         elif self.params.model_type == "beta_binomial_vae":

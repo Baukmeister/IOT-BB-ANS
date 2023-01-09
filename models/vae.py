@@ -1,176 +1,126 @@
-from random import sample
-
-import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
 import torch
 import torch.cuda
 import torch.nn.functional as F
 import torch.optim as optim
-from torch.autograd import Variable
+from torch import lgamma
+from torch import nn
+from torch.distributions import Normal
 
 from models.model_util import plot_prediction
 
 
-class Encoder(torch.nn.Module):
-    def __init__(self, D_in, H, latent_size):
-        super(Encoder, self).__init__()
-        self.linear1 = torch.nn.Linear(D_in, H)
-        self.batch_norm = torch.nn.BatchNorm1d(H)
-        self.fc1 = torch.nn.Linear(H, H)
-        self.fc2 = torch.nn.Linear(H, H)
-        self.fc3 = torch.nn.Linear(H, H)
-        self.enc_mu = torch.nn.Linear(H, latent_size)
-        self.enc_log_var = torch.nn.Linear(H, latent_size)
-        self.bn_mu = torch.nn.BatchNorm1d(latent_size)
-        self.bn_log_var = torch.nn.BatchNorm1d(latent_size)
-
-    def forward(self, x):
-        x = F.relu(self.linear1(x))
-        x = self.batch_norm(x)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
-        mu = self.bn_mu(self.enc_mu(x))
-        log_var = self.bn_log_var(self.enc_log_var(x))
-        return mu, torch.exp(log_var)
-
-
-class Decoder(torch.nn.Module):
-    def __init__(self, D_in, H, D_out, scale_factor):
-        super(Decoder, self).__init__()
-        self.D_out = D_out
-        self.linear1 = torch.nn.Linear(D_in, H)
-        self.bn = torch.nn.BatchNorm1d(H)
-        self.fc1 = torch.nn.Linear(H, H)
-        self.fc2 = torch.nn.Linear(H, H)
-        self.fc3 = torch.nn.Linear(H, H)
-        self.fc4 = torch.nn.Linear(H, H)
-        self.fc5 = torch.nn.Linear(H, H)
-        self.output_mu = torch.nn.Linear(H, D_out)
-        self.output_log_var = torch.nn.Linear(H, D_out)
-
-    def forward(self, z):
-        x = F.relu(self.bn(self.linear1(z)))
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
-        x = F.relu(self.fc4(x))
-        x = F.relu(self.fc5(x))
-        mu = self.output_mu(x)
-        log_var = self.output_log_var(x)
-
-        return mu, torch.exp(log_var)
-
-
-# TODO: Figure out why the predictions seem to be very clustered around 0
-# Seems like eiter mean or scale are screwed (not the same for each iteration)
 class VAE_full(pl.LightningModule):
-    def __init__(self, n_features, scale_factor, hidden_size, latent_size, device=None, lr=0.001, wc=0,
-                 plot_preds=True):
+    def __init__(self, n_features, range, batch_size, wc=0.0, lr=5e-4, hidden_dim=200, latent_dim=50, plot=True):
         super(VAE_full, self).__init__()
-        if self.device is None and torch.cuda.is_available():
-            device = "cuda"
-        else:
-            device = "cpu"
-
-        self.lr = lr
-        self.wc = wc
-        self.scale_factor = scale_factor
-        self.plot_preds = plot_preds
-
         self.n_features = n_features
-        self.encoder = Encoder(D_in=n_features, H=hidden_size, latent_size=latent_size).to(device)
-        self.decoder = Decoder(D_in=latent_size, H=hidden_size, D_out=n_features, scale_factor=scale_factor).to(device)
-        self.to(device)
+        self.range = range
+        self.batch_size = batch_size
+        self.wc = wc
+        self.lr = lr
+        self.hidden_dim = hidden_dim
+        self.latent_dim = latent_dim
+        self.plot = plot
 
-    def kl_divergence(self, z, mu, std):
+        self.register_buffer('prior_mean', torch.zeros(1))
+        self.register_buffer('prior_std', torch.ones(1))
+        self.register_buffer('n', torch.ones(self.batch_size, n_features) * self.range)
 
-        # --------------------------
-        # Monte carlo KL divergence
-        # --------------------------
-        # 1. define the first two probabilities (in this case Normal for both)
-        p = torch.distributions.Normal(torch.zeros_like(mu), torch.ones_like(std))
-        q = torch.distributions.Normal(mu, std)
+        self.fc1 = nn.Linear(n_features, self.hidden_dim)
+        self.bn1 = nn.BatchNorm1d(self.hidden_dim)
 
-        # 2. get the probabilities from the equation
-        log_qzx = q.log_prob(z)
-        log_pz = p.log_prob(z)
+        #Extra Layers
 
-        # kl
-        kl = (log_qzx - log_pz)
-        kl = kl.sum(-1)
+        self.encoderExtraLayers = nn.Sequential(
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.BatchNorm1d(self.hidden_dim)
+        )
 
-        return kl.mean()
+        self.decoderExtraLayers = nn.Sequential(
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.BatchNorm1d(self.hidden_dim)
+        )
+
+
+        self.fc21 = nn.Linear(self.hidden_dim, self.latent_dim)
+        self.fc22 = nn.Linear(self.hidden_dim, self.latent_dim)
+
+        self.bn21 = nn.BatchNorm1d(self.latent_dim)
+        self.bn22 = nn.BatchNorm1d(self.latent_dim)
+
+        self.fc3 = nn.Linear(self.latent_dim, self.hidden_dim)
+        self.bn3 = nn.BatchNorm1d(self.hidden_dim)
+        self.fc4 = nn.Linear(self.hidden_dim, n_features * 2)
+
+
+    def encode(self, x):
+        """Return mu, sigma on latent"""
+        h = x / self.range  # otherwise we will have numerical issues
+        h = F.relu(self.bn1(self.fc1(h)))
+        h = F.relu(self.encoderExtraLayers(h))
+        return self.bn21(self.fc21(h)), torch.exp(self.bn22(self.fc22(h)))
 
     def reparameterize(self, mu, std):
-
         if self.training:
             eps = torch.randn_like(std)
             return eps.mul(std).add_(mu)
         else:
             return mu
 
-    def mse_loss(self, x, dec_mu, dec_std):
-        dec_std = torch.clamp(dec_std, 1e-7)
-        distribution = torch.distributions.Normal(dec_mu, dec_std)
-        outputs = distribution.sample()
-        MSE_fun = torch.nn.MSELoss(reduction='mean')
-        MSE_loss = MSE_fun(outputs, x)
-        return torch.tensor(MSE_loss, requires_grad=True)
+    def decode(self, z):
+        h = F.relu(self.bn3(self.fc3(z)))
+        h = F.relu(self.decoderExtraLayers(h))
+        h = self.fc4(h)
+        mean, log_var = torch.split(h, self.n_features, dim=1)
+        return mean, log_var
 
     def loss(self, x):
+        z_mu, z_std = self.encode(x.view(-1, self.n_features))
+        z = self.reparameterize(z_mu, z_std)  # sample zs
 
-        mu, std = self.encoder(x)
-        z = self.reparameterize(mu, std)
+        mean, log_var = self.decode(z)
+        l = Normal(mean, torch.exp(log_var)).log_prob(x)
 
-        dec_mu, dec_std = self.decoder(z)
+        p_z = torch.sum(Normal(self.prior_mean, self.prior_std).log_prob(z), dim=1)
+        q_z = torch.sum(Normal(z_mu, z_std).log_prob(z), dim=1)
 
-        self.log("Decoder MU - mean", torch.mean(dec_mu))
-        self.log("Decoder STD - mean", torch.mean(dec_std))
+        return -torch.mean(l + p_z - q_z) * np.log2(np.e) / float(self.n_features)
 
-        l = torch.distributions.Normal(dec_mu, dec_std)
-        l = torch.sum(l.log_prob(x), dim=1)
-        p_z = torch.sum(torch.distributions.Normal(0, 1).log_prob(z), dim=1)
-        q_z = torch.sum(torch.distributions.Normal(mu, torch.clamp(std, 1e-9)).log_prob(z), dim=1)
-        elbo = -torch.mean(l + p_z - q_z) * np.log2(np.e) / float(x.numel())
-
-        self.log("Elbo Loss", elbo)
-        return elbo
-        # return self.mse_loss(x, dec_mu, dec_std)
-
-    def forward(self, x_inputs):
-
-        mu, std = self.encoder(x_inputs)
-        z = self.reparameterize(mu, std)
-
-        dec_mu, dec_std = self.decoder(z)
-
-        return dec_mu, dec_std
+    def reconstruct(self, x, device):
+        x = x.view(-1, self.n_features).float().to(device)
+        z_mu, z_logvar = self.encode(x)
+        z = self.reparameterize(z_mu, z_logvar)  # sample zs
+        mean, log_var = self.decode(z)
+        distr = Normal(mean, torch.exp(log_var))
+        x_recon = distr.sample()
+        return x_recon
 
     def training_step(self, batch, batch_idx):
 
-        mean, std = self.forward(batch)
+        if (abs(batch) > self.range).any():
+            raise Warning("Batch values are out of range!")
+
         loss = self.loss(batch)
+        self.log(f'ELBO LOSS', loss, on_epoch=True)
 
-        if self.plot_preds and batch_idx % 500 == 0:
-            distribution = torch.distributions.Normal(mean, torch.clamp(std, 1e-7))
-            outputs = distribution.sample()
-
-            plot_prediction(prediction_tensors=outputs, target_tensors=batch, batch_idx=batch_idx,
-                            loss=loss)
+        if self.plot and batch_idx % 500 == 0:
+            recon = self.reconstruct(batch, self.device)
+            plot_prediction(prediction_tensors=recon, target_tensors=batch, batch_idx=batch_idx, loss=loss)
 
         return loss
 
     def validation_step(self, batch, batch_idx):
-        mean, log_var = self.forward(batch)
-        loss = self.loss(batch)
-        return {'val_loss': loss}
 
-    def validation_epoch_end(self, outputs):
-        avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
-        log = {'val_loss': avg_loss}
-        return {'val_loss': avg_loss, 'log': log}
+        if batch.shape[0] == self.batch_size or batch.shape[0] == 1:
+            loss = self.loss(batch)
+            self.log("val_loss", loss)
+        else:
+            # Deals with the issue of non-batch-sized tensors returned by validation DataLoader
+            print("\n Skipping validation loss calculation because of shape divergence")
+            pass
 
     def configure_optimizers(self):
         optimizer = optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.wc)
