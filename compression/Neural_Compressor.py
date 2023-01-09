@@ -115,8 +115,10 @@ class NeuralCompressor():
         compressed_message = rans.flatten(state)
 
         compressed_bits = 32 * (len(compressed_message) - len(other_bits))
+        compression_rate = compressed_bits/(np.size(data_points)*32)
+        bits_per_datapoint = compressed_bits / np.size(data_points)
         print("Used " + str(compressed_bits) + " bits.")
-        print(f'This is {compressed_bits / np.size(data_points)} bits per data point')
+        print(f'Compression ratio: {round(compression_rate, 4)}. BpD: {bits_per_datapoint}')
 
 
         state = rans.unflatten(compressed_message)
