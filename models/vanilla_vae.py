@@ -7,6 +7,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch import nn
 
+from models.model_util import plot_prediction
+
 
 # Seems like eitehr mean or scale are screwed (not the same for each iteration)
 class Vanilla_VAE(pl.LightningModule):

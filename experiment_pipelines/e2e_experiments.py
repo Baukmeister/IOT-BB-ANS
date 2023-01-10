@@ -18,7 +18,7 @@ def main():
     ]
 
     modes_to_evaluate = [
-        "model_training",
+        #"model_training",
         "compression"
     ]
 
@@ -67,7 +67,7 @@ def main():
 
         household_power_params = Params(
             train_set_ratio=0.2,
-            model_type="full_vae",
+            model_type="beta_binomial_vae",
             val_set_ratio=0.005,
             compression_samples_num=10,
             scale_factor=1000,

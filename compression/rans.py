@@ -113,3 +113,9 @@ def unflatten(arr):
     """Unflatten a 1d numpy array into a rANS message."""
     return (int(arr[0]) << 32 | int(arr[1]),
             reduce(lambda tl, hd: (int(hd), tl), reversed(arr[2:]), ()))
+
+def stack_depth(t):
+    try:
+        return 1 + max(map(stack_depth, t))
+    except:
+        return 0

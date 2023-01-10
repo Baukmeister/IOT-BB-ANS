@@ -4,9 +4,11 @@ import time
 import numpy as np
 import numpy.random
 import torch.utils.data
+from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 from compression import tvae_utils, rans
+from compression.rans import stack_depth
 from experiment_pipelines.experiment_params import Params
 from models.beta_binomial_vae import BetaBinomialVAE_sbs
 from models.vae import VAE_full
@@ -104,6 +106,7 @@ class NeuralCompressor():
         self.vae_pop = bb_util.vae_pop(latent_shape, gen_net, rec_net, obs_pop,
                                   self.params.prior_precision, self.params.q_precision)
 
+
     def run_compression(self):
         rng = numpy.random.RandomState()
 
@@ -111,14 +114,13 @@ class NeuralCompressor():
         state = rans.unflatten(other_bits)
         data_points = np.split(np.reshape(self.data_points_singles, (len(self.data_points_singles), -1)), self.num_batches)
 
-        compress_lengths = []
+        stack_sizes = []
 
         encode_start_time = time.time()
         for i, data_point in tqdm(enumerate(data_points), total=self.params.compression_samples_num):
             state = self.vae_append(state, data_point)
 
-            compressed_length = 32 * (len(rans.flatten(state)) - len(other_bits)) / (i + 1)
-            compress_lengths.append(compressed_length)
+            stack_sizes.append((stack_depth(state)))
 
         print('\nAll encoded in {:.2f}s'.format(time.time() - encode_start_time))
         compressed_message = rans.flatten(state)
@@ -145,3 +147,9 @@ class NeuralCompressor():
         assert all(other_bits == recovered_bits)
         np.testing.assert_equal(reconstructed_data_points, self.data_points_singles)
         print('\nLossless reconstruction!')
+
+        # plot_stack size:
+        x = list(range(len(stack_sizes)))
+        plt.plot(x, stack_sizes)
+        plt.title(f"Stack size per per sample")
+        plt.show()
