@@ -11,14 +11,14 @@ from torch.utils import data
 
 def main():
     experiments_to_run = [
-        "simple",
+        #"simple",
         "household",
-        "wisdm",
-        "intel"
+        #"wisdm",
+        #"intel"
     ]
 
     modes_to_evaluate = [
-        #"model_training",
+        "model_training",
         "compression"
     ]
 
@@ -66,19 +66,21 @@ def main():
         print("_" * 25)
 
         household_power_params = Params(
-            train_set_ratio=1.0,
+            train_set_ratio=0.2,
+            model_type="full_vae",
             val_set_ratio=0.005,
-            compression_samples_num=100,
+            compression_samples_num=10,
             scale_factor=1000,
-            pooling_factor=10,
+            pooling_factor=5,
             hidden_dim=50,
             latent_dim=30,
             train_batch_size=8,
             discretize=True,
-            learning_rate=0.0001,
-            train_batches=100000,
-            max_epochs=2,
+            learning_rate=0.01,
+            train_batches=10000,
+            max_epochs=3,
             metric="all"
+
         )
 
         householdPowerDataSet = HouseholdPowerDataset(

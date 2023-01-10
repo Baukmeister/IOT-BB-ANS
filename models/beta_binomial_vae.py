@@ -97,6 +97,7 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
 
         p_z = torch.sum(Normal(self.prior_mean, self.prior_std).log_prob(z), dim=1)
         q_z = torch.sum(Normal(z_mu, z_std).log_prob(z), dim=1)
+
         return -torch.mean(l + p_z - q_z) * np.log2(np.e) / float(self.n_features)
 
     def sample(self, device, epoch, num=64):

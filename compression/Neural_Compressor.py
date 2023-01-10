@@ -71,11 +71,21 @@ class NeuralCompressor():
         )
 
         if self.params.model_type == "full_vae":
+            print("Using Full VAE (gaussian likelihood)")
             self.model = vae_full
+            obs_append = tvae_utils.gaussian_obs_append(self.params.scale_factor, self.params.obs_precision)
+            obs_pop = tvae_utils.gaussian_obs_pop(self.params.scale_factor, self.params.obs_precision)
         elif self.params.model_type == "vanilla_vae":
+            print("Using Vanilla VAE")
             self.model = vanilla_vae
+            #TODO: add this
+            obs_append = None
+            obs_pop = None
         elif self.params.model_type == "beta_binomial_vae":
+            print("Using Beta Binomial VAE (beta-binomial likelihood)")
             self.model = beta_binomial_vae
+            obs_append = tvae_utils.beta_binomial_obs_append(self.params.scale_factor, self.params.obs_precision)
+            obs_pop = tvae_utils.beta_binomial_obs_pop(self.params.scale_factor, self.params.obs_precision)
         else:
             raise ValueError(f"No model defined for '{self.params.model_type}'")
 
@@ -88,8 +98,6 @@ class NeuralCompressor():
         # set up compression methods
         latent_shape = (self.params.compression_batch_size, self.params.latent_dim)
 
-        obs_append = tvae_utils.beta_binomial_obs_append(self.params.scale_factor, self.params.obs_precision)
-        obs_pop = tvae_utils.beta_binomial_obs_pop(self.params.scale_factor, self.params.obs_precision)
 
         self.vae_append = bb_util.vae_append(latent_shape, gen_net, rec_net, obs_append,
                                         self.params.prior_precision, self.params.q_precision)
@@ -105,7 +113,6 @@ class NeuralCompressor():
 
         compress_lengths = []
 
-        print_interval = 100
         encode_start_time = time.time()
         for i, data_point in tqdm(enumerate(data_points), total=self.params.compression_samples_num):
             state = self.vae_append(state, data_point)

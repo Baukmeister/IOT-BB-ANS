@@ -109,6 +109,7 @@ class VaeTrainer():
         date_time = datetime.now().strftime("%m/%d/%Y_%H:%M:%S")
 
         wandb_logger = WandbLogger(name=date_time, project="e2e_experiments", group=self.name)
+        wandb_logger.watch(self.model, log="all")
 
         trainer = pl.Trainer(
             limit_train_batches=int((self.params.train_set_ratio * self.trainSetSize) / self.params.train_batch_size),

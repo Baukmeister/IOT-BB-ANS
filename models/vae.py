@@ -82,7 +82,8 @@ class VAE_full(pl.LightningModule):
         z = self.reparameterize(z_mu, z_std)  # sample zs
 
         mean, log_var = self.decode(z)
-        l = Normal(mean, torch.exp(log_var)).log_prob(x)
+        l = Normal(mean, torch.exp(log_var)).log_prob(x.view(-1, self.n_features))
+        l = torch.sum(l, dim=1)
 
         p_z = torch.sum(Normal(self.prior_mean, self.prior_std).log_prob(z), dim=1)
         q_z = torch.sum(Normal(z_mu, z_std).log_prob(z), dim=1)
