@@ -1,5 +1,6 @@
 import paho.mqtt.client as mqtt
 
+# Assume trained model is available an only perform the compression using the fully trained VAE compared to benchmarks
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code " + str(rc))
