@@ -11,7 +11,7 @@ from torch.utils import data
 
 def main():
     experiments_to_run = [
-        #"simple",
+        "simple",
         "household",
         #"wisdm",
         #"intel"
@@ -59,7 +59,7 @@ def main():
             simple_neural_compressor.run_compression()
 
             print("Running benchmark compression for simple data ...")
-            benchmark_on_data(test_set)
+            benchmark_on_data(test_set, simple_params.compression_samples_num)
         print("_" * 25)
 
     if "household" in experiments_to_run:
@@ -119,7 +119,7 @@ def main():
             household_power_neural_compressor.run_compression()
 
             print("Running benchmark compression for household_power data ...")
-            benchmark_on_data(test_set)
+            benchmark_on_data(test_set, household_power_params.compression_samples_num)
         print("_" * 25)
 
     if "wisdm" in experiments_to_run:
@@ -177,7 +177,7 @@ def main():
             wisdm_neural_compressor.run_compression()
 
             print("Running benchmark compression for WISDM data ...")
-            benchmark_on_data(test_set)
+            benchmark_on_data(test_set, WISDM_params.compression_samples_num)
         print("_" * 25)
 
     if "intel" in experiments_to_run:
@@ -234,7 +234,7 @@ def main():
             intel_lab_neural_compressor.run_compression()
 
             print("Running benchmark compression for intel_lab data ...")
-            benchmark_on_data(test_set)
+            benchmark_on_data(test_set, intel_lab_params.compression_samples_num    )
         print("_" * 25)
 
 

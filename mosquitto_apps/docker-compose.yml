@@ -1,0 +1,5 @@
+services:
+  sensor:
+    build: './sensor'
+  leader:
+    build: './leader'

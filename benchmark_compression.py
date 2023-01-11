@@ -50,8 +50,8 @@ def zstd_compress(data_points):
     return zstd.compress(data_points.tobytes())
 
 
-def benchmark_on_data(custom_data_set):
-    custom_data = np.array([custom_data_set.__getitem__(i).cpu().numpy()[0] for i in tqdm(range(len(custom_data_set)))]).astype("uint8")
+def benchmark_on_data(custom_data_set, compression_samples_num):
+    custom_data = np.array([custom_data_set.__getitem__(i).cpu().numpy()[0] for i in tqdm(range(compression_samples_num))]).astype("uint8")
     bench_compressor(gzip_compress, gzip.decompress, "gzip", custom_data)
     bench_compressor(bz2_compress, bz2.decompress, "bz2", custom_data)
     bench_compressor(lzma_compress, lzma.decompress, "lzma", custom_data)
