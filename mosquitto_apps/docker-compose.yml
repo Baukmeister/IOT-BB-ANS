@@ -1,5 +1,9 @@
 services:
   sensor:
-    build: './sensor'
+    build:
+      context: ..
+      dockerfile: ./mosquitto_apps/sensor/Dockerfile
   leader:
-    build: './leader'
+    build:
+      context: ..
+      dockerfile: ./mosquitto_apps/leader/Dockerfile
