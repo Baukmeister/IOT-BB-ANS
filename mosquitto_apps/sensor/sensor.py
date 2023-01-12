@@ -9,9 +9,10 @@ from util.DataLoadersLite.HouseholdPowerDataLoader_Lite import HouseholdPowerDat
 
 class SensorNode():
 
-    def __init__(self, data_set_type, data_set_dir):
+    def __init__(self, data_set_type, data_set_dir, host_address):
         self.data_set = None
         self.client = None
+        self.host_address = host_address
         self.data_set_type = data_set_type
         self.data_set_dir = data_set_dir
 
@@ -32,7 +33,7 @@ class SensorNode():
 
     def set_up_connection(self):
         self.client = mqtt.Client()
-        self.client.connect("localhost", 1883, 60)
+        self.client.connect(self.host_address, 1883, 60)
 
     def send_data(self):
         for idx in tqdm(range(self.data_set.__len__() // 10)):
@@ -45,5 +46,9 @@ class SensorNode():
 if __name__ == "__main__":
     data_set_type = sys.argv[1]
     data_set_dir = sys.argv[2]
+    if len(sys.argv) >= 4:
+        host_address = sys.argv[3]
+    else:
+        host_address = "localhost"
 
-    SensorNode(data_set_type, data_set_dir)
+    SensorNode(data_set_type, data_set_dir, host_address)

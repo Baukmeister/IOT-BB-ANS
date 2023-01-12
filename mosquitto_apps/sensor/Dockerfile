@@ -13,8 +13,7 @@ COPY ./mosquitto_apps/sensor .
 COPY ./data ./data
 
 ENV PYTHONPATH "${PYTHONPATH}:/app"
-COPY . .
 RUN pip3 install -r requirements.txt
 
-CMD [ "python3" , "/app/mosquitto_apps/sensor/sensor.py", "household", "data/household_power_consumption"]
+CMD [ "python3" , "sensor.py", "household", "data/household_power_consumption", "host.docker.internal"]
 
