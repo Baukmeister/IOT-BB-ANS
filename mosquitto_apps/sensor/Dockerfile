@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
 
 FROM python:latest
+EXPOSE 1883
 
 WORKDIR /app
 
@@ -15,5 +16,5 @@ ENV PYTHONPATH "${PYTHONPATH}:/app"
 COPY . .
 RUN pip3 install -r requirements.txt
 
-CMD [ "python3" , "/app/mosquitto_apps/sensor/sensor.py", "household", "../data/household_power_consumption"]
+CMD [ "python3" , "/app/mosquitto_apps/sensor/sensor.py", "household", "data/household_power_consumption"]
 
