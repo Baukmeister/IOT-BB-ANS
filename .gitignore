@@ -135,3 +135,4 @@ dmypy.json
 /lightning_logs/*
 /compression/compressed_lengths_cts
 /.idea/*
+/experiment_pipelines/wandb/

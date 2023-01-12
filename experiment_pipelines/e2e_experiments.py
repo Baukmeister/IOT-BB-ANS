@@ -18,7 +18,7 @@ def main():
     ]
 
     modes_to_evaluate = [
-        #"model_training",
+        "model_training",
         "compression"
     ]
 

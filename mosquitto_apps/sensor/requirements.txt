@@ -1,5 +1,4 @@
 paho-mqtt
 numpy
-torch
 pandas
 tqdm

@@ -4,7 +4,7 @@ import sys
 import paho.mqtt.client as mqtt
 from tqdm import tqdm
 
-from util.HouseholdPowerDataLoader import HouseholdPowerDataset
+from util.DataLoadersLite.HouseholdPowerDataLoader_Lite import HouseholdPowerDataset_Lite
 
 
 class SensorNode():
@@ -22,7 +22,7 @@ class SensorNode():
     def load_data(self):
 
         if self.data_set_type == "household":
-            self.data_set = HouseholdPowerDataset(
+            self.data_set = HouseholdPowerDataset_Lite(
                 self.data_set_dir,
                 scaling_factor=100,
                 caching=False
@@ -37,7 +37,7 @@ class SensorNode():
     def send_data(self):
         for idx in tqdm(range(self.data_set.__len__() // 10)):
             item = self.data_set.__getitem__(idx)
-            nums = item.numpy()
+            nums = item
             for num in nums:
                 self.client.publish("test", int(num))
 

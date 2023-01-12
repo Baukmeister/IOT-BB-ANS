@@ -78,10 +78,10 @@ class IntelLabDataset(Dataset):
         self.IntelDataDf['light'].fillna(0, inplace=True)
 
         if self.discretize:
-            self.IntelDataDf['humidity'] = (self.IntelDataDf['humidity'].astype(np.float) * self.scaling_factor).round()
-            self.IntelDataDf['temperature'] = (self.IntelDataDf['temperature'].astype(np.float) * self.scaling_factor).round()
-            self.IntelDataDf['light'] = (self.IntelDataDf['light'].astype(np.float) * self.scaling_factor).round()
-            self.IntelDataDf['voltage'] = (self.IntelDataDf['voltage'].astype(np.float) * self.scaling_factor).round()
+            self.IntelDataDf['humidity'] = (self.IntelDataDf['humidity'].astype(float) * self.scaling_factor).round()
+            self.IntelDataDf['temperature'] = (self.IntelDataDf['temperature'].astype(float) * self.scaling_factor).round()
+            self.IntelDataDf['light'] = (self.IntelDataDf['light'].astype(float) * self.scaling_factor).round()
+            self.IntelDataDf['voltage'] = (self.IntelDataDf['voltage'].astype(float) * self.scaling_factor).round()
 
 
 

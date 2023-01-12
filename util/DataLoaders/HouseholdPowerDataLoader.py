@@ -104,19 +104,19 @@ class HouseholdPowerDataset(Dataset):
 
         if self.discretize:
             self.HouseholdPowerDf['Global_active_power'] = (
-                        self.HouseholdPowerDf['Global_active_power'].astype(np.float) * self.scaling_factor).round()
+                        self.HouseholdPowerDf['Global_active_power'].astype(float) * self.scaling_factor).round()
             self.HouseholdPowerDf['Global_reactive_power'] = (
-                        self.HouseholdPowerDf['Global_reactive_power'].astype(np.float) * self.scaling_factor).round()
+                        self.HouseholdPowerDf['Global_reactive_power'].astype(float) * self.scaling_factor).round()
             self.HouseholdPowerDf['Voltage'] = (
-                        self.HouseholdPowerDf['Voltage'].astype(np.float) * self.scaling_factor).round()
+                        self.HouseholdPowerDf['Voltage'].astype(float) * self.scaling_factor).round()
             self.HouseholdPowerDf['Global_intensity'] = (
-                        self.HouseholdPowerDf['Global_intensity'].astype(np.float) * self.scaling_factor).round()
+                        self.HouseholdPowerDf['Global_intensity'].astype(float) * self.scaling_factor).round()
             self.HouseholdPowerDf['Sub_metering_1'] = (
-                        self.HouseholdPowerDf['Sub_metering_1'].astype(np.float) * self.scaling_factor).round()
+                        self.HouseholdPowerDf['Sub_metering_1'].astype(float) * self.scaling_factor).round()
             self.HouseholdPowerDf['Sub_metering_2'] = (
-                        self.HouseholdPowerDf['Sub_metering_2'].astype(np.float) * self.scaling_factor).round()
+                        self.HouseholdPowerDf['Sub_metering_2'].astype(float) * self.scaling_factor).round()
             self.HouseholdPowerDf['Sub_metering_3'] = (
-                        self.HouseholdPowerDf['Sub_metering_3'].astype(np.float) * self.scaling_factor).round()
+                        self.HouseholdPowerDf['Sub_metering_3'].astype(float) * self.scaling_factor).round()
 
         if self.caching:
             print("Storing samples in cache...")

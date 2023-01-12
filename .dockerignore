@@ -1,0 +1,5 @@
+/.venv
+/.pytest_cache
+/data_analytics.ipynb
+# requirements will be specifically for each container
+./requirements.txt

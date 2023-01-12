@@ -88,16 +88,16 @@ class WISDMDataset(Dataset):
 
                         temp['z'] = temp['z'].str.replace(';', '')
                         temp['user'] = temp['user'].astype(np.double)
-                        temp['time'] = temp['time'].astype(np.float)
+                        temp['time'] = temp['time'].astype(float)
 
                         if self.discretize:
-                            temp['x'] = ((temp['x'].astype(np.float) * self.scaling_factor)).round()
-                            temp['y'] = ((temp['y'].astype(np.float) * self.scaling_factor)).round()
-                            temp['z'] = ((temp['z'].astype(np.float) * self.scaling_factor)).round()
+                            temp['x'] = ((temp['x'].astype(float) * self.scaling_factor)).round()
+                            temp['y'] = ((temp['y'].astype(float) * self.scaling_factor)).round()
+                            temp['z'] = ((temp['z'].astype(float) * self.scaling_factor)).round()
                         else:
-                            temp['x'] = temp['x'].astype(np.float)
-                            temp['y'] = temp['y'].astype(np.float)
-                            temp['z'] = temp['z'].astype(np.float)
+                            temp['x'] = temp['x'].astype(float)
+                            temp['y'] = temp['y'].astype(float)
+                            temp['z'] = temp['z'].astype(float)
 
                         self.WISDMdf = pd.concat([self.WISDMdf, temp])
 

@@ -115,7 +115,7 @@ def std_gaussian_buckets(precision):
     if precision in std_gaussian_bucket_cache:
         return std_gaussian_bucket_cache[precision]
     else:
-        buckets = np.float32(
+        buckets = float32(
             norm.ppf(np.arange((1 << precision) + 1) / (1 << precision)))
         std_gaussian_bucket_cache[precision] = buckets
         return buckets
@@ -129,7 +129,7 @@ def std_gaussian_centres(precision):
     if precision in std_gaussian_centres_cache:
         return std_gaussian_centres_cache[precision]
     else:
-        centres = np.float32(
+        centres = float32(
             norm.ppf((np.arange(1 << precision) + 0.5) / (1 << precision)))
         std_gaussian_centres_cache[precision] = centres
         return centres

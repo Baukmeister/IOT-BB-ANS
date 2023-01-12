@@ -14,7 +14,7 @@ def ndarray_to_tensor(arr):
     elif type(arr) is torch.Tensor:
         return arr
     else:
-        return torch.from_numpy(np.float32(arr))
+        return torch.from_numpy(float32(arr))
 
 def torch_fun_to_numpy_fun(fun):
     def numpy_fun(*args, **kwargs):
