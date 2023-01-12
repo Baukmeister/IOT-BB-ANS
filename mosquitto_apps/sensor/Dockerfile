@@ -1,10 +1,10 @@
 # syntax=docker/dockerfile:1
 
 FROM python:latest
-EXPOSE 1883
 
 WORKDIR /app
 
+#TODO: check if this can be removed
 COPY /mosquitto_apps/sensor/requirements.txt requirements.txt
 
 
