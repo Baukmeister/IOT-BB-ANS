@@ -136,3 +136,4 @@ dmypy.json
 /compression/compressed_lengths_cts
 /.idea/*
 /experiment_pipelines/wandb/
+/experiment_pipelines/e2e_experiments/
