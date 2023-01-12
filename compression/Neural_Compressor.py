@@ -19,10 +19,10 @@ from util.io import vae_model_name
 
 class NeuralCompressor():
 
-    def __init__(self, params: Params, dataSet: torch.utils.data.Dataset, name: str, input_dim):
+    def __init__(self, params: Params, data_samples: list, name: str, input_dim):
         self.params = params
 
-        self.dataSet = dataSet
+        self.data_samples = data_samples
         self.name = name
         self.n_features = input_dim
 
@@ -38,8 +38,7 @@ class NeuralCompressor():
             data_set_type =self.params.metric
         )
 
-        self.data_points_singles = [self.dataSet.__getitem__(i).cpu().numpy() for i in range(self.params.compression_samples_num)]
-        self.num_batches = len(self.data_points_singles) // self.params.compression_batch_size
+        self.num_batches = len(self.data_samples) // self.params.compression_batch_size
 
         vae_full = VAE_full(
             n_features=self.n_features,
@@ -112,7 +111,7 @@ class NeuralCompressor():
 
         other_bits = rng.randint(low=1 << 16, high=1 << 31, size=50, dtype=np.uint32)
         state = rans.unflatten(other_bits)
-        data_points = np.split(np.reshape(self.data_points_singles, (len(self.data_points_singles), -1)), self.num_batches)
+        data_points = np.split(np.reshape(self.data_samples, (len(self.data_samples), -1)), self.num_batches)
 
         stack_sizes = []
 
@@ -145,7 +144,7 @@ class NeuralCompressor():
 
         recovered_bits = rans.flatten(state)
         assert all(other_bits == recovered_bits)
-        np.testing.assert_equal(reconstructed_data_points, self.data_points_singles)
+        np.testing.assert_equal(reconstructed_data_points, self.data_samples)
         print('\nLossless reconstruction!')
 
         # plot_stack size:

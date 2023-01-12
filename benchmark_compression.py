@@ -7,10 +7,10 @@ import numpy as np
 import zstd
 from tqdm import tqdm
 
-from util.HouseholdPowerDataLoader import HouseholdPowerDataset
-from util.IntelLabDataLoader import IntelLabDataset
-from util.SimpleDataLoader import SimpleDataSet
-from util.WIDSMDataLoader import WISDMDataset
+from util.DataLoaders.HouseholdPowerDataLoader import HouseholdPowerDataset
+from util.DataLoaders.IntelLabDataLoader import IntelLabDataset
+from util.DataLoaders.SimpleDataLoader import SimpleDataSet
+from util.DataLoaders.WIDSMDataLoader import WISDMDataset
 
 
 def bench_compressor(compress_fun, decompress_fun, compressor_name, data_points):

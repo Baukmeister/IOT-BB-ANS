@@ -1,24 +1,27 @@
+from torch.utils.data import Dataset
+
 from benchmark_compression import benchmark_on_data
 from compression.Neural_Compressor import NeuralCompressor
 from experiment_pipelines.experiment_params import Params
 from model_training.VAE_Trainer import VaeTrainer
-from util.HouseholdPowerDataLoader import HouseholdPowerDataset
-from util.IntelLabDataLoader import IntelLabDataset
-from util.WIDSMDataLoader import WISDMDataset
-from util.SimpleDataLoader import SimpleDataSet
 from torch.utils import data
+
+from util.DataLoaders.HouseholdPowerDataLoader import HouseholdPowerDataset
+from util.DataLoaders.IntelLabDataLoader import IntelLabDataset
+from util.DataLoaders.SimpleDataLoader import SimpleDataSet
+from util.DataLoaders.WIDSMDataLoader import WISDMDataset
 
 
 def main():
     experiments_to_run = [
         "simple",
         "household",
-        #"wisdm",
+        "wisdm",
         #"intel"
     ]
 
     modes_to_evaluate = [
-        "model_training",
+        #"model_training",
         "compression"
     ]
 
@@ -29,9 +32,9 @@ def main():
             train_set_ratio=1.0,
             train_batches=1000,
             val_set_ratio=0.001,
-            scale_factor=10000,
+            scale_factor=100,
             max_epochs=8,
-            compression_samples_num=100
+            compression_samples_num=50
         )
 
         simpleDataSet = SimpleDataSet(
@@ -55,7 +58,8 @@ def main():
         if "compression" in modes_to_evaluate:
             print("Running neural compression for simple data ...")
 
-            simple_neural_compressor = NeuralCompressor(simple_params, test_set, "simple", simple_input_dim)
+            test_set_samples = [test_set.__getitem__(i).cpu().numpy() for i in range(simple_params.compression_samples_num)]
+            simple_neural_compressor = NeuralCompressor(simple_params, test_set_samples, "simple", simple_input_dim)
             simple_neural_compressor.run_compression()
 
             print("Running benchmark compression for simple data ...")
@@ -114,7 +118,8 @@ def main():
 
             print("Running neural compression for household_power data ...")
 
-            household_power_neural_compressor = NeuralCompressor(household_power_params, test_set, "HouseholdPower",
+            test_set_samples = [test_set.__getitem__(i).cpu().numpy() for i in range(household_power_params.compression_samples_num)]
+            household_power_neural_compressor = NeuralCompressor(household_power_params, test_set_samples, "HouseholdPower",
                                                                  householder_power_input_dim)
             household_power_neural_compressor.run_compression()
 
@@ -127,7 +132,7 @@ def main():
 
         WISDM_params = Params(
             pooling_factor=5,
-            compression_samples_num=100,
+            compression_samples_num=10,
             hidden_dim=200,
             latent_dim=50,
             train_set_ratio=1.0,
@@ -172,7 +177,8 @@ def main():
 
             print("Running neural compression for WISDM data ...")
 
-            wisdm_neural_compressor = NeuralCompressor(WISDM_params, test_set, "WISDM",
+            test_set_samples = [test_set.__getitem__(i).cpu().numpy() for i in range(WISDM_params.compression_samples_num)]
+            wisdm_neural_compressor = NeuralCompressor(WISDM_params, test_set_samples, "WISDM",
                                                        wisdm_power_input_dim)
             wisdm_neural_compressor.run_compression()
 
@@ -186,6 +192,7 @@ def main():
         intel_lab_params = Params(
             pooling_factor=10,
             hidden_dim=50,
+            compression_samples_num=10,
             latent_dim=10,
             train_set_ratio=0.2,
             val_set_ratio=0.001,
@@ -207,6 +214,7 @@ def main():
             metric=intel_lab_params.metric
         )
 
+        # TODO: fix this issue as it breaks model loading
         intel_lab_params.scale_factor = intel_lab_dataset.range
 
         testSetSize = int(len(intel_lab_dataset) * intel_lab_params.test_set_ratio)
@@ -221,6 +229,7 @@ def main():
         if "model_training" in modes_to_evaluate:
             print("Running model training for Intel_Lab data ...")
 
+
             intel_lab_vae_trainer = VaeTrainer(intel_lab_params, train_set, "IntelLab",
                                                intel_lab_input_dim)
             intel_lab_vae_trainer.train_model()
@@ -229,7 +238,8 @@ def main():
         if "compression" in modes_to_evaluate:
             print("Running neural compression for intel_lab data ...")
 
-            intel_lab_neural_compressor = NeuralCompressor(intel_lab_params, test_set, "IntelLab",
+            test_set_samples = [test_set.__getitem__(i).cpu().numpy() for i in range(intel_lab_params.compression_samples_num)]
+            intel_lab_neural_compressor = NeuralCompressor(intel_lab_params, test_set_samples, "IntelLab",
                                                            intel_lab_input_dim)
             intel_lab_neural_compressor.run_compression()
 

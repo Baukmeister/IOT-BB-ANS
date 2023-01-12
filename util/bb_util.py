@@ -1,4 +1,5 @@
 import numpy as np
+from numpy import float32
 from scipy.stats import norm, beta, binom
 from scipy.special import gammaln
 

@@ -7,16 +7,29 @@ class LeaderNode():
     def __init__(self, data_set_type, host_address):
 
         self.client = None
+        self.compression_batch_size = 10
+        self.buffer = []
         self.host_address = host_address
         self.data_set_type = data_set_type
         self.set_up_connection()
+
 
     def on_connect(self, client, userdata, flags, rc):
         print("Connected with result code " + str(rc))
         client.subscribe("test")
 
+
     def on_message(self, client, userdata, msg):
-        print(msg.topic + " " + str(msg.payload))
+
+        self.buffer.append(msg.payload)
+
+        if len(self.buffer) == self.compression_batch_size:
+            self.compress_current_buffer()
+
+
+    def compress_current_buffer(self):
+        #Perform compression
+        pass
 
     def set_up_connection(self):
         self.client = mqtt.Client()

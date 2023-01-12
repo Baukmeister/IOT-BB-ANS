@@ -4,10 +4,6 @@ FROM python:latest
 
 WORKDIR /app
 
-#TODO: check if this can be removed
-COPY /mosquitto_apps/sensor/requirements.txt requirements.txt
-
-
 COPY ../../util/DataLoadersLite ./util/DataLoadersLite
 COPY ./mosquitto_apps/sensor .
 COPY ./data ./data
