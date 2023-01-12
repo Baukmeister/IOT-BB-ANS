@@ -16,7 +16,7 @@ from models.vanilla_vae import Vanilla_VAE
 from util import bb_util
 from util.io import vae_model_name
 
-
+# TODO rework to offer interface for docker deployment
 class NeuralCompressor():
 
     def __init__(self, params: Params, data_samples: list, name: str, input_dim):
