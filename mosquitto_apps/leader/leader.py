@@ -29,6 +29,7 @@ class LeaderNode():
 
     def compress_current_buffer(self):
         #Perform compression
+        #TODO: Use neural compressor class here!
         pass
 
     def set_up_connection(self):
