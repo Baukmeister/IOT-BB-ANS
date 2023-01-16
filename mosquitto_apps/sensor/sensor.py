@@ -52,7 +52,7 @@ class SensorNode():
         total_sent_messages = 1
 
         #for idx in tqdm(range(self.data_set.__len__() // 100000)):
-        for idx in tqdm(range(100)):
+        for idx in tqdm(range(300)):
             item = self.data_set.__getitem__(idx)
             nums = item
             for num in nums:
