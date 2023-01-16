@@ -43,15 +43,16 @@ The number `start` represents the beginning of the interval corresponding to
 """
 import numpy as np
 from functools import reduce
-
+import sys
 
 head_precision = 64
 tail_precision = 32
 tail_mask = (1 << tail_precision) - 1
-head_min  = 1 << head_precision - tail_precision
+head_min = 1 << head_precision - tail_precision
 
 #          head    , tail
 msg_init = head_min, ()
+
 
 def append(msg, start, prob, precision):
     """
@@ -65,6 +66,7 @@ def append(msg, start, prob, precision):
         # Need to push data down into tail
         head, tail = head >> tail_precision, (head & tail_mask, tail)
     return (head // prob << precision) + head % prob + start, tail
+
 
 def pop(msg, statfun, precision):
     """
@@ -87,16 +89,21 @@ def pop(msg, statfun, precision):
         head = (head << tail_precision) + head_new
     return (head, tail), symb
 
+
 def append_symbol(statfun, precision):
     def append_(msg, symbol):
         start, prob = statfun(symbol)
         return append(msg, start, prob, precision)
+
     return append_
+
 
 def pop_symbol(statfun, precision):
     def pop_(msg):
         return pop(msg, statfun, precision)
+
     return pop_
+
 
 def flatten(msg):
     """Flatten a rANS message into a 1d numpy array."""
@@ -109,13 +116,17 @@ def flatten(msg):
         out.append(x_head)
     return np.asarray(out, dtype=np.uint32)
 
+
 def unflatten(arr):
     """Unflatten a 1d numpy array into a rANS message."""
     return (int(arr[0]) << 32 | int(arr[1]),
             reduce(lambda tl, hd: (int(hd), tl), reversed(arr[2:]), ()))
 
+
 def stack_depth(t):
-    try:
-        return 1 + max(map(stack_depth, t))
-    except:
-        return 0
+    depth = 0
+    while t:
+        _, t = t
+        depth += 1
+
+    return depth

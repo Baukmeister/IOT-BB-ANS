@@ -50,7 +50,8 @@ class SensorNode():
             raise Warning(f"Could not connect at port {self.mosquitto_port} - Make sure the service is running!")
 
     def send_data(self):
-        for idx in tqdm(range(self.data_set.__len__() // 100000)):
+        #for idx in tqdm(range(self.data_set.__len__() // 100000)):
+        for idx in tqdm(range(300)):
             item = self.data_set.__getitem__(idx)
             nums = item
             for num in nums:

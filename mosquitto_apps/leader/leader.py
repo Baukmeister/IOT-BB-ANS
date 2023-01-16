@@ -44,6 +44,7 @@ class LeaderNode():
         payload = msg.payload
 
         if payload == b"EOT":
+            print("Finished compression!")
             self.end_compression()
         else:
             self.buffer.append(int(msg.payload))
@@ -72,12 +73,14 @@ class LeaderNode():
     def instantiate_neural_compressor(self):
 
         n_features = input_dim(self.model_params)
-        self.compressor = NeuralCompressor(params=self.model_params, data_samples=[], input_dim=n_features)
+        self.compressor = NeuralCompressor(params=self.model_params, data_samples=[], input_dim=n_features, plot=True)
 
     def end_compression(self):
+        self.client.unsubscribe(self.model_params.data_set_name)
+        self.client.loop_stop()
         self.client.disconnect()
-        print("Finished compression!")
         self.compressor.get_encoding_stats(self.data_points_num)
+        self.compressor.plot_stack_sizes()
 
 if __name__ == "__main__":
 

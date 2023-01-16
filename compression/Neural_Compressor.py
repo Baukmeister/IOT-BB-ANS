@@ -17,7 +17,6 @@ from util.experiment_params import Params
 from util.io import vae_model_name
 
 
-# TODO rework to offer interface for docker deployment
 class NeuralCompressor:
 
     def __init__(self, params: Params, data_samples: list, input_dim, plot=False):
@@ -112,11 +111,14 @@ class NeuralCompressor:
         self.decode_entire_state(len(data_points))
 
         if self.plot:
-            # plot_stack size:
-            x = list(range(len(self.stack_sizes)))
-            plt.plot(x, self.stack_sizes)
-            plt.title(f"Stack size per per sample")
-            plt.show()
+            self.plot_stack_sizes()
+
+    def plot_stack_sizes(self):
+        # plot_stack size:
+        x = list(range(len(self.stack_sizes)))
+        plt.plot(x, self.stack_sizes)
+        plt.title(f"Stack size per per sample")
+        plt.show()
 
     def decode_entire_state(self, data_points_num):
         decode_start_time = time.time()
