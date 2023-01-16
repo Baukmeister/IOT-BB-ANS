@@ -3,6 +3,7 @@ import sys
 
 import numpy
 import numpy as np
+import paho.mqtt.client
 import paho.mqtt.client as mqtt
 
 from compression.Neural_Compressor import NeuralCompressor
@@ -18,35 +19,44 @@ class LeaderNode():
         self.model_name = None
         self.n_features = None
         self.mosquitto_port = 1883
+        self.data_points_num = 0
 
         with open(f"{model_param_path}") as f:
             params_json = json.load(f)
             self.model_params: Params = Params.from_dict(params_json)
 
         self.input_dim = input_dim(self.model_params)
-        self.client = None
+        self.client: paho.mqtt.client.Client = None
         self.compression_batch_size = self.input_dim
         self.buffer = []
         self.host_address = host_address
-        self.data_set_type = self.model_params.data_set_type
+        self.data_set_name = self.model_params.data_set_name
         self.instantiate_neural_compressor()
         self.set_up_connection()
 
     def on_connect(self, client, userdata, flags, rc):
         print("Connected with result code " + str(rc))
-        client.subscribe(self.data_set_type)
+        client.subscribe(topic=self.data_set_name)
 
-    def on_message(self, client, userdata, msg):
+    def on_message(self, client, userdata, msg: paho.mqtt.client.MQTTMessage):
 
-        self.buffer.append(int(msg.payload))
+        payload = msg.payload
 
-        if len(self.buffer) == self.compression_batch_size:
-            self.compress_current_buffer()
+        if payload == b"EOT":
+            self.end_compression()
+        else:
+            self.buffer.append(int(msg.payload))
+
+            if len(self.buffer) == self.compression_batch_size:
+                self.compress_current_buffer()
+                self.buffer = []
 
     def compress_current_buffer(self):
         data_point = np.array(self.buffer)
         data_point.shape = (1, self.input_dim)
+        print("Encoding current buffer!")
         self.compressor.add_to_state(data_point)
+        self.data_points_num += data_point.size
 
     def set_up_connection(self):
         self.client = mqtt.Client()
@@ -56,7 +66,6 @@ class LeaderNode():
             self.client.connect(host_address, self.mosquitto_port)
         except ConnectionRefusedError as e:
             raise Warning(f"Could not connect at port {self.mosquitto_port} - Make sure the service is running!")
-
         self.client.loop_forever()
 
     def instantiate_neural_compressor(self):
@@ -64,6 +73,10 @@ class LeaderNode():
         n_features = input_dim(self.model_params)
         self.compressor = NeuralCompressor(params=self.model_params, data_samples=[], input_dim=n_features)
 
+    def end_compression(self):
+        self.client.disconnect()
+        print("Finished compression!")
+        self.compressor.get_encoding_stats(self.data_points_num)
 
 if __name__ == "__main__":
 

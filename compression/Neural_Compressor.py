@@ -67,8 +67,10 @@ class NeuralCompressor:
         if self.params.model_type == "full_vae":
             print("Using Full VAE (gaussian likelihood)")
             self.model = vae_full
-            obs_append = tvae_utils.gaussian_obs_append(vae_full.range, self.params.obs_precision)
-            obs_pop = tvae_utils.gaussian_obs_pop(vae_full.range, self.params.obs_precision)
+            self.model.load_state_dict(torch.load(self.model_name))
+            self.model.eval()
+            obs_append = tvae_utils.gaussian_obs_append(self.model.range.item(), self.params.obs_precision)
+            obs_pop = tvae_utils.gaussian_obs_pop(self.model.range.item(), self.params.obs_precision)
         elif self.params.model_type == "vanilla_vae":
             print("Using Vanilla VAE")
             self.model = vanilla_vae
@@ -78,13 +80,14 @@ class NeuralCompressor:
         elif self.params.model_type == "beta_binomial_vae":
             print("Using Beta Binomial VAE (beta-binomial likelihood)")
             self.model = beta_binomial_vae
-            obs_append = tvae_utils.beta_binomial_obs_append(beta_binomial_vae.range, self.params.obs_precision)
-            obs_pop = tvae_utils.beta_binomial_obs_pop(beta_binomial_vae.range, self.params.obs_precision)
+            self.model.load_state_dict(torch.load(self.model_name))
+            self.model.eval()
+            obs_append = tvae_utils.beta_binomial_obs_append(self.model.range.item(), self.params.obs_precision)
+            obs_pop = tvae_utils.beta_binomial_obs_pop(self.model.range.item(), self.params.obs_precision)
         else:
             raise ValueError(f"No model defined for '{self.params.model_type}'")
 
-        self.model.load_state_dict(torch.load(self.model_name))
-        self.model.eval()
+
 
         rec_net = tvae_utils.torch_fun_to_numpy_fun(self.model.encode)
         gen_net = tvae_utils.torch_fun_to_numpy_fun(self.model.decode)
@@ -106,7 +109,7 @@ class NeuralCompressor:
     def run_compression(self):
 
         data_points = self.encode_data_set()
-        self.decode_entire_state(data_points)
+        self.decode_entire_state(len(data_points))
 
         if self.plot:
             # plot_stack size:
@@ -115,11 +118,11 @@ class NeuralCompressor:
             plt.title(f"Stack size per per sample")
             plt.show()
 
-    def decode_entire_state(self, data_points):
+    def decode_entire_state(self, data_points_num):
         decode_start_time = time.time()
         reconstructed_data_points = []
         print("\nDecoding data points ...")
-        for _ in tqdm(range(len(data_points))):
+        for _ in tqdm(range(data_points_num)):
             self.remove_from_state(reconstructed_data_points)
         print('\nAll decoded in {:.2f}s'.format(time.time() - decode_start_time))
         recovered_bits = rans.flatten(self.state)
@@ -133,14 +136,18 @@ class NeuralCompressor:
         for i, data_point in tqdm(enumerate(data_points), total=self.params.compression_samples_num):
             self.add_to_state(data_point)
         print('\nAll encoded in {:.2f}s'.format(time.time() - encode_start_time))
-        compressed_message = rans.flatten(self.state)
-        compressed_bits = 32 * (len(compressed_message) - len(self.other_bits))
-        compression_rate = compressed_bits / (np.size(data_points) * 32)
-        bits_per_datapoint = compressed_bits / np.size(data_points)
-        print("Used " + str(compressed_bits) + " bits.")
-        print(f'Compression ratio: {round(compression_rate, 4)}. BpD: {bits_per_datapoint}')
+        compressed_message = self.get_encoding_stats(np.size(data_points))
         self.state = rans.unflatten(compressed_message)
         return data_points
+
+    def get_encoding_stats(self, data_points_num):
+        compressed_message = rans.flatten(self.state)
+        compressed_bits = 32 * (len(compressed_message) - len(self.other_bits))
+        compression_rate = compressed_bits / (data_points_num * 32)
+        bits_per_datapoint = compressed_bits / data_points_num
+        print("Used " + str(compressed_bits) + " bits.")
+        print(f'Compression ratio: {round(compression_rate, 4)}. BpD: {bits_per_datapoint}')
+        return compressed_message
 
     def remove_from_state(self, reconstructed_data_points):
         self.state, data_point_ = self.vae_pop(self.state)
@@ -148,4 +155,7 @@ class NeuralCompressor:
 
     def add_to_state(self, data_point):
         self.state = self.vae_append(self.state, data_point)
-        self.stack_sizes.append((stack_depth(self.state)))
+        current_stack_depth = stack_depth(self.state)
+        print(f"Current stack depth: {current_stack_depth}")
+        self.stack_sizes.append(current_stack_depth)
+

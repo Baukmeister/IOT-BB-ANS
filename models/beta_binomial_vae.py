@@ -21,7 +21,6 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
     def __init__(self, n_features, range, batch_size, wc=0.0, lr=5e-4, hidden_dim=200, latent_dim=50, plot=True):
         super(BetaBinomialVAE_sbs, self).__init__()
         self.n_features = n_features
-        self.range = range
         self.batch_size = batch_size
         self.wc = wc
         self.lr = lr
@@ -29,6 +28,7 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
         self.latent_dim = latent_dim
         self.plot = plot
 
+        self.register_parameter('range', torch.nn.Parameter(torch.tensor(range), requires_grad=False))
         self.register_buffer('prior_mean', torch.zeros(1))
         self.register_buffer('prior_std', torch.ones(1))
         self.register_buffer('n', torch.ones(self.batch_size, n_features) * self.range)
@@ -36,7 +36,7 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
         self.fc1 = nn.Linear(n_features, self.hidden_dim)
         self.bn1 = nn.BatchNorm1d(self.hidden_dim)
 
-        #Extra Layers
+        # Extra Layers
 
         self.encoderExtraLayers = nn.Sequential(
             nn.Linear(self.hidden_dim, self.hidden_dim),
@@ -50,7 +50,6 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
             nn.BatchNorm1d(self.hidden_dim)
         )
 
-
         self.fc21 = nn.Linear(self.hidden_dim, self.latent_dim)
         self.fc22 = nn.Linear(self.hidden_dim, self.latent_dim)
 
@@ -60,7 +59,6 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
         self.fc3 = nn.Linear(self.latent_dim, self.hidden_dim)
         self.bn3 = nn.BatchNorm1d(self.hidden_dim)
         self.fc4 = nn.Linear(self.hidden_dim, n_features * 2)
-
 
     def encode(self, x):
         """Return mu, sigma on latent"""

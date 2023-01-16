@@ -1,7 +1,8 @@
-import io
+import os
 import json
 import sys
 
+import paho.mqtt.client
 import paho.mqtt.client as mqtt
 from tqdm import tqdm
 
@@ -13,7 +14,7 @@ class SensorNode():
 
     def __init__(self, data_set_dir, host_address, model_param_path):
         self.data_set = None
-        self.client = None
+        self.client: paho.mqtt.client.Client = None
 
         with open(f"{model_param_path}") as f:
             params_json = json.load(f)
@@ -49,11 +50,14 @@ class SensorNode():
             raise Warning(f"Could not connect at port {self.mosquitto_port} - Make sure the service is running!")
 
     def send_data(self):
-        for idx in tqdm(range(self.data_set.__len__() // 10)):
+        for idx in tqdm(range(self.data_set.__len__() // 100000)):
             item = self.data_set.__getitem__(idx)
             nums = item
             for num in nums:
-                self.client.publish(self.data_set_name, int(num))
+                self.client.publish(self.data_set_name, int(num), )
+
+        # end of transmission
+        self.client.publish(self.data_set_name, "EOT")
 
 
 if __name__ == "__main__":

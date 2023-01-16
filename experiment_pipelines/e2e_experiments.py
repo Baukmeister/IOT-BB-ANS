@@ -17,15 +17,15 @@ from util.io import input_dim
 
 def main():
     experiments_to_run = [
-        "simple",
+        #"simple",
         "household",
-        "wisdm",
-        "intel"
+        #"wisdm",
+        #"intel"
     ]
 
     modes_to_evaluate = [
-        #"model_training",
-        "compression"
+        "model_training",
+        #"compression"
     ]
 
     if "simple" in experiments_to_run:
@@ -148,7 +148,7 @@ def main():
             compression_samples_num=10,
             hidden_dim=200,
             latent_dim=50,
-            train_set_ratio=1.0,
+            train_set_ratio=0.3,
             val_set_ratio=0.01,
             train_batch_size=64,
             discretize=True,
