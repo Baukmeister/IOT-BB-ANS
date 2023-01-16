@@ -21,6 +21,7 @@ class LeaderNode():
         self.n_features = None
         self.mosquitto_port = 1883
         self.data_points_num = 0
+        self.compression_steps = 0
 
         with open(f"{model_param_path}") as f:
             params_json = json.load(f)
@@ -37,11 +38,12 @@ class LeaderNode():
 
     def on_connect(self, client, userdata, flags, rc):
         print("Connected with result code " + str(rc))
-        client.subscribe(topic=self.data_set_name)
+        client.subscribe(topic=self.data_set_name, qos=2)
 
     def on_message(self, client, userdata, msg: paho.mqtt.client.MQTTMessage):
 
         payload = msg.payload
+        #print(payload)
 
         if payload == b"EOT":
             print("Finished compression!")
@@ -49,16 +51,18 @@ class LeaderNode():
         else:
             self.buffer.append(int(msg.payload))
 
-            if len(self.buffer) == self.compression_batch_size:
-                self.compress_current_buffer()
-                self.buffer = []
+        if len(self.buffer) == self.compression_batch_size:
+            self.compress_current_buffer()
+            self.buffer = []
 
     def compress_current_buffer(self):
         data_point = np.array(self.buffer)
         data_point.shape = (1, self.input_dim)
-        print("Encoding current buffer!")
+        print(f"Encoding current buffer! ({self.compression_steps})")
+        self.compression_steps += 1
         self.compressor.add_to_state(data_point)
         self.data_points_num += data_point.size
+
 
     def set_up_connection(self):
         self.client = mqtt.Client()

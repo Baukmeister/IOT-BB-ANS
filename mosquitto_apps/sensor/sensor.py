@@ -25,12 +25,11 @@ class SensorNode():
         self.data_set_dir = data_set_dir
         self.mosquitto_port = 1883
 
-
-
         self.load_data()
         self.set_up_connection()
+        self.client.loop_start()
         self.send_data()
-
+        self.client.loop_stop()
     def load_data(self):
 
         if self.data_set_name == "household":
@@ -50,15 +49,19 @@ class SensorNode():
             raise Warning(f"Could not connect at port {self.mosquitto_port} - Make sure the service is running!")
 
     def send_data(self):
+        total_sent_messages = 1
+
         #for idx in tqdm(range(self.data_set.__len__() // 100000)):
-        for idx in tqdm(range(300)):
+        for idx in tqdm(range(100)):
             item = self.data_set.__getitem__(idx)
             nums = item
             for num in nums:
-                self.client.publish(self.data_set_name, int(num), )
+                self.client.publish(self.data_set_name, int(num), qos=2)
+                total_sent_messages += 1
 
         # end of transmission
-        self.client.publish(self.data_set_name, "EOT")
+        self.client.publish(self.data_set_name, "EOT", qos=2)
+        print(f"Sent a total of {total_sent_messages} messages")
 
 
 if __name__ == "__main__":
