@@ -67,8 +67,8 @@ class NeuralCompressor:
         if self.params.model_type == "full_vae":
             print("Using Full VAE (gaussian likelihood)")
             self.model = vae_full
-            obs_append = tvae_utils.gaussian_obs_append(self.params.range, self.params.obs_precision)
-            obs_pop = tvae_utils.gaussian_obs_pop(self.params.range, self.params.obs_precision)
+            obs_append = tvae_utils.gaussian_obs_append(vae_full.range, self.params.obs_precision)
+            obs_pop = tvae_utils.gaussian_obs_pop(vae_full.range, self.params.obs_precision)
         elif self.params.model_type == "vanilla_vae":
             print("Using Vanilla VAE")
             self.model = vanilla_vae
@@ -78,8 +78,8 @@ class NeuralCompressor:
         elif self.params.model_type == "beta_binomial_vae":
             print("Using Beta Binomial VAE (beta-binomial likelihood)")
             self.model = beta_binomial_vae
-            obs_append = tvae_utils.beta_binomial_obs_append(self.params.range, self.params.obs_precision)
-            obs_pop = tvae_utils.beta_binomial_obs_pop(self.params.range, self.params.obs_precision)
+            obs_append = tvae_utils.beta_binomial_obs_append(beta_binomial_vae.range, self.params.obs_precision)
+            obs_pop = tvae_utils.beta_binomial_obs_pop(beta_binomial_vae.range, self.params.obs_precision)
         else:
             raise ValueError(f"No model defined for '{self.params.model_type}'")
 
