@@ -1,3 +1,5 @@
+import json
+
 from torch.utils.data import Dataset
 
 from benchmark_compression import benchmark_on_data
@@ -40,6 +42,10 @@ def main():
             max_epochs=5,
             compression_samples_num=50
         )
+
+        # TODO: check if this works and use it for others
+        with open("../params/e2e/simple.json") as f:
+            json.dump(simple_params.to_dict(), f)
 
         simpleDataSet = SimpleDataSet(
             data_range=simple_params.scale_factor,
@@ -250,6 +256,8 @@ def main():
             print("Running benchmark compression for intel_lab data ...")
             benchmark_on_data(test_set, intel_lab_params.compression_samples_num)
         print("_" * 25)
+
+
 
 
 if __name__ == "__main__":
