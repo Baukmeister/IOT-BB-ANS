@@ -16,7 +16,7 @@ from util.io import input_dim
 def main():
     experiments_to_run = [
         #"simple",
-        "household",
+        #"household",
         "wisdm",
         "intel"
     ]

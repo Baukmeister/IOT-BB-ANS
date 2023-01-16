@@ -35,7 +35,7 @@ class NeuralCompressor:
 
         vae_full = VAE_full(
             n_features=self.n_features,
-            range=self.params.scale_factor,
+            range=self.params.range,
             batch_size=self.params.train_batch_size,
             hidden_dim=self.params.hidden_dim,
             latent_dim=self.params.latent_dim,
@@ -46,7 +46,7 @@ class NeuralCompressor:
 
         vanilla_vae = Vanilla_VAE(
             n_features=self.n_features,
-            scale_factor=self.params.scale_factor,
+            scale_factor=self.params.range,
             hidden_dims=None,
             latent_dim=self.params.latent_dim,
             lr=self.params.learning_rate,
@@ -55,7 +55,7 @@ class NeuralCompressor:
 
         beta_binomial_vae = BetaBinomialVAE_sbs(
             n_features=self.n_features,
-            range=self.params.scale_factor,
+            range=self.params.range,
             batch_size=self.params.train_batch_size,
             hidden_dim=self.params.hidden_dim,
             latent_dim=self.params.latent_dim,

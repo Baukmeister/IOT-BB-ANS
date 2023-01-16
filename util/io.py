@@ -45,9 +45,9 @@ def input_dim(params: Params) -> int:
         if params.metric == "all":
             n_features = 7 * int(params.pooling_factor)
         else:
-            n_features = 7 * int(params.pooling_factor)
+            n_features = 1 * int(params.pooling_factor)
     elif params.data_set_name == "wisdm":
-        n_features = 3 * int(params.n_feature)
+        n_features = 3 * int(params.pooling_factor)
     elif params.data_set_name == "intel":
         if params.metric == "all":
             n_features = 4 * int(params.pooling_factor)
