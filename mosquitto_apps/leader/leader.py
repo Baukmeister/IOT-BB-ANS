@@ -9,7 +9,7 @@ from compression.Neural_Compressor import NeuralCompressor
 from util.io import input_dim
 from util.experiment_params import Params
 
-
+# TODO: rework this and make it run compression
 class LeaderNode():
 
     def __init__(self,host_address, model_param_path):
