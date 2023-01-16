@@ -5,10 +5,10 @@ import wandb
 from pytorch_lightning.callbacks import EarlyStopping
 from pytorch_lightning.profilers import SimpleProfiler
 
-from experiment_pipelines.experiment_params import Params
 from models.beta_binomial_vae import BetaBinomialVAE_sbs
 from models.vae import VAE_full
 from models.vanilla_vae import Vanilla_VAE
+from util.experiment_params import Params
 from util.io import vae_model_name
 import pytorch_lightning as pl
 from torch.utils import data
@@ -31,6 +31,7 @@ class VaeTrainer():
         self.learning_rate = self.params.learning_rate
         self.weight_decay = self.params.weight_decay
         self.scale_factor = self.params.scale_factor
+        self.range = self.params.range
         self.shift = self.params.shift
         self.model_type = self.params.model_type
         self.metric = self.params.metric
@@ -41,15 +42,7 @@ class VaeTrainer():
         self.dataSet = dataSet
 
         self.model_name = vae_model_name(
-            f"../models/trained_models/{self.name}",
-            self.discretize,
-            self.hidden_dim,
-            self.latent_dim,
-            self.pooling_factor,
-            self.scale_factor,
-            self.model_type,
-            self.shift,
-            data_set_type=self.metric
+            self.params
         )
 
         vae_full = VAE_full(
@@ -74,7 +67,7 @@ class VaeTrainer():
 
         beta_binomial_vae = BetaBinomialVAE_sbs(
             n_features=self.input_dim,
-            range=self.scale_factor,
+            range=self.range,
             batch_size=self.train_batch_size,
             hidden_dim=self.hidden_dim,
             latent_dim=self.latent_dim,

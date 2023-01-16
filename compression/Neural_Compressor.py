@@ -9,37 +9,27 @@ from tqdm import tqdm
 
 from compression import tvae_utils, rans
 from compression.rans import stack_depth
-from experiment_pipelines.experiment_params import Params
 from models.beta_binomial_vae import BetaBinomialVAE_sbs
 from models.vae import VAE_full
 from models.vanilla_vae import Vanilla_VAE
 from util import bb_util
+from util.experiment_params import Params
 from util.io import vae_model_name
 
 
 # TODO rework to offer interface for docker deployment
 class NeuralCompressor:
 
-    def __init__(self, params: Params, data_samples: list, name: str, input_dim, plot=False):
+    def __init__(self, params: Params, data_samples: list, input_dim, plot=False):
         self.plot = plot
         self.params = params
         self.state = None
 
         self.data_samples = data_samples
-        self.name = name
+        self.name = params.model_type
         self.n_features = input_dim
 
-        self.model_name = vae_model_name(
-            f"../models/trained_models/{self.name}",
-            self.params.discretize,
-            self.params.hidden_dim,
-            self.params.latent_dim,
-            self.params.pooling_factor,
-            self.params.scale_factor,
-            self.params.model_type,
-            self.params.shift,
-            data_set_type=self.params.metric
-        )
+        self.model_name = vae_model_name(params=params)
 
         self.num_batches = len(self.data_samples) // self.params.compression_batch_size
 
@@ -77,8 +67,8 @@ class NeuralCompressor:
         if self.params.model_type == "full_vae":
             print("Using Full VAE (gaussian likelihood)")
             self.model = vae_full
-            obs_append = tvae_utils.gaussian_obs_append(self.params.scale_factor, self.params.obs_precision)
-            obs_pop = tvae_utils.gaussian_obs_pop(self.params.scale_factor, self.params.obs_precision)
+            obs_append = tvae_utils.gaussian_obs_append(self.params.range, self.params.obs_precision)
+            obs_pop = tvae_utils.gaussian_obs_pop(self.params.range, self.params.obs_precision)
         elif self.params.model_type == "vanilla_vae":
             print("Using Vanilla VAE")
             self.model = vanilla_vae
@@ -88,8 +78,8 @@ class NeuralCompressor:
         elif self.params.model_type == "beta_binomial_vae":
             print("Using Beta Binomial VAE (beta-binomial likelihood)")
             self.model = beta_binomial_vae
-            obs_append = tvae_utils.beta_binomial_obs_append(self.params.scale_factor, self.params.obs_precision)
-            obs_pop = tvae_utils.beta_binomial_obs_pop(self.params.scale_factor, self.params.obs_precision)
+            obs_append = tvae_utils.beta_binomial_obs_append(self.params.range, self.params.obs_precision)
+            obs_pop = tvae_utils.beta_binomial_obs_pop(self.params.range, self.params.obs_precision)
         else:
             raise ValueError(f"No model defined for '{self.params.model_type}'")
 

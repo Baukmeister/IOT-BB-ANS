@@ -5,7 +5,6 @@ import numpy as np
 import torch
 from autograd.builtins import tuple as ag_tuple
 
-import craystack as cs
 from compression.torch_util import torch_fun_to_numpy_fun
 from craystack import bb_ans
 from models.beta_binomial_vae import BetaBinomialVAE_sbs

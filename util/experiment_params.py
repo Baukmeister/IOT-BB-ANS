@@ -1,8 +1,12 @@
 from dataclasses import dataclass
+from dataclasses_json import dataclass_json
 
 
+@dataclass_json
 @dataclass
 class Params:
+    n_feature: int = 3
+    data_set_name:str = "simple"
     pooling_factor: int = 15
     hidden_dim: int = 300
     latent_dim: int = 20
@@ -14,6 +18,7 @@ class Params:
     learning_rate: float = 1e-8
     weight_decay: float = 0.01
     scale_factor: int = 100
+    range: int = 100
     shift: bool = False
     model_type: str = "beta_binomial_vae"
     metric: str = None

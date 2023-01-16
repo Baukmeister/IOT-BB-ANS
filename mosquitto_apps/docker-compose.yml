@@ -1,5 +1,6 @@
 services:
   sensor:
+    image: baukmeister/mosquitto_apps-sensor
     build:
       context: ..
       dockerfile: ./mosquitto_apps/sensor/Dockerfile
