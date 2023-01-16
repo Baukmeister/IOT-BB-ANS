@@ -17,14 +17,14 @@ from util.io import input_dim
 
 def main():
     experiments_to_run = [
-        #"simple",
-        #"household",
+        "simple",
+        "household",
         "wisdm",
         "intel"
     ]
 
     modes_to_evaluate = [
-        "model_training",
+        #"model_training",
         "compression"
     ]
 
@@ -43,9 +43,8 @@ def main():
             compression_samples_num=50
         )
 
-        # TODO: check if this works and use it for others
-        with open("../params/e2e/simple.json") as f:
-            json.dump(simple_params.to_dict(), f)
+        with open("../params/e2e/simple.json", "w") as f:
+            json.dump(simple_params.to_dict(), f, indent=4)
 
         simpleDataSet = SimpleDataSet(
             data_range=simple_params.scale_factor,
@@ -99,6 +98,9 @@ def main():
 
         )
 
+        with open("../params/e2e/household.json", "w") as f:
+            json.dump(household_power_params.to_dict(), f, indent=4)
+
         householdPowerDataSet = HouseholdPowerDataset(
             "../data/household_power_consumption",
             pooling_factor=household_power_params.pooling_factor,
@@ -140,7 +142,7 @@ def main():
     if "wisdm" in experiments_to_run:
         print("_" * 25)
 
-        WISDM_params = Params(
+        wisdm_params = Params(
             data_set_name="wisdm",
             pooling_factor=5,
             compression_samples_num=10,
@@ -159,28 +161,31 @@ def main():
             data_set_type="accel"
         )
 
+        with open("../params/e2e/wisdm.json", "w") as f:
+            json.dump(wisdm_params.to_dict(), f, indent=4)
+
         wisdm_dataset = WISDMDataset(
             "../data/wisdm-dataset/raw",
-            pooling_factor=WISDM_params.pooling_factor,
-            discretize=WISDM_params.discretize,
-            scaling_factor=WISDM_params.scale_factor,
-            shift=WISDM_params.shift,
-            data_set_size=WISDM_params.data_set_type,
+            pooling_factor=wisdm_params.pooling_factor,
+            discretize=wisdm_params.discretize,
+            scaling_factor=wisdm_params.scale_factor,
+            shift=wisdm_params.shift,
+            data_set_size=wisdm_params.data_set_type,
             caching=False
         )
 
-        WISDM_params.range = wisdm_dataset.range
+        wisdm_params.range = wisdm_dataset.range
 
-        testSetSize = int(len(wisdm_dataset) * WISDM_params.test_set_ratio)
+        testSetSize = int(len(wisdm_dataset) * wisdm_params.test_set_ratio)
         trainSetSize = len(wisdm_dataset) - (testSetSize)
         train_set, test_set = data.random_split(wisdm_dataset, [trainSetSize, testSetSize])
 
-        wisdm_power_input_dim = input_dim(WISDM_params)
+        wisdm_power_input_dim = input_dim(wisdm_params)
 
         if "model_training" in modes_to_evaluate:
             print("Running model training for WISDM data ...")
 
-            wisdm_vae_trainer = VaeTrainer(WISDM_params, train_set, "WISDM",
+            wisdm_vae_trainer = VaeTrainer(wisdm_params, train_set, "WISDM",
                                            wisdm_power_input_dim)
             wisdm_vae_trainer.train_model()
 
@@ -188,13 +193,13 @@ def main():
             print("Running neural compression for WISDM data ...")
 
             test_set_samples = [test_set.__getitem__(i).cpu().numpy() for i in
-                                range(WISDM_params.compression_samples_num)]
-            wisdm_neural_compressor = NeuralCompressor(WISDM_params, test_set_samples,
+                                range(wisdm_params.compression_samples_num)]
+            wisdm_neural_compressor = NeuralCompressor(wisdm_params, test_set_samples,
                                                        wisdm_power_input_dim)
             wisdm_neural_compressor.run_compression()
 
             print("Running benchmark compression for WISDM data ...")
-            benchmark_on_data(test_set, WISDM_params.compression_samples_num)
+            benchmark_on_data(test_set, wisdm_params.compression_samples_num)
         print("_" * 25)
 
     if "intel" in experiments_to_run:
@@ -219,6 +224,9 @@ def main():
             metric="all"
         )
 
+        with open("../params/e2e/intel.json", "w") as f:
+            json.dump(intel_lab_params.to_dict(),f, indent=4)
+
         intel_lab_dataset = IntelLabDataset(
             "../data/IntelLabData",
             pooling_factor=intel_lab_params.pooling_factor,
@@ -227,7 +235,6 @@ def main():
             metric=intel_lab_params.metric
         )
 
-        # TODO: fix this issue as it breaks model loading
         intel_lab_params.range = intel_lab_dataset.range
 
         testSetSize = int(len(intel_lab_dataset) * intel_lab_params.test_set_ratio)
