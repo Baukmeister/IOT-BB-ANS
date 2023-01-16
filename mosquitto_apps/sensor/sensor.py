@@ -18,10 +18,10 @@ class SensorNode():
 
         with open(f"{model_param_path}") as f:
             params_json = json.load(f)
-            self.model_params: Params = Params.from_dict(params_json)
+            self.params: Params = Params.from_dict(params_json)
 
         self.host_address = host_address
-        self.data_set_name  = self.model_params.data_set_name
+        self.data_set_name  = self.params.data_set_name
         self.data_set_dir = data_set_dir
         self.mosquitto_port = 1883
 
@@ -35,7 +35,7 @@ class SensorNode():
         if self.data_set_name == "household":
             self.data_set = HouseholdPowerDataset_Lite(
                 self.data_set_dir,
-                scaling_factor=self.model_params.scale_factor,
+                scaling_factor=self.params.scale_factor,
                 caching=False
             )
         else:
@@ -51,8 +51,7 @@ class SensorNode():
     def send_data(self):
         total_sent_messages = 1
 
-        #for idx in tqdm(range(self.data_set.__len__() // 100000)):
-        for idx in tqdm(range(300)):
+        for idx in tqdm(range(self.params.compression_samples_num)):
             item = self.data_set.__getitem__(idx)
             nums = item
             for num in nums:
