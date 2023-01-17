@@ -1,12 +1,10 @@
 import json
 
-from torch.utils.data import Dataset
+from torch.utils import data
 
 from benchmark_compression import benchmark_on_data
 from compression.Neural_Compressor import NeuralCompressor
 from model_training.VAE_Trainer import VaeTrainer
-from torch.utils import data
-
 from util.DataLoaders.HouseholdPowerDataLoader import HouseholdPowerDataset
 from util.DataLoaders.IntelLabDataLoader import IntelLabDataset
 from util.DataLoaders.SimpleDataLoader import SimpleDataSet
@@ -24,8 +22,8 @@ def main():
     ]
 
     modes_to_evaluate = [
-        "model_training",
-        #"compression"
+        #"model_training",
+        "compression"
     ]
 
     if "simple" in experiments_to_run:
@@ -81,7 +79,7 @@ def main():
 
         household_power_params = Params(
             data_set_name="household",
-            train_set_ratio=0.2,
+            train_set_ratio=0.8,
             model_type="beta_binomial_vae",
             val_set_ratio=0.005,
             compression_samples_num=10,
@@ -93,9 +91,8 @@ def main():
             discretize=True,
             learning_rate=0.01,
             train_batches=10000,
-            max_epochs=1,
+            max_epochs=3,
             metric="all"
-
         )
 
         with open("../params/e2e/household.json", "w") as f:

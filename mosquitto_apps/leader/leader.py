@@ -10,11 +10,12 @@ from compression.Neural_Compressor import NeuralCompressor
 from util.io import input_dim
 from util.experiment_params import Params
 
+
 # TODO: Implement idea of using first few samples as random bits
 # TODO: Add benchmark compressor leader variant
 class LeaderNode():
 
-    def __init__(self,host_address, model_param_path):
+    def __init__(self, host_address, model_param_path):
 
         self.compressor: NeuralCompressor = None
         self.model_name = None
@@ -25,14 +26,18 @@ class LeaderNode():
 
         with open(f"{model_param_path}") as f:
             params_json = json.load(f)
-            self.model_params: Params = Params.from_dict(params_json)
+            self.params: Params = Params.from_dict(params_json)
 
-        self.input_dim = input_dim(self.model_params)
+        self.input_dim = input_dim(self.params)
         self.client: paho.mqtt.client.Client = None
+        self.random_bits_filled = not self.params.use_first_samples_as_extra_bits
+        self.random_bits_size = 50
+        self.random_bits_buffer = []
+
         self.compression_batch_size = self.input_dim
         self.buffer = []
         self.host_address = host_address
-        self.data_set_name = self.model_params.data_set_name
+        self.data_set_name = self.params.data_set_name
         self.instantiate_neural_compressor()
         self.set_up_connection()
 
@@ -43,17 +48,23 @@ class LeaderNode():
     def on_message(self, client, userdata, msg: paho.mqtt.client.MQTTMessage):
 
         payload = msg.payload
-        #print(payload)
 
         if payload == b"EOT":
             print("Finished compression!")
             self.end_compression()
         else:
-            self.buffer.append(int(msg.payload))
+            if self.random_bits_filled:
+                self.buffer.append(int(msg.payload))
+                if len(self.buffer) == self.compression_batch_size:
+                    self.compress_current_buffer()
+                    self.buffer = []
 
-        if len(self.buffer) == self.compression_batch_size:
-            self.compress_current_buffer()
-            self.buffer = []
+            else:
+                self.random_bits_buffer.append(int(msg.payload))
+                if len(self.random_bits_buffer) == self.random_bits_size:
+                    print(f"Using first {self.random_bits_size} samples as random bits for ANS coder")
+                    self.compressor.set_random_bits(np.array(self.random_bits_buffer))
+                    self.random_bits_filled = True
 
     def compress_current_buffer(self):
         data_point = np.array(self.buffer)
@@ -62,7 +73,6 @@ class LeaderNode():
         self.compression_steps += 1
         self.compressor.add_to_state(data_point)
         self.data_points_num += data_point.size
-
 
     def set_up_connection(self):
         self.client = mqtt.Client()
@@ -76,15 +86,16 @@ class LeaderNode():
 
     def instantiate_neural_compressor(self):
 
-        n_features = input_dim(self.model_params)
-        self.compressor = NeuralCompressor(params=self.model_params, data_samples=[], input_dim=n_features, plot=True)
+        n_features = input_dim(self.params)
+        self.compressor = NeuralCompressor(params=self.params, data_samples=[], input_dim=n_features, plot=True)
 
     def end_compression(self):
-        self.client.unsubscribe(self.model_params.data_set_name)
+        self.client.unsubscribe(self.params.data_set_name)
         self.client.loop_stop()
         self.client.disconnect()
         self.compressor.get_encoding_stats(self.data_points_num)
         self.compressor.plot_stack_sizes()
+
 
 if __name__ == "__main__":
 

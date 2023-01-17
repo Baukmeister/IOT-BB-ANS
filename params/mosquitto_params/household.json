@@ -22,7 +22,9 @@
     "prior_precision": 8,
     "obs_precision": 24,
     "q_precision": 14,
-    "compression_samples_num": 300,
+    "compression_samples_num": 10,
     "data_set_type": null,
-    "caching": false
+    "caching": false,
+    "use_first_samples_as_extra_bits": true,
+    "random_bit_samples": 50
 }

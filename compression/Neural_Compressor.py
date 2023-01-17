@@ -86,8 +86,6 @@ class NeuralCompressor:
         else:
             raise ValueError(f"No model defined for '{self.params.model_type}'")
 
-
-
         rec_net = tvae_utils.torch_fun_to_numpy_fun(self.model.encode)
         gen_net = tvae_utils.torch_fun_to_numpy_fun(self.model.decode)
 
@@ -102,8 +100,6 @@ class NeuralCompressor:
         self.other_bits = self.rng.randint(low=1 << 16, high=1 << 31, size=50, dtype=np.uint32)
         self.state = rans.unflatten(self.other_bits)
         self.stack_sizes = []
-
-
 
     def run_compression(self):
 
@@ -161,3 +157,9 @@ class NeuralCompressor:
         print(f"Current stack depth: {current_stack_depth}")
         self.stack_sizes.append(current_stack_depth)
 
+    def set_random_bits(self, random_bits):
+        if all(self.other_bits == rans.flatten(self.state)):
+            self.state = rans.unflatten(random_bits)
+            self.other_bits = random_bits
+        else:
+            raise ValueError("Can't change random start bits of ANS coder since information has already been encoded!")

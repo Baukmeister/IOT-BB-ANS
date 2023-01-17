@@ -31,3 +31,5 @@ class Params:
     compression_samples_num: int = 1000
     data_set_type: str = None
     caching: bool = False
+    use_first_samples_as_extra_bits = True
+    random_bit_samples = 50
