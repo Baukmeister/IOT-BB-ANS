@@ -15,8 +15,9 @@ from util.experiment_params import Params
 # TODO: Add benchmark compressor leader variant
 class LeaderNode:
 
-    def __init__(self, host_address, model_param_path):
+    def __init__(self, host_address ,model_param_path, compression_mode="neural"):
 
+        self.compression_mode = compression_mode
         self.compressor: NeuralCompressor = None
         self.model_name = None
         self.n_features = None
@@ -28,7 +29,7 @@ class LeaderNode:
             params_json = json.load(f)
             self.params: Params = Params.from_dict(params_json)
 
-        print(f"Running leader node in '{self.params.compression_mode}' compression mode")
+        print(f"Running leader node in '{self.compression_mode}' compression mode")
 
         self.input_dim = input_dim(self.params)
         self.client: paho.mqtt.client.Client = None
@@ -41,7 +42,7 @@ class LeaderNode:
         self.host_address = host_address
         self.data_set_name = self.params.data_set_name
 
-        if self.params.compression_mode == "neural":
+        if self.compression_mode == "neural":
             self.instantiate_neural_compressor()
 
         self.set_up_connection()
@@ -60,9 +61,9 @@ class LeaderNode:
         else:
             self.buffer.append(int(msg.payload))
 
-            if self.params.compression_mode == "neural":
+            if self.compression_mode == "neural":
                 self.process_message_neural_compressor(msg)
-            elif self.params.compression_mode == "benchmark":
+            elif self.compression_mode == "benchmark":
                 # Just let the buffer accumulate
                 pass
 
@@ -105,10 +106,10 @@ class LeaderNode:
         self.client.unsubscribe(self.params.data_set_name)
         self.client.loop_stop()
         self.client.disconnect()
-        if self.params.compression_mode == "neural":
+        if self.compression_mode == "neural":
             self.compressor.get_encoding_stats(self.data_points_num)
             self.compressor.plot_stack_sizes()
-        elif self.params.compression_mode == "benchmark":
+        elif self.compression_mode == "benchmark":
             benchmark_compression.benchmark_on_data(self.buffer)
             pass
 
@@ -116,9 +117,10 @@ class LeaderNode:
 if __name__ == "__main__":
 
     model_param_path = sys.argv[1]
-    if len(sys.argv) >= 3:
-        host_address = sys.argv[2]
+    compression_mode = sys.argv[2]
+    if len(sys.argv) >= 4:
+        host_address = sys.argv[3]
     else:
         host_address = "localhost"
 
-    LeaderNode(host_address, model_param_path)
+    LeaderNode(host_address, model_param_path, compression_mode)

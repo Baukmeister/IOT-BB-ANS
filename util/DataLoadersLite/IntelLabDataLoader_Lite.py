@@ -4,13 +4,12 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import torch
-from torch.utils.data.dataset import T_co, Dataset
 from tqdm import tqdm
 
 
-class IntelLabDataset(Dataset):
+class IntelLabDataset_Lite():
 
-    def __getitem__(self, index) -> T_co:
+    def __getitem__(self, index):
         if not self.caching:
             item = self.IntelDataDf.iloc[index:index + self.pooling_factor, self.item_indices].values.flatten()
 
@@ -18,7 +17,7 @@ class IntelLabDataset(Dataset):
             with open(self._cached_file_name(index), "rb") as f:
                 item = np.load(f)
 
-        return torch.tensor(item).float()
+        return item
 
     def __len__(self) -> int:
         if self.caching:

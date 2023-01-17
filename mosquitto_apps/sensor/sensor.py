@@ -7,6 +7,9 @@ import paho.mqtt.client as mqtt
 from tqdm import tqdm
 
 from util.DataLoadersLite.HouseholdPowerDataLoader_Lite import HouseholdPowerDataset_Lite
+from util.DataLoadersLite.IntelLabDataLoader_Lite import IntelLabDataset_Lite
+from util.DataLoadersLite.SimpleDataLoader_Lite import SimpleDataSet_Lite
+from util.DataLoadersLite.WIDSMDataLoader_Lite import WISDMDataset_Lite
 from util.experiment_params import Params
 
 
@@ -33,14 +36,38 @@ class SensorNode():
 
     def load_data(self):
 
-        if self.data_set_name == "household":
+        if self.data_set_name == "simple":
+            self.data_set = SimpleDataSet_Lite(
+                data_range=self.params.scale_factor,
+                pooling_factor=self.params.pooling_factor
+            )
+        elif self.data_set_name == "household":
             self.data_set = HouseholdPowerDataset_Lite(
                 self.data_set_dir,
                 scaling_factor=self.params.scale_factor,
                 caching=False,
             )
+        elif self.data_set_name == "wisdm":
+            self.data_set = WISDMDataset_Lite(
+                self.data_set_dir,
+                pooling_factor=self.params.pooling_factor,
+                discretize=self.params.discretize,
+                scaling_factor=self.params.scale_factor,
+                shift=self.params.shift,
+                data_set_size=self.params.data_set_type,
+                caching=False
+            )
+        elif self.data_set_name == "intel":
+            self.data_set = IntelLabDataset_Lite(
+                self.data_set_dir,
+                pooling_factor=self.params.pooling_factor,
+                scaling_factor=self.params.scale_factor,
+                caching=self.params.caching,
+                metric=self.params.metric
+            )
         else:
             print(f"Data set name {self.data_set_name} not implemented!")
+
 
     def set_up_connection(self):
         self.client = mqtt.Client()

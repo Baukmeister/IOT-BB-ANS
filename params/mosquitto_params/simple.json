@@ -24,7 +24,5 @@
     "q_precision": 14,
     "compression_samples_num": 50,
     "data_set_type": null,
-    "caching": false,
-    "use_first_samples_as_extra_bits": true,
-    "random_bit_samples": 50
+    "caching": false
 }

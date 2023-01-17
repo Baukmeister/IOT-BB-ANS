@@ -1,17 +1,17 @@
 import torch
-from torch.utils.data.dataset import T_co, Dataset
 import numpy as np
 
 
-class SimpleDataSet(Dataset):
+class SimpleDataSet_Lite:
 
-    def __getitem__(self, index) -> T_co:
-        return torch.tensor(self.data[index:index + self.pooling_factor]).float()
+    def __getitem__(self, index):
+        item = self.data[index:index + self.pooling_factor]
+        return item
 
     def __len__(self) -> int:
         return self.data.size // self.pooling_factor
 
-    def __init__(self, data_range=100, data_set_size=10000, distribution="default", pooling_factor=1) -> None:
+    def __init__(self, data_range=100, data_set_size=int(1e6), distribution="default", pooling_factor=1) -> None:
         self.pooling_factor = pooling_factor
 
         if distribution == "default":

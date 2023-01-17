@@ -6,7 +6,7 @@ import pandas as pd
 from tqdm import tqdm
 
 
-class HouseholdPowerDataset_Lite():
+class HouseholdPowerDataset_Lite:
 
     def __getitem__(self, index):
         if not self.caching:

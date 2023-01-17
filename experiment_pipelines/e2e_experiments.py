@@ -15,14 +15,14 @@ from util.io import input_dim
 
 def main():
     experiments_to_run = [
-        #"simple",
+        "simple",
         "household",
-        #"wisdm",
-        #"intel"
+        "wisdm",
+        "intel"
     ]
 
     modes_to_evaluate = [
-        #"model_training",
+        "model_training",
         "compression"
     ]
 
@@ -153,7 +153,7 @@ def main():
             weight_decay=0.0001,
             scale_factor=10000,
             shift=True,
-            max_epochs=1,
+            max_epochs=3,
             model_type="beta_binomial_vae",
             data_set_type="accel"
         )
@@ -216,7 +216,7 @@ def main():
             weight_decay=0.01,
             scale_factor=100,
             shift=True,
-            max_epochs=1,
+            max_epochs=3,
             model_type="beta_binomial_vae",
             metric="all"
         )

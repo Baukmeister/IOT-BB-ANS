@@ -33,4 +33,3 @@ class Params:
     caching: bool = False
     use_first_samples_as_extra_bits = True
     random_bit_samples = 50
-    compression_mode: str = "neural"

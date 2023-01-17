@@ -52,9 +52,10 @@ def benchmark_on_data(custom_data_set, compression_samples_num=None):
         compression_samples_num = len(custom_data_set)
 
     if type(custom_data_set) == list:
-        custom_data = np.array(custom_data_set)
+        custom_data = np.array(custom_data_set).astype("uint8")
     else:
-        custom_data = np.array([custom_data_set.__getitem__(i).cpu().numpy()[0] for i in tqdm(range(compression_samples_num))]).astype("uint8")
+        custom_data = np.hstack([custom_data_set.__getitem__(i).cpu().numpy() for i in tqdm(range(compression_samples_num))]).astype("uint8")
+
     bench_compressor(gzip_compress, gzip.decompress, "gzip", custom_data)
     bench_compressor(bz2_compress, bz2.decompress, "bz2", custom_data)
     bench_compressor(lzma_compress, lzma.decompress, "lzma", custom_data)
