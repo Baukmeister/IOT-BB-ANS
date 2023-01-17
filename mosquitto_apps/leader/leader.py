@@ -6,14 +6,14 @@ import numpy as np
 import paho.mqtt.client
 import paho.mqtt.client as mqtt
 
+import benchmark_compression
 from compression.Neural_Compressor import NeuralCompressor
 from util.io import input_dim
 from util.experiment_params import Params
 
 
-# TODO: Implement idea of using first few samples as random bits
 # TODO: Add benchmark compressor leader variant
-class LeaderNode():
+class LeaderNode:
 
     def __init__(self, host_address, model_param_path):
 
@@ -28,6 +28,8 @@ class LeaderNode():
             params_json = json.load(f)
             self.params: Params = Params.from_dict(params_json)
 
+        print(f"Running leader node in '{self.params.compression_mode}' compression mode")
+
         self.input_dim = input_dim(self.params)
         self.client: paho.mqtt.client.Client = None
         self.random_bits_filled = not self.params.use_first_samples_as_extra_bits
@@ -38,7 +40,10 @@ class LeaderNode():
         self.buffer = []
         self.host_address = host_address
         self.data_set_name = self.params.data_set_name
-        self.instantiate_neural_compressor()
+
+        if self.params.compression_mode == "neural":
+            self.instantiate_neural_compressor()
+
         self.set_up_connection()
 
     def on_connect(self, client, userdata, flags, rc):
@@ -50,21 +55,28 @@ class LeaderNode():
         payload = msg.payload
 
         if payload == b"EOT":
-            print("Finished compression!")
-            self.end_compression()
+            print("Finished processing samples!")
+            self.finish_input_processing()
         else:
-            if self.random_bits_filled:
-                self.buffer.append(int(msg.payload))
-                if len(self.buffer) == self.compression_batch_size:
-                    self.compress_current_buffer()
-                    self.buffer = []
+            self.buffer.append(int(msg.payload))
 
-            else:
-                self.random_bits_buffer.append(int(msg.payload))
-                if len(self.random_bits_buffer) == self.random_bits_size:
-                    print(f"Using first {self.random_bits_size} samples as random bits for ANS coder")
-                    self.compressor.set_random_bits(np.array(self.random_bits_buffer))
-                    self.random_bits_filled = True
+            if self.params.compression_mode == "neural":
+                self.process_message_neural_compressor(msg)
+            elif self.params.compression_mode == "benchmark":
+                # Just let the buffer accumulate
+                pass
+
+    def process_message_neural_compressor(self, msg):
+        if self.random_bits_filled:
+            if len(self.buffer) == self.compression_batch_size:
+                self.compress_current_buffer()
+                self.buffer = []
+        else:
+            self.random_bits_buffer.append(int(msg.payload))
+            if len(self.random_bits_buffer) == self.random_bits_size:
+                print(f"Using first {self.random_bits_size} samples as random bits for ANS coder")
+                self.compressor.set_random_bits(np.array(self.random_bits_buffer))
+                self.random_bits_filled = True
 
     def compress_current_buffer(self):
         data_point = np.array(self.buffer)
@@ -89,12 +101,16 @@ class LeaderNode():
         n_features = input_dim(self.params)
         self.compressor = NeuralCompressor(params=self.params, data_samples=[], input_dim=n_features, plot=True)
 
-    def end_compression(self):
+    def finish_input_processing(self):
         self.client.unsubscribe(self.params.data_set_name)
         self.client.loop_stop()
         self.client.disconnect()
-        self.compressor.get_encoding_stats(self.data_points_num)
-        self.compressor.plot_stack_sizes()
+        if self.params.compression_mode == "neural":
+            self.compressor.get_encoding_stats(self.data_points_num)
+            self.compressor.plot_stack_sizes()
+        elif self.params.compression_mode == "benchmark":
+            benchmark_compression.benchmark_on_data(self.buffer)
+            pass
 
 
 if __name__ == "__main__":

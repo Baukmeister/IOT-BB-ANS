@@ -29,29 +29,32 @@ def bench_compressor(compress_fun, decompress_fun, compressor_name, data_points)
 
 def gzip_compress(data_points):
     original_size = np.size(data_points)
-    assert data_points.dtype is np.dtype('uint8')
     return gzip.compress(data_points.tobytes())
 
 
 def bz2_compress(data_points):
     original_size = np.size(data_points)
-    assert data_points.dtype is np.dtype('uint8')
     return bz2.compress(data_points.tobytes())
 
 
 def lzma_compress(data_points):
     original_size = np.size(data_points)
-    assert data_points.dtype is np.dtype('uint8')
     return lzma.compress(data_points.tobytes())
 
 def zstd_compress(data_points):
     original_size = np.size(data_points)
-    assert data_points.dtype is np.dtype('uint8')
     return zstd.compress(data_points.tobytes())
 
 
-def benchmark_on_data(custom_data_set, compression_samples_num):
-    custom_data = np.array([custom_data_set.__getitem__(i).cpu().numpy()[0] for i in tqdm(range(compression_samples_num))]).astype("uint8")
+def benchmark_on_data(custom_data_set, compression_samples_num=None):
+
+    if compression_samples_num is None:
+        compression_samples_num = len(custom_data_set)
+
+    if type(custom_data_set) == list:
+        custom_data = np.array(custom_data_set)
+    else:
+        custom_data = np.array([custom_data_set.__getitem__(i).cpu().numpy()[0] for i in tqdm(range(compression_samples_num))]).astype("uint8")
     bench_compressor(gzip_compress, gzip.decompress, "gzip", custom_data)
     bench_compressor(bz2_compress, bz2.decompress, "bz2", custom_data)
     bench_compressor(lzma_compress, lzma.decompress, "lzma", custom_data)

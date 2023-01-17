@@ -6,7 +6,7 @@ from dataclasses_json import dataclass_json
 @dataclass
 class Params:
     n_feature: int = 3
-    data_set_name:str = "simple"
+    data_set_name: str = "simple"
     pooling_factor: int = 15
     hidden_dim: int = 300
     latent_dim: int = 20
@@ -33,3 +33,4 @@ class Params:
     caching: bool = False
     use_first_samples_as_extra_bits = True
     random_bit_samples = 50
+    compression_mode: str = "neural"

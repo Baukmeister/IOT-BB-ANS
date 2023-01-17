@@ -26,5 +26,6 @@
     "data_set_type": null,
     "caching": false,
     "use_first_samples_as_extra_bits": true,
-    "random_bit_samples": 50
+    "random_bit_samples": 50,
+    "compression_mode": "benchmark"
 }
