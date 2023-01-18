@@ -7,3 +7,5 @@ matplotlib
 scipy
 pytorch-lightning
 dataclasses-json
+--find-links https://download.pytorch.org/whl/cu116
+torch==1.13.1

@@ -15,6 +15,7 @@ class LeaderNode:
 
     def __init__(self, host_address, model_param_path, compression_mode="neural"):
 
+        self.compression_mode = compression_mode
         self.compressor: NeuralCompressor = None
         self.model_name = None
         self.n_features = None

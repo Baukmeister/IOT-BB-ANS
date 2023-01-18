@@ -9,11 +9,12 @@ COPY ./data ./data
 COPY ./compression ./compression
 COPY ./models ./models
 COPY ./benchmark_compression.py ./benchmark_compression.py
+COPY ./params/mosquitto_params ./params
+
 
 
 ENV PYTHONPATH "${PYTHONPATH}:/app"
-RUN pip3 install -r requirements.txt
-RUN pip3 install torch --extra-index-url https://download.pytorch.org/whl/cu116
+RUN --mount=type=cache,target=/root/.cache \
+    pip install -r requirements.txt
 
-
-CMD [ "python3" , "leader.py", "./params/mosquitto_params/household.json", "neural", "host.docker.internal"]
+CMD [ "python3" , "leader.py", "./params/household.json", "neural", "host.docker.internal"]
