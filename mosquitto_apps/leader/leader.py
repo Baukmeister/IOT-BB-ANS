@@ -15,7 +15,6 @@ class LeaderNode:
 
     def __init__(self, host_address, model_param_path, compression_mode="neural"):
 
-        self.compression_mode = compression_mode
         self.compressor: NeuralCompressor = None
         self.model_name = None
         self.n_features = None
@@ -26,6 +25,7 @@ class LeaderNode:
         with open(f"{model_param_path}") as f:
             params_json = json.load(f)
             self.params: Params = Params.from_dict(params_json)
+
 
         print(f"Running leader node in '{self.compression_mode}' compression mode")
 
