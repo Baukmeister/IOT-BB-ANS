@@ -2,3 +2,4 @@ paho-mqtt
 numpy
 pandas
 tqdm
+dataclasses-json

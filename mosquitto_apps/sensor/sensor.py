@@ -1,4 +1,3 @@
-import os
 import json
 import sys
 
@@ -12,8 +11,7 @@ from util.DataLoadersLite.SimpleDataLoader_Lite import SimpleDataSet_Lite
 from util.DataLoadersLite.WIDSMDataLoader_Lite import WISDMDataset_Lite
 from util.experiment_params import Params
 
-
-class SensorNode():
+class SensorNode:
 
     def __init__(self, data_set_dir, host_address, model_param_path):
         self.data_set = None
