@@ -1,7 +1,6 @@
 import json
 import sys
 
-import numpy
 import numpy as np
 import paho.mqtt.client
 import paho.mqtt.client as mqtt
@@ -12,10 +11,9 @@ from util.io import input_dim
 from util.experiment_params import Params
 
 
-# TODO: Add benchmark compressor leader variant
 class LeaderNode:
 
-    def __init__(self, host_address ,model_param_path, compression_mode="neural"):
+    def __init__(self, host_address, model_param_path, compression_mode="neural"):
 
         self.compression_mode = compression_mode
         self.compressor: NeuralCompressor = None

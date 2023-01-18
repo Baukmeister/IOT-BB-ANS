@@ -2,3 +2,8 @@ paho-mqtt
 numpy
 pandas
 tqdm
+zstd
+matplotlib
+scipy
+pytorch-lightning
+dataclasses-json

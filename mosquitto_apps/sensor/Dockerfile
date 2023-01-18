@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM python:latest
+FROM python:3.8
 
 WORKDIR /app
 
