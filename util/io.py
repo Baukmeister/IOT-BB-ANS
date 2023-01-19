@@ -24,9 +24,9 @@ def _vae_model_name(
     return model_name
 
 
-def vae_model_name(params: Params):
+def vae_model_name(params: Params, folder_root="../models/trained_models"):
     return _vae_model_name(
-        model_folder=f"./models/trained_models/{params.data_set_name}",
+        model_folder=f"{folder_root}/{params.data_set_name}",
         dicretize=params.discretize,
         hidden_dim=params.hidden_dim,
         latent_dim=params.latent_dim,

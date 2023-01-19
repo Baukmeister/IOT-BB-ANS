@@ -19,7 +19,8 @@ from util.io import vae_model_name
 
 class NeuralCompressor:
 
-    def __init__(self, params: Params, data_samples: list, input_dim, plot=False):
+    def __init__(self, params: Params, data_samples: list, input_dim, plot=False,
+                 trained_model_folder="../models/trained_models"):
         self.plot = plot
         self.params = params
         self.state = None
@@ -28,7 +29,7 @@ class NeuralCompressor:
         self.name = params.model_type
         self.n_features = input_dim
 
-        self.model_name = vae_model_name(params=params)
+        self.model_name = vae_model_name(params=params, folder_root=trained_model_folder)
 
         self.num_batches = len(self.data_samples) // self.params.compression_batch_size
 
@@ -138,9 +139,13 @@ class NeuralCompressor:
         self.state = rans.unflatten(compressed_message)
         return data_points
 
-    def get_encoding_stats(self, data_points_num):
+    def get_encoding_stats(self, data_points_num, include_init_bits_in_calculation=False):
         compressed_message = rans.flatten(self.state)
-        compressed_bits = 32 * (len(compressed_message) - len(self.other_bits))
+        if include_init_bits_in_calculation:
+            compressed_bits = 32 * (len(compressed_message))
+            pass
+        else:
+            compressed_bits = 32 * (len(compressed_message) - len(self.other_bits))
         compression_rate = compressed_bits / (data_points_num * 32)
         bits_per_datapoint = compressed_bits / data_points_num
         print("Used " + str(compressed_bits) + " bits.")

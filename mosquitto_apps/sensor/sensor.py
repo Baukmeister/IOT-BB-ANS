@@ -78,9 +78,11 @@ class SensorNode:
         total_sent_messages = 1
 
         # TODO: change these hardcoded values
+        test_set_offset = 4000
+
         # for idx in tqdm(range(self.params.compression_samples_num)):
         for idx in tqdm(range(self.params.pooling_factor * self.params.compression_samples_num)):
-            item = self.data_set.__getitem__(4000 + idx)
+            item = self.data_set.__getitem__(test_set_offset + idx)
             nums = item
             for num in nums:
                 self.client.publish(self.data_set_name, int(num), qos=2)

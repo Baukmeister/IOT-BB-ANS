@@ -27,7 +27,6 @@ class LeaderNode:
             params_json = json.load(f)
             self.params: Params = Params.from_dict(params_json)
 
-
         print(f"Running leader node in '{self.compression_mode}' compression mode")
 
         self.input_dim = input_dim(self.params)
@@ -58,21 +57,21 @@ class LeaderNode:
             print("Finished processing samples!")
             self.finish_input_processing()
         else:
-            self.buffer.append(int(msg.payload))
-
             if self.compression_mode == "neural":
-                self.process_message_neural_compressor(msg)
+                self.process_message_neural_compressor(int(payload))
             elif self.compression_mode == "benchmark":
+                self.buffer.append(payload)
                 # Just let the buffer accumulate
                 pass
 
-    def process_message_neural_compressor(self, msg):
+    def process_message_neural_compressor(self, payload: int):
         if self.random_bits_filled:
+            self.buffer.append(payload)
             if len(self.buffer) == self.compression_batch_size:
                 self.compress_current_buffer()
                 self.buffer = []
         else:
-            self.random_bits_buffer.append(int(msg.payload))
+            self.random_bits_buffer.append(payload)
             if len(self.random_bits_buffer) == self.random_bits_size:
                 print(f"Using first {self.random_bits_size} samples as random bits for ANS coder")
                 self.compressor.set_random_bits(np.array(self.random_bits_buffer))
@@ -98,15 +97,26 @@ class LeaderNode:
 
     def instantiate_neural_compressor(self):
 
+        if self.host_address == "localhost":
+            trained_model_folder = "../models/trained_models"
+        else:
+            trained_model_folder = "./models/trained_models"
+
         n_features = input_dim(self.params)
-        self.compressor = NeuralCompressor(params=self.params, data_samples=[], input_dim=n_features, plot=True)
+        self.compressor = NeuralCompressor(params=self.params, data_samples=[], input_dim=n_features, plot=True,
+                                           trained_model_folder=trained_model_folder)
 
     def finish_input_processing(self):
         self.client.unsubscribe(self.params.data_set_name)
         self.client.loop_stop()
         self.client.disconnect()
         if self.compression_mode == "neural":
-            self.compressor.get_encoding_stats(self.data_points_num)
+            if self.params.use_first_samples_as_extra_bits:
+                include_init_bits_in_stats = True
+            else:
+                include_init_bits_in_stats = False
+
+            self.compressor.get_encoding_stats(self.data_points_num, include_init_bits_in_calculation=include_init_bits_in_stats)
             self.compressor.plot_stack_sizes()
         elif self.compression_mode == "benchmark":
             benchmark_compression.benchmark_on_data(self.buffer)

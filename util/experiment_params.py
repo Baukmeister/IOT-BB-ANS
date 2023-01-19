@@ -29,7 +29,7 @@ class Params:
     obs_precision: int = 24
     q_precision: int = 14
     compression_samples_num: int = 1000
-    data_set_type: str = None
+    data_set_type: str = ""
     caching: bool = False
-    use_first_samples_as_extra_bits = True
+    use_first_samples_as_extra_bits: bool = True
     random_bit_samples = 50
