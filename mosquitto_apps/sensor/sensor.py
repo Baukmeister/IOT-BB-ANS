@@ -84,7 +84,7 @@ class SensorNode:
             for num in nums:
                 self.client.publish(self.data_set_name, int(num), qos=2)
                 total_sent_messages += 1
-                time.sleep(0.005)
+                time.sleep(0.01)
 
         # end of transmission
         self.client.publish(self.data_set_name, "EOT", qos=2)
