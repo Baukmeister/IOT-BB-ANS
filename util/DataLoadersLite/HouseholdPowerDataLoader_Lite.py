@@ -23,7 +23,7 @@ class HouseholdPowerDataset_Lite:
         self.pooling_factor = pooling_factor
         self.scaling_factor = scaling_factor
         self.metric = metric
-        self.pkl_name = f"household_power_data.pkl"
+        self.pkl_name = f"household.pkl"
         self.pkl_path = f"{self.path}/{self.pkl_name}"
         self.columns = [
             "Date",
@@ -41,7 +41,6 @@ class HouseholdPowerDataset_Lite:
         self.userDfs = []
         self.cached_data_samples = []
 
-        # TODO: Adapt
         if self.metric == "all":
             self.item_indices = [2, 3, 4, 5, 6, 7, 8]
         elif self.metric == "Global_active_power":
@@ -59,9 +58,11 @@ class HouseholdPowerDataset_Lite:
         elif self.metric == "Sub_metering_8":
             self.item_indices = 8
 
+        self._load()
+
     def _load(self):
 
-        with open(self.pkl_path) as f:
+        with open(self.pkl_path, 'rb') as f:
 
             self.HouseholdPowerDf = pickle.load(f)
 

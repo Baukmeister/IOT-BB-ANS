@@ -1,5 +1,6 @@
 import json
 import sys
+import time
 
 import paho.mqtt.client
 import paho.mqtt.client as mqtt
@@ -43,7 +44,6 @@ class SensorNode:
             self.data_set = HouseholdPowerDataset_Lite(
                 self.data_set_dir,
                 scaling_factor=self.params.scale_factor,
-                caching=False,
             )
         elif self.data_set_name == "wisdm":
             self.data_set = WISDMDataset_Lite(
@@ -77,16 +77,14 @@ class SensorNode:
     def send_data(self):
         total_sent_messages = 1
 
-        # TODO: change these hardcoded values
-        test_set_offset = 4000
-
         # for idx in tqdm(range(self.params.compression_samples_num)):
         for idx in tqdm(range(self.params.pooling_factor * self.params.compression_samples_num)):
-            item = self.data_set.__getitem__(test_set_offset + idx)
+            item = self.data_set.__getitem__(idx)
             nums = item
             for num in nums:
                 self.client.publish(self.data_set_name, int(num), qos=2)
                 total_sent_messages += 1
+                time.sleep(0.005)
 
         # end of transmission
         self.client.publish(self.data_set_name, "EOT", qos=2)

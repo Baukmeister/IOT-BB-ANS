@@ -11,7 +11,7 @@
     "discretize": true,
     "learning_rate": 0.01,
     "weight_decay": 0.01,
-    "scale_factor": 1000,
+    "scale_factor": 100,
     "range": 100,
     "shift": false,
     "model_type": "beta_binomial_vae",
@@ -22,8 +22,8 @@
     "prior_precision": 8,
     "obs_precision": 24,
     "q_precision": 14,
-    "compression_samples_num": 10,
+    "compression_samples_num": 500,
     "data_set_type": "",
     "caching": false,
-    "use_first_samples_as_extra_bits": true
+    "use_first_samples_as_extra_bits": false
 }
