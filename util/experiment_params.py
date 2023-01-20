@@ -12,7 +12,7 @@ class Params:
     latent_dim: int = 20
     train_set_ratio: float = 1.0
     val_set_ratio: float = 0.2
-    test_set_ratio: float = 0.1
+    test_set_ratio: float = 0.2
     train_batch_size: int = 64
     discretize: bool = True
     learning_rate: float = 1e-8

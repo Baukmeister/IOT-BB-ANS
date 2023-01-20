@@ -17,7 +17,7 @@ from pytorch_lightning import Trainer
 
 
 class VaeTrainer():
-    def __init__(self, params: Params, dataSet: torch.utils.data.Dataset, name, input_dim):
+    def __init__(self, params: Params, dataSet: torch.utils.data.Dataset, name, input_dim, grad_clipping=False):
 
         # extract params
         self.params = params
@@ -38,6 +38,7 @@ class VaeTrainer():
 
         self.name = name
         self.input_dim = input_dim
+        self.gradient_clipping = grad_clipping
 
         self.dataSet = dataSet
 
@@ -104,6 +105,12 @@ class VaeTrainer():
         wandb_logger = WandbLogger(name=date_time, project="e2e_experiments", group=self.name)
         wandb_logger.watch(self.model, log="all")
 
+        if self.gradient_clipping:
+            grad_val = 2.0
+        else:
+            grad_val = 0
+
+
         trainer = pl.Trainer(
             limit_train_batches=int((self.params.train_set_ratio * self.trainSetSize) / self.params.train_batch_size),
             max_epochs=self.params.max_epochs,
@@ -111,7 +118,9 @@ class VaeTrainer():
             devices=1,
             callbacks=[EarlyStopping(monitor="val_loss")],
             profiler=profiler,
-            logger=wandb_logger
+            logger=wandb_logger,
+            gradient_clip_val=grad_val,
+            gradient_clip_algorithm="norm"
         )
         trainer.fit(model=self.model, train_dataloaders=trainDataLoader, val_dataloaders=valDataLoader, )
         torch.save(self.model.state_dict(), self.model_name)

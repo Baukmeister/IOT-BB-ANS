@@ -1,10 +1,11 @@
 # syntax=docker/dockerfile:1
 
-FROM python:3.8
+FROM nvcr.io/nvidia/l4t-pytorch:r34.1.1-pth1.11-py3
 
 WORKDIR /app
 COPY ./mosquitto_apps/leader .
 COPY ../../util ./util
+# TODO: figure out wether this folder is needed
 COPY ./data ./data
 COPY ./compression ./compression
 COPY ./models ./models
@@ -15,6 +16,6 @@ COPY ./params/mosquitto_params ./params
 
 ENV PYTHONPATH "${PYTHONPATH}:/app"
 RUN --mount=type=cache,target=/root/.cache \
-    pip install -r requirements.txt
+    pip3 install -r requirements.txt
 
 CMD [ "python3" , "leader.py", "./params/household.json", "neural", "host.docker.internal"]

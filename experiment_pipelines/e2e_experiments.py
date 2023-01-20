@@ -15,15 +15,15 @@ from util.io import input_dim
 
 def main():
     experiments_to_run = [
-        "simple",
+        #"simple",
         "household",
-        "wisdm",
-        "intel"
+        #"wisdm",
+        #"intel"
     ]
 
     modes_to_evaluate = [
         "model_training",
-        "compression"
+        #"compression"
     ]
 
     if "simple" in experiments_to_run:
@@ -83,8 +83,8 @@ def main():
             model_type="beta_binomial_vae",
             val_set_ratio=0.005,
             compression_samples_num=10,
-            scale_factor=1000,
-            pooling_factor=5,
+            scale_factor=100,
+            pooling_factor=50,
             hidden_dim=50,
             latent_dim=10,
             train_batch_size=8,

@@ -1,17 +1,17 @@
 {
     "n_feature": 3,
     "data_set_name": "household",
-    "pooling_factor": 5,
+    "pooling_factor": 50,
     "hidden_dim": 50,
     "latent_dim": 10,
     "train_set_ratio": 0.8,
     "val_set_ratio": 0.005,
-    "test_set_ratio": 0.1,
+    "test_set_ratio": 0.2,
     "train_batch_size": 8,
     "discretize": true,
     "learning_rate": 0.01,
     "weight_decay": 0.01,
-    "scale_factor": 1000,
+    "scale_factor": 100,
     "range": 100,
     "shift": false,
     "model_type": "beta_binomial_vae",
@@ -23,6 +23,7 @@
     "obs_precision": 24,
     "q_precision": 14,
     "compression_samples_num": 10,
-    "data_set_type": null,
-    "caching": false
+    "data_set_type": "",
+    "caching": false,
+    "use_first_samples_as_extra_bits": true
 }

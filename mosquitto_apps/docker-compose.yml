@@ -4,6 +4,7 @@ services:
       context: ..
       dockerfile: ./mosquitto_apps/sensor/Dockerfile
   leader:
+    image: baukmeister/leader-app
     build:
       context: ..
       dockerfile: ./mosquitto_apps/leader/Dockerfile

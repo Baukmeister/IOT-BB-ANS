@@ -1,11 +1,12 @@
 paho-mqtt
-numpy
-pandas
+numpy==1.24.1
+pandas==1.5.3
 tqdm
 zstd
 matplotlib
 scipy
 pytorch-lightning
 dataclasses-json
---find-links https://download.pytorch.org/whl/cu116
-torch==1.13.1
+#--find-links https://download.pytorch.org/whl/cu116
+#torch==1.13.1
+
