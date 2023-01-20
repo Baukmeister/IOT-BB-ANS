@@ -69,5 +69,3 @@ class HouseholdPowerDataset_Lite:
         self.range = self.HouseholdPowerDf.iloc[:, self.item_indices].max().max() - self.HouseholdPowerDf.iloc[:,
                                                                                     self.item_indices].min().min()
 
-    def _cached_file_name(self, idx):
-        return f"{self.pkl_path}/{idx}.npy"

@@ -19,7 +19,7 @@ class SensorNode:
         self.data_set = None
         self.client: paho.mqtt.client.Client = None
 
-        with open(f"{param_path}") as f:
+        with open(f"{param_path}",) as f:
             params_json = json.load(f)
             self.params: Params = Params.from_dict(params_json)
 

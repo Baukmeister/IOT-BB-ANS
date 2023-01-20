@@ -13,5 +13,5 @@ ENV PYTHONPATH "${PYTHONPATH}:/app"
 RUN pip3 install -r requirements.txt
 
 
-ENTRYPOINT [ "python3" , "sensor.py", "data/test_data_dfs"]
+ENTRYPOINT [ "python3" , "sensor.py"]
 

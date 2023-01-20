@@ -26,5 +26,5 @@
     "data_set_type": "accel",
     "caching": false,
     "use_first_samples_as_extra_bits": true,
-    "test_data_set_dir": "../data/test_data_dfs"
+    "test_data_set_dir": "./data/test_data_dfs"
 }
