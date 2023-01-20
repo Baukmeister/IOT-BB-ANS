@@ -91,6 +91,7 @@ class LeaderNode:
         self.client.on_message = self.on_message
         try:
             self.client.connect(host_address, self.mosquitto_port)
+            print(f"Connected to {host_address}:{self.mosquitto_port}")
         except ConnectionRefusedError as e:
             raise Warning(f"Could not connect at port {self.mosquitto_port} - Make sure the service is running!")
         self.client.loop_forever()

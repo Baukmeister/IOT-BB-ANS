@@ -1,4 +1,5 @@
 import json
+import pickle
 
 from torch.utils import data
 
@@ -15,16 +16,18 @@ from util.io import input_dim
 
 def main():
     experiments_to_run = [
-        #"simple",
+        # "simple",
         "household",
-        #"wisdm",
-        #"intel"
+        # "wisdm",
+        # "intel"
     ]
 
     modes_to_evaluate = [
-        "model_training",
-        #"compression"
+        #"model_training",
+        # "compression"
     ]
+
+    test_set_export_dir = "../data/test_data_dfs"
 
     if "simple" in experiments_to_run:
         print("_" * 25)
@@ -111,9 +114,9 @@ def main():
         testSetSize = int(len(householdPowerDataSet) * household_power_params.test_set_ratio)
         trainSetSize = len(householdPowerDataSet) - (testSetSize)
         train_set, test_set = data.random_split(householdPowerDataSet, [trainSetSize, testSetSize])
+        _export_to_test_set_dir(test_set_export_dir, test_set.dataset.HouseholdPowerDf, "household")
 
         householder_power_input_dim = input_dim(household_power_params)
-
 
         if "model_training" in modes_to_evaluate:
             print("Running model training for household_power data ...")
@@ -128,6 +131,7 @@ def main():
 
             test_set_samples = [test_set.__getitem__(i).cpu().numpy() for i in
                                 range(household_power_params.compression_samples_num)]
+
             household_power_neural_compressor = NeuralCompressor(household_power_params, test_set_samples,
                                                                  householder_power_input_dim)
             household_power_neural_compressor.run_compression()
@@ -222,7 +226,7 @@ def main():
         )
 
         with open("../params/e2e/intel.json", "w") as f:
-            json.dump(intel_lab_params.to_dict(),f, indent=4)
+            json.dump(intel_lab_params.to_dict(), f, indent=4)
 
         intel_lab_dataset = IntelLabDataset(
             "../data/IntelLabData",
@@ -240,7 +244,6 @@ def main():
 
         intel_lab_input_dim = input_dim(intel_lab_params)
 
-
         if "model_training" in modes_to_evaluate:
             print("Running model training for Intel_Lab data ...")
 
@@ -253,6 +256,7 @@ def main():
 
             test_set_samples = [test_set.__getitem__(i).cpu().numpy() for i in
                                 range(intel_lab_params.compression_samples_num)]
+
             intel_lab_neural_compressor = NeuralCompressor(intel_lab_params, test_set_samples,
                                                            intel_lab_input_dim)
             intel_lab_neural_compressor.run_compression()
@@ -262,6 +266,9 @@ def main():
         print("_" * 25)
 
 
+def _export_to_test_set_dir(dir, df, name):
+    with open(f"{dir}/{name}.pkl", "wb") as f:
+        pickle.dump(df, f)
 
 
 if __name__ == "__main__":

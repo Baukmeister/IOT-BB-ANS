@@ -12,5 +12,5 @@ COPY ./params/mosquitto_params ./params
 ENV PYTHONPATH "${PYTHONPATH}:/app"
 RUN pip3 install -r requirements.txt
 
-CMD [ "python3" , "sensor.py", "data/household_power_consumption", "params/household.json", "host.docker.internal"]
+ENTRYPOINT [ "python3" , "sensor.py", "data/household_power_consumption", "params/household.json", "host.docker.internal"]
 
