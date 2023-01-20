@@ -1,4 +1,5 @@
 import os
+import pickle
 from pathlib import Path
 
 import numpy as np
@@ -9,32 +10,24 @@ from tqdm import tqdm
 class IntelLabDataset_Lite():
 
     def __getitem__(self, index):
-        if not self.caching:
-            item = self.IntelDataDf.iloc[index:index + self.pooling_factor, self.item_indices].values.flatten()
 
-        else:
-            with open(self._cached_file_name(index), "rb") as f:
-                item = np.load(f)
+        item = self.IntelDataDf.iloc[index:index + self.pooling_factor, self.item_indices].values.flatten()
 
         return item
 
     def __len__(self) -> int:
-        if self.caching:
-            return len(self.cached_file_list)
-        else:
-            return self.IntelDataDf.shape[0] // self.pooling_factor
 
-    def __init__(self, path, pooling_factor=1, discretize=True, scaling_factor=1, caching=True, metric="all") -> None:
+        return self.IntelDataDf.shape[0] // self.pooling_factor
+
+    def __init__(self, path, pooling_factor=1, scaling_factor=1,  metric="all") -> None:
 
 
         self.path = path
         self.pooling_factor = pooling_factor
-        self.discretize = discretize
         self.scaling_factor = scaling_factor
-        self.caching = caching
         self.metric = metric
-        self.pkl_name = f"intel_lab_data"
-        self.pkl_path = f"{self.path}/cache/{self.pkl_name}"
+        self.pkl_name = f"intel_lab_data.pkl"
+        self.pkl_path = f"{self.path}/{self.pkl_name}"
         self.columns = ['date', 'time', 'epoch', 'mote_id', 'temperature', 'humidity', 'light', 'voltage']
 
         self.IntelDataDf = pd.DataFrame(columns=self.columns)
@@ -52,44 +45,12 @@ class IntelLabDataset_Lite():
         elif self.metric == "voltage":
             self.item_indices = 7
 
-        if self.caching and os.path.exists(self.pkl_path):
-            print("\nSkip data loading in favour of caching ...")
-        else:
-            self._load(caching=self.caching)
+        self._load()
 
-        if self.caching:
-            self.cached_file_list = os.listdir(self.pkl_path)
+    def _load(self):
 
-    def _load(self, caching=False):
-
-        if caching:
-            if not os.path.exists(self.pkl_path):
-                path = Path(self.pkl_path)
-                path.mkdir(parents=True)
-
-
-        self.IntelDataDf = pd.read_csv(f"{self.path}/data.txt", sep=" ", names=self.columns)
-        self.IntelDataDf['humidity'].clip(lower=0, upper=100, inplace=True)
-        self.IntelDataDf['humidity'].fillna(0, inplace=True)
-        self.IntelDataDf['temperature'].clip(lower=0, upper=100, inplace=True)
-        self.IntelDataDf['temperature'].fillna(0, inplace=True)
-        self.IntelDataDf['light'].fillna(0, inplace=True)
-
-        if self.discretize:
-            self.IntelDataDf['humidity'] = (self.IntelDataDf['humidity'].astype(float) * self.scaling_factor).round()
-            self.IntelDataDf['temperature'] = (self.IntelDataDf['temperature'].astype(float) * self.scaling_factor).round()
-            self.IntelDataDf['light'] = (self.IntelDataDf['light'].astype(float) * self.scaling_factor).round()
-            self.IntelDataDf['voltage'] = (self.IntelDataDf['voltage'].astype(float) * self.scaling_factor).round()
-
-
-
-        if self.caching:
-            print("Storing samples in cache...")
-            for idx in tqdm(range(self.IntelDataDf.shape[0] // self.pooling_factor)):
-                item = self.IntelDataDf.iloc[idx:idx + self.pooling_factor, 4:8].values.flatten()
-
-                with open(self._cached_file_name(idx), "wb") as f:
-                    np.save(f, item)
+        with open(self.pkl_path, 'rb') as f:
+            self.IntelDataDf = pickle.load(f)
 
         self.range = self.IntelDataDf.iloc[:,self.item_indices].max().max() - self.IntelDataDf.iloc[:,self.item_indices].min().min()
 

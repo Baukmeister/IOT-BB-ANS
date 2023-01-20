@@ -48,20 +48,12 @@ class SensorNode:
         elif self.data_set_name == "wisdm":
             self.data_set = WISDMDataset_Lite(
                 self.data_set_dir,
-                pooling_factor=self.params.pooling_factor,
-                discretize=self.params.discretize,
                 scaling_factor=self.params.scale_factor,
-                shift=self.params.shift,
-                data_set_size=self.params.data_set_type,
-                caching=False
             )
         elif self.data_set_name == "intel":
             self.data_set = IntelLabDataset_Lite(
                 self.data_set_dir,
-                pooling_factor=self.params.pooling_factor,
                 scaling_factor=self.params.scale_factor,
-                caching=self.params.caching,
-                metric=self.params.metric
             )
         else:
             print(f"Data set name {self.data_set_name} not implemented!")
@@ -93,10 +85,10 @@ class SensorNode:
 
 if __name__ == "__main__":
     data_set_dir = sys.argv[1]
-    model_param_path = sys.argv[2]
+    param_path = sys.argv[2]
     if len(sys.argv) >= 4:
         host_address = sys.argv[3]
     else:
         host_address = "localhost"
 
-    SensorNode(data_set_dir, host_address, model_param_path)
+    SensorNode(data_set_dir, host_address, param_path)
