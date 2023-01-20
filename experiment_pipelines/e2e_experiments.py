@@ -13,21 +13,19 @@ from util.DataLoaders.WIDSMDataLoader import WISDMDataset
 from util.experiment_params import Params
 from util.io import input_dim
 
-#TODO: change lite dataloader and export test sets
 
 def main():
     experiments_to_run = [
-        "simple",
+        # "simple",
         "household",
-        "wisdm",
-        "intel"
+        # "wisdm",
+        # "intel"
     ]
 
     modes_to_evaluate = [
-        #"model_training",
+        "model_training",
         # "compression"
     ]
-
 
     if "simple" in experiments_to_run:
         print("_" * 25)
@@ -40,7 +38,7 @@ def main():
             hidden_dim=300,
             val_set_ratio=0.001,
             scale_factor=100,
-            max_epochs=5,
+            max_epochs=1,
             compression_samples_num=50
         )
 
@@ -87,14 +85,13 @@ def main():
             val_set_ratio=0.005,
             compression_samples_num=10,
             scale_factor=100,
-            pooling_factor=50,
+            pooling_factor=20,
             hidden_dim=50,
             latent_dim=10,
             train_batch_size=8,
             discretize=True,
             learning_rate=0.01,
-            train_batches=10000,
-            max_epochs=3,
+            max_epochs=1,
             metric="all"
         )
 
@@ -114,7 +111,8 @@ def main():
         testSetSize = int(len(householdPowerDataSet) * household_power_params.test_set_ratio)
         trainSetSize = len(householdPowerDataSet) - (testSetSize)
         train_set, test_set = data.random_split(householdPowerDataSet, [trainSetSize, testSetSize])
-        _export_to_test_set_dir(household_power_params.test_data_set_dir, test_set.dataset.HouseholdPowerDf, "household")
+        _export_to_test_set_dir(household_power_params.test_data_set_dir, test_set.dataset.HouseholdPowerDf,
+                                "household")
 
         householder_power_input_dim = input_dim(household_power_params)
 
@@ -157,7 +155,7 @@ def main():
             weight_decay=0.0001,
             scale_factor=10000,
             shift=True,
-            max_epochs=3,
+            max_epochs=1,
             model_type="beta_binomial_vae",
             data_set_type="accel"
         )
@@ -181,7 +179,6 @@ def main():
         trainSetSize = len(wisdm_dataset) - (testSetSize)
         train_set, test_set = data.random_split(wisdm_dataset, [trainSetSize, testSetSize])
         _export_to_test_set_dir(wisdm_params.test_data_set_dir, test_set.dataset.WISDMdf, "wisdm")
-
 
         wisdm_power_input_dim = input_dim(wisdm_params)
 
@@ -222,7 +219,7 @@ def main():
             weight_decay=0.01,
             scale_factor=100,
             shift=True,
-            max_epochs=3,
+            max_epochs=1,
             model_type="beta_binomial_vae",
             metric="all"
         )
@@ -244,7 +241,6 @@ def main():
         trainSetSize = len(intel_lab_dataset) - (testSetSize)
         train_set, test_set = data.random_split(intel_lab_dataset, [trainSetSize, testSetSize])
         _export_to_test_set_dir(intel_lab_params.test_data_set_dir, test_set.dataset.IntelDataDf, "intel")
-
 
         intel_lab_input_dim = input_dim(intel_lab_params)
 
