@@ -126,8 +126,8 @@ class LeaderNode:
 
 if __name__ == "__main__":
 
-    model_param_path = sys.argv[1]
-    compression_mode = sys.argv[2]
+    compression_mode = sys.argv[1]
+    model_param_path = sys.argv[2]
     if len(sys.argv) >= 4:
         host_address = sys.argv[3]
     else:

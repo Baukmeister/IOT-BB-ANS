@@ -1,2 +1,1 @@
-docker-compose build sensor
-docker run baukmeister/sensor-app host.docker.internal
+docker run -it baukmeister/sensor-app params/household.json host.docker.internal

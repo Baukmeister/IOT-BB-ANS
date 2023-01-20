@@ -17,4 +17,4 @@ RUN --mount=type=cache,target=/root/.cache \
     pip3 install -r requirements.txt
 
 
-ENTRYPOINT [ "python3" , "leader.py", "./params/household.json", "neural"]
+ENTRYPOINT [ "python3" , "leader.py", "neural"]
