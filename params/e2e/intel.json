@@ -25,5 +25,6 @@
     "compression_samples_num": 10,
     "data_set_type": "",
     "caching": false,
-    "use_first_samples_as_extra_bits": true
+    "use_first_samples_as_extra_bits": true,
+    "test_data_set_dir": "../data/test_data_dfs"
 }

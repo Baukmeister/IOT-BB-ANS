@@ -28,7 +28,6 @@ def main():
         # "compression"
     ]
 
-    test_set_export_dir = "../data/test_data_dfs"
 
     if "simple" in experiments_to_run:
         print("_" * 25)
@@ -115,7 +114,7 @@ def main():
         testSetSize = int(len(householdPowerDataSet) * household_power_params.test_set_ratio)
         trainSetSize = len(householdPowerDataSet) - (testSetSize)
         train_set, test_set = data.random_split(householdPowerDataSet, [trainSetSize, testSetSize])
-        _export_to_test_set_dir(test_set_export_dir, test_set.dataset.HouseholdPowerDf, "household")
+        _export_to_test_set_dir(household_power_params.test_data_set_dir, test_set.dataset.HouseholdPowerDf, "household")
 
         householder_power_input_dim = input_dim(household_power_params)
 
@@ -181,7 +180,7 @@ def main():
         testSetSize = int(len(wisdm_dataset) * wisdm_params.test_set_ratio)
         trainSetSize = len(wisdm_dataset) - (testSetSize)
         train_set, test_set = data.random_split(wisdm_dataset, [trainSetSize, testSetSize])
-        _export_to_test_set_dir(test_set_export_dir, test_set.dataset.WISDMdf, "wisdm")
+        _export_to_test_set_dir(wisdm_params.test_data_set_dir, test_set.dataset.WISDMdf, "wisdm")
 
 
         wisdm_power_input_dim = input_dim(wisdm_params)
@@ -244,7 +243,7 @@ def main():
         testSetSize = int(len(intel_lab_dataset) * intel_lab_params.test_set_ratio)
         trainSetSize = len(intel_lab_dataset) - (testSetSize)
         train_set, test_set = data.random_split(intel_lab_dataset, [trainSetSize, testSetSize])
-        _export_to_test_set_dir(test_set_export_dir, test_set.dataset.IntelDataDf, "intel")
+        _export_to_test_set_dir(intel_lab_params.test_data_set_dir, test_set.dataset.IntelDataDf, "intel")
 
 
         intel_lab_input_dim = input_dim(intel_lab_params)

@@ -6,7 +6,7 @@
     "latent_dim": 10,
     "train_set_ratio": 0.2,
     "val_set_ratio": 0.001,
-    "test_set_ratio": 0.1,
+    "test_set_ratio": 0.2,
     "train_batch_size": 8,
     "discretize": true,
     "learning_rate": 0.0001,
@@ -23,6 +23,8 @@
     "obs_precision": 24,
     "q_precision": 14,
     "compression_samples_num": 10,
-    "data_set_type": null,
-    "caching": false
+    "data_set_type": "",
+    "caching": false,
+    "use_first_samples_as_extra_bits": true,
+    "test_data_set_dir": "../data/test_data_dfs"
 }

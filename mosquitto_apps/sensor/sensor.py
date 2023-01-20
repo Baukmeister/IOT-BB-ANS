@@ -12,19 +12,20 @@ from util.DataLoadersLite.SimpleDataLoader_Lite import SimpleDataSet_Lite
 from util.DataLoadersLite.WIDSMDataLoader_Lite import WISDMDataset_Lite
 from util.experiment_params import Params
 
+
 class SensorNode:
 
-    def __init__(self, data_set_dir, host_address, model_param_path):
+    def __init__(self, host_address, param_path):
         self.data_set = None
         self.client: paho.mqtt.client.Client = None
 
-        with open(f"{model_param_path}") as f:
+        with open(f"{param_path}") as f:
             params_json = json.load(f)
             self.params: Params = Params.from_dict(params_json)
 
         self.host_address = host_address
         self.data_set_name = self.params.data_set_name
-        self.data_set_dir = data_set_dir
+        self.data_set_dir = self.params.test_data_set_dir
         self.mosquitto_port = 1883
 
         self.load_data()
@@ -58,7 +59,6 @@ class SensorNode:
         else:
             print(f"Data set name {self.data_set_name} not implemented!")
 
-
     def set_up_connection(self):
         self.client = mqtt.Client()
         try:
@@ -69,7 +69,6 @@ class SensorNode:
     def send_data(self):
         total_sent_messages = 1
 
-        # for idx in tqdm(range(self.params.compression_samples_num)):
         for idx in tqdm(range(self.params.pooling_factor * self.params.compression_samples_num)):
             item = self.data_set.__getitem__(idx)
             nums = item
@@ -84,11 +83,10 @@ class SensorNode:
 
 
 if __name__ == "__main__":
-    data_set_dir = sys.argv[1]
-    param_path = sys.argv[2]
-    if len(sys.argv) >= 4:
-        host_address = sys.argv[3]
+    param_path = sys.argv[1]
+    if len(sys.argv) >= 3:
+        host_address = sys.argv[2]
     else:
         host_address = "localhost"
 
-    SensorNode(data_set_dir, host_address, param_path)
+    SensorNode(host_address, param_path)
