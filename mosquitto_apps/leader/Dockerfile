@@ -5,8 +5,6 @@ FROM nvcr.io/nvidia/l4t-pytorch:r34.1.1-pth1.11-py3
 WORKDIR /app
 COPY ./mosquitto_apps/leader .
 COPY ../../util ./util
-# TODO: figure out wether this folder is needed
-# COPY ./data ./data
 COPY ./compression ./compression
 COPY ./models ./models
 COPY ./benchmark_compression.py ./benchmark_compression.py

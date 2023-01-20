@@ -13,6 +13,7 @@ from util.DataLoaders.WIDSMDataLoader import WISDMDataset
 from util.experiment_params import Params
 from util.io import input_dim
 
+#TODO: change lite dataloader and export test sets
 
 def main():
     experiments_to_run = [

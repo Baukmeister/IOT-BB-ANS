@@ -144,7 +144,6 @@ def gaussian_latent_cdf(mean, stdd, prior_prec, post_prec):
     return cdf
 
 
-# TODO: crazy mean and prior values are supplied here.
 # I think the means and priors should be from a N(0,1) distribution as they sample the latent!
 def gaussian_latent_ppf(mean, stdd, prior_prec, post_prec):
     def ppf(cf):
@@ -349,10 +348,6 @@ def generate_beta_binomial_probs(a, b, n):
 
 
 def generate_gaussian_probs(mean, std, n):
-    #TODO fix this
-
-    #TODO --> CONTINUE WORK HERE <--
-
     # 1. Figure out what these probs are exactly used for and how to generate it
     dims = mean.shape[1]
     vals = np.transpose(np.tile(np.arange(n), (dims, 1)))
@@ -368,13 +363,11 @@ def generate_gaussian_probs(mean, std, n):
 
 
 def beta_binomials_append(a, b, n, precision):
-    # TODO: Implement this using bits-back instead of generic discrete distrn.
     probs = generate_beta_binomial_probs(a, b, n)
     return categoricals_append(probs, precision)
 
 
 def beta_binomials_pop(a, b, n, precision):
-    # TODO: Implement this using bits-back instead of generic discrete distrn.
     probs = generate_beta_binomial_probs(a, b, n)
     return categoricals_pop(probs, precision)
 

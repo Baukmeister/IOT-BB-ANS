@@ -52,7 +52,6 @@ class HouseholdPowerDataset(Dataset):
         self.userDfs = []
         self.cached_data_samples = []
 
-        # TODO: Adapt
         if self.metric == "all":
             self.item_indices = [2, 3, 4, 5, 6, 7, 8]
         elif self.metric == "Global_active_power":

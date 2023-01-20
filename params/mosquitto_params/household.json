@@ -25,5 +25,5 @@
     "compression_samples_num": 500,
     "data_set_type": "",
     "caching": false,
-    "use_first_samples_as_extra_bits": false
+    "use_first_samples_as_extra_bits": true
 }
