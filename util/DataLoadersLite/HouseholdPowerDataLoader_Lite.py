@@ -62,10 +62,13 @@ class HouseholdPowerDataset_Lite:
 
     def _load(self):
 
-        with open(self.pkl_path, 'rb') as f:
+        try:
+            with open(self.pkl_path, 'rb') as f:
 
-            self.HouseholdPowerDf = pickle.load(f)
+                self.HouseholdPowerDf = pickle.load(f)
 
-        self.range = self.HouseholdPowerDf.iloc[:, self.item_indices].max().max() - self.HouseholdPowerDf.iloc[:,
-                                                                                    self.item_indices].min().min()
-
+            self.range = self.HouseholdPowerDf.iloc[:, self.item_indices].max().max() - self.HouseholdPowerDf.iloc[:,
+                                                                                        self.item_indices].min().min()
+        except FileNotFoundError:
+            self.pkl_path = f"../{self.pkl_path}"
+            self._load()
