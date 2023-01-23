@@ -11,6 +11,7 @@ from util.io import input_dim
 from util.experiment_params import Params
 
 
+# TODO: implement multithreading following this guide https://www.tutorialspoint.com/python/python_multithreading.htm
 class LeaderNode:
 
     def __init__(self, host_address, model_param_path, compression_mode="neural"):
@@ -76,6 +77,11 @@ class LeaderNode:
                 print(f"Using first {self.random_bits_size} samples as random bits for ANS coder")
                 self.compressor.set_random_bits(np.array(self.random_bits_buffer))
                 self.random_bits_filled = True
+
+    def handle_data_buffer(self):
+        #TODO: Perform the multi-threading here
+        pass
+
 
     def compress_current_buffer(self):
         data_point = np.array(self.buffer)
