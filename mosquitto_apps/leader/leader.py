@@ -75,13 +75,14 @@ class LeaderNode:
             self.random_bits_buffer.append(payload)
             if len(self.random_bits_buffer) == self.random_bits_size:
                 print(f"Using first {self.random_bits_size} samples as random bits for ANS coder")
+
+                # TODO: Do this in a way that actually works without degrading compression performance!
                 self.compressor.set_random_bits(np.array(self.random_bits_buffer))
                 self.random_bits_filled = True
 
     def handle_data_buffer(self):
-        #TODO: Perform the multi-threading here
+        # TODO: Perform the multi-threading here
         pass
-
 
     def compress_current_buffer(self):
         data_point = np.array(self.buffer)
@@ -124,7 +125,8 @@ class LeaderNode:
                 include_init_bits_in_stats = False
 
             self.compressor.decode_entire_state(self.compression_steps)
-            self.compressor.get_encoding_stats(self.data_points_num, include_init_bits_in_calculation=include_init_bits_in_stats)
+            self.compressor.get_encoding_stats(self.data_points_num,
+                                               include_init_bits_in_calculation=include_init_bits_in_stats)
             self.compressor.plot_stack_sizes()
         elif self.compression_mode == "benchmark":
             benchmark_compression.benchmark_on_data(self.buffer)
