@@ -17,7 +17,7 @@
     "model_type": "beta_binomial_vae",
     "metric": "all",
     "train_batches": 10000,
-    "max_epochs": 3,
+    "max_epochs": 1,
     "compression_batch_size": 1,
     "prior_precision": 8,
     "obs_precision": 24,
@@ -26,5 +26,6 @@
     "data_set_type": "",
     "caching": false,
     "use_first_samples_as_extra_bits": true,
+    "random_bit_samples": 50,
     "test_data_set_dir": "../data/test_data_dfs"
 }

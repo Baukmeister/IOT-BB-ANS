@@ -16,10 +16,10 @@ from util.io import input_dim
 
 def main():
     experiments_to_run = [
-        # "simple",
+        #"simple",
         "household",
-        # "wisdm",
-        # "intel"
+        #"wisdm",
+        "intel"
     ]
 
     modes_to_evaluate = [
@@ -85,7 +85,7 @@ def main():
             val_set_ratio=0.005,
             compression_samples_num=10,
             scale_factor=100,
-            pooling_factor=20,
+            pooling_factor=5,
             hidden_dim=50,
             latent_dim=10,
             train_batch_size=8,
@@ -153,7 +153,7 @@ def main():
             discretize=True,
             learning_rate=0.001,
             weight_decay=0.0001,
-            scale_factor=10000,
+            scale_factor=100,
             shift=True,
             max_epochs=1,
             model_type="beta_binomial_vae",

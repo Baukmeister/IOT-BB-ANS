@@ -32,5 +32,5 @@ class Params:
     data_set_type: str = ""
     caching: bool = False
     use_first_samples_as_extra_bits: bool = True
-    random_bit_samples = 50
+    random_bit_samples:int = 50
     test_data_set_dir: str = "../data/test_data_dfs"

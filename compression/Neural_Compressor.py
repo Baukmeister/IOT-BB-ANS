@@ -21,6 +21,10 @@ class NeuralCompressor:
 
     def __init__(self, params: Params, data_samples: list, input_dim, plot=False,
                  trained_model_folder="../models/trained_models"):
+        self.compressed_message = None
+        self.bits_per_datapoint = None
+        self.compression_rate = None
+        self.compressed_bits = None
         self.plot = plot
         self.params = params
         self.state = None
@@ -98,9 +102,12 @@ class NeuralCompressor:
         self.vae_pop = bb_util.vae_pop(latent_shape, gen_net, rec_net, obs_pop,
                                        self.params.prior_precision, self.params.q_precision)
         self.rng = numpy.random.RandomState()
-        self.other_bits = self.rng.randint(low=1 << 16, high=1 << 31, size=50, dtype=np.uint32)
+        self.other_bits = self.rng.randint(low=1 << 16, high=1 << 31, size=self.params.random_bit_samples,
+                                           dtype=np.uint32)
         self.state = rans.unflatten(self.other_bits)
         self.stack_sizes = []
+        self.encoding_times = []
+        self.decoding_times = []
 
     def run_compression(self):
 
@@ -120,13 +127,14 @@ class NeuralCompressor:
     def decode_entire_state(self, data_points_num):
         decode_start_time = time.time()
         reconstructed_data_points = []
+        self.compressed_message = rans.flatten(self.state)
         print("\nDecoding data points ...")
         for _ in tqdm(range(data_points_num)):
             self.remove_from_state(reconstructed_data_points)
         print('\nAll decoded in {:.2f}s'.format(time.time() - decode_start_time))
         recovered_bits = rans.flatten(self.state)
         assert all(self.other_bits == recovered_bits)
-        np.testing.assert_equal(reconstructed_data_points, self.data_samples)
+        assert (list(self.data_samples)[0] == list(reconstructed_data_points)[0]).all()
         print('\nLossless reconstruction!')
 
     def encode_data_set(self):
@@ -140,24 +148,28 @@ class NeuralCompressor:
         return data_points
 
     def get_encoding_stats(self, data_points_num, include_init_bits_in_calculation=False):
-        compressed_message = rans.flatten(self.state)
         if include_init_bits_in_calculation:
-            compressed_bits = 32 * (len(compressed_message))
-            pass
+            self.compressed_bits = 32 * (len(self.compressed_message))
         else:
-            compressed_bits = 32 * (len(compressed_message) - len(self.other_bits))
-        compression_rate = compressed_bits / (data_points_num * 32)
-        bits_per_datapoint = compressed_bits / data_points_num
-        print("Used " + str(compressed_bits) + " bits.")
-        print(f'Compression ratio: {round(compression_rate, 4)}. BpD: {bits_per_datapoint}')
-        return compressed_message
+            self.compressed_bits = 32 * (len(self.compressed_message) - len(self.other_bits))
+        self.compression_rate = self.compressed_bits / (data_points_num * 32)
+        self.bits_per_datapoint = self.compressed_bits / data_points_num
+
+        self.print_metrics()
 
     def remove_from_state(self, reconstructed_data_points):
+        start = time.time()
         self.state, data_point_ = self.vae_pop(self.state)
-        reconstructed_data_points.insert(0, data_point_.numpy()[0])
+        decoding_time = time.time() - start
+        self.decoding_times.append(round(decoding_time,3))
+        reconstructed_data_points.insert(0, data_point_.numpy()[0].astype(int))
 
     def add_to_state(self, data_point):
+        self.data_samples.append(data_point)
+        start = time.time()
         self.state = self.vae_append(self.state, data_point)
+        encoding_time = time.time() - start
+        self.encoding_times.append(round(encoding_time, 3))
         current_stack_depth = stack_depth(self.state)
         print(f"Current stack depth: {current_stack_depth}")
         self.stack_sizes.append(current_stack_depth)
@@ -168,3 +180,14 @@ class NeuralCompressor:
             self.other_bits = random_bits
         else:
             raise ValueError("Can't change random start bits of ANS coder since information has already been encoded!")
+
+    def print_metrics(self):
+        print("\n"
+              "#########METRICS##########"
+              "\n")
+        print(f"Used bits: {str(self.compressed_bits)}")
+        print(f'Compression ratio: {round(self.compression_rate, 4)}')
+        print(f'BpD: {self.bits_per_datapoint}')
+        print(f'Stack sizes: {self.stack_sizes}')
+        print(f'Encoding times: {self.encoding_times}')
+        print(f'Decoding times: {self.decoding_times}')

@@ -1,7 +1,7 @@
 {
     "n_feature": 3,
     "data_set_name": "household",
-    "pooling_factor": 50,
+    "pooling_factor": 20,
     "hidden_dim": 50,
     "latent_dim": 10,
     "train_set_ratio": 0.8,
@@ -17,14 +17,15 @@
     "model_type": "beta_binomial_vae",
     "metric": "all",
     "train_batches": 10000,
-    "max_epochs": 3,
+    "max_epochs": 1,
     "compression_batch_size": 1,
     "prior_precision": 8,
     "obs_precision": 24,
     "q_precision": 14,
-    "compression_samples_num": 10,
+    "compression_samples_num": 15,
     "data_set_type": "",
     "caching": false,
     "use_first_samples_as_extra_bits": true,
-    "test_data_set_dir": "./data/test_data_dfs"
+    "random_bit_samples": 20,
+    "test_data_set_dir": "../data/test_data_dfs"
 }
