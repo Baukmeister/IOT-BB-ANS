@@ -71,4 +71,5 @@ class HouseholdPowerDataset_Lite:
                                                                                         self.item_indices].min().min()
         except FileNotFoundError:
             self.pkl_path = f"../{self.pkl_path}"
+            print(f"Data not found in current dir. Trying {self.pkl_path}")
             self._load()

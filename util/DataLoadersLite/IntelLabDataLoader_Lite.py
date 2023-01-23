@@ -26,7 +26,7 @@ class IntelLabDataset_Lite():
         self.pooling_factor = pooling_factor
         self.scaling_factor = scaling_factor
         self.metric = metric
-        self.pkl_name = f"intel_lab_data.pkl"
+        self.pkl_name = f"intel.pkl"
         self.pkl_path = f"{self.path}/{self.pkl_name}"
         self.columns = ['date', 'time', 'epoch', 'mote_id', 'temperature', 'humidity', 'light', 'voltage']
 
@@ -49,11 +49,15 @@ class IntelLabDataset_Lite():
 
     def _load(self):
 
-        with open(self.pkl_path, 'rb') as f:
-            self.IntelDataDf = pickle.load(f)
+        try:
+            with open(self.pkl_path, 'rb') as f:
+                self.IntelDataDf = pickle.load(f)
 
-        self.range = self.IntelDataDf.iloc[:,self.item_indices].max().max() - self.IntelDataDf.iloc[:,self.item_indices].min().min()
-
+            self.range = self.IntelDataDf.iloc[:,self.item_indices].max().max() - self.IntelDataDf.iloc[:,self.item_indices].min().min()
+        except FileNotFoundError:
+            self.pkl_path = f"../{self.pkl_path}"
+            print(f"Data not found in current dir. Trying {self.pkl_path}")
+            self._load()
 
     def _cached_file_name(self, idx):
         return f"{self.pkl_path}/{idx}.npy"

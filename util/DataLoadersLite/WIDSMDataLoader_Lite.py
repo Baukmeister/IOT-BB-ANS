@@ -51,7 +51,13 @@ class WISDMDataset_Lite:
 
     def _load(self):
 
-        with open(self.pkl_path, 'rb') as f:
-            self.WISDMdf = pickle.load(f)
+        try:
+            with open(self.pkl_path, 'rb') as f:
+                self.WISDMdf = pickle.load(f)
 
-        self.range = self.WISDMdf.iloc[:, 2:5].max().max() - self.WISDMdf.iloc[:, 2:5].min().min()
+            self.range = self.WISDMdf.iloc[:, 2:5].max().max() - self.WISDMdf.iloc[:, 2:5].min().min()
+        except FileNotFoundError:
+            self.pkl_path = f"../{self.pkl_path}"
+            print(f"Data not found in current dir. Trying {self.pkl_path}")
+            self._load()
+
