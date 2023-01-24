@@ -1,5 +1,8 @@
 import json
 import sys
+import threading
+import time
+from multiprocessing import  cpu_count
 
 import numpy as np
 import paho.mqtt.client
@@ -12,6 +15,8 @@ from util.experiment_params import Params
 
 
 # TODO: implement multithreading following this guide https://www.tutorialspoint.com/python/python_multithreading.htm
+# TODO: consider multiprocessing instead of multithreading
+# TODO: use a queue for buffer management
 class LeaderNode:
 
     def __init__(self, host_address, model_param_path, compression_mode="neural"):
@@ -44,7 +49,6 @@ class LeaderNode:
         if self.compression_mode == "neural":
             self.instantiate_neural_compressor()
 
-        self.set_up_connection()
 
     def on_connect(self, client, userdata, flags, rc):
         print("Connected with result code " + str(rc))
@@ -81,7 +85,10 @@ class LeaderNode:
                 self.random_bits_filled = True
 
     def handle_data_buffer(self):
-        # TODO: Perform the multi-threading here
+        # TODO: Move Buffer handling (ANS coding) here
+        for i in range(10):
+            print("buffer checker")
+            time.sleep(1)
         pass
 
     def compress_current_buffer(self):
@@ -142,4 +149,11 @@ if __name__ == "__main__":
     else:
         host_address = "localhost"
 
-    LeaderNode(host_address, model_param_path, compression_mode)
+    leader = LeaderNode(host_address, model_param_path, compression_mode)
+
+    mqtt_thread = threading.Thread(target=leader.set_up_connection)
+    ans_coder_thread = threading.Thread(target=leader.handle_data_buffer)
+
+    print(cpu_count())
+    mqtt_thread.start()
+    ans_coder_thread.start()
