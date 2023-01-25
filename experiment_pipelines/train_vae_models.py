@@ -31,7 +31,7 @@ def main(params_path, test_set_num):
     ]
 
     modes_to_evaluate = [
-        #"model_training",
+        "model_training",
         # "compression"
     ]
 
