@@ -1,6 +1,9 @@
 import json
 import pickle
+import sys
 
+import numpy
+import torch.random
 from torch.utils import data
 
 from benchmark_compression import benchmark_on_data
@@ -14,36 +17,31 @@ from util.experiment_params import Params
 from util.io import input_dim
 
 
-def main():
+def main(params_path, test_set_num):
+
+    seed = 11775814
+    torch.random.manual_seed(seed)
+    numpy.random.seed(seed)
+
     experiments_to_run = [
-        #"simple",
+        "simple",
         "household",
-        #"wisdm",
+        "wisdm",
         "intel"
     ]
 
     modes_to_evaluate = [
-        "model_training",
+        #"model_training",
         # "compression"
     ]
 
     if "simple" in experiments_to_run:
         print("_" * 25)
 
-        simple_params = Params(
-            data_set_name="simple",
-            train_set_ratio=1.0,
-            train_batches=1000,
-            latent_dim=20,
-            hidden_dim=300,
-            val_set_ratio=0.001,
-            scale_factor=100,
-            max_epochs=1,
-            compression_samples_num=50
-        )
+        with open(f"{params_path}/simple.json") as f:
+            params_json = json.load(f)
+            simple_params = Params.from_dict(params_json)
 
-        with open("../params/e2e/simple.json", "w") as f:
-            json.dump(simple_params.to_dict(), f, indent=4)
 
         simpleDataSet = SimpleDataSet(
             data_range=simple_params.scale_factor,
@@ -78,22 +76,9 @@ def main():
     if "household" in experiments_to_run:
         print("_" * 25)
 
-        household_power_params = Params(
-            data_set_name="household",
-            train_set_ratio=0.8,
-            model_type="beta_binomial_vae",
-            val_set_ratio=0.005,
-            compression_samples_num=10,
-            scale_factor=100,
-            pooling_factor=5,
-            hidden_dim=50,
-            latent_dim=10,
-            train_batch_size=8,
-            discretize=True,
-            learning_rate=0.01,
-            max_epochs=1,
-            metric="all"
-        )
+        with open(f"{params_path}/household.json") as f:
+            params_json = json.load(f)
+            household_power_params = Params.from_dict(params_json)
 
         with open("../params/e2e/household.json", "w") as f:
             json.dump(household_power_params.to_dict(), f, indent=4)
@@ -112,7 +97,7 @@ def main():
         trainSetSize = len(householdPowerDataSet) - (testSetSize)
         train_set, test_set = data.random_split(householdPowerDataSet, [trainSetSize, testSetSize])
         _export_to_test_set_dir(household_power_params.test_data_set_dir, test_set.dataset.HouseholdPowerDf,
-                                "household")
+                                "household", test_set_num)
 
         householder_power_input_dim = input_dim(household_power_params)
 
@@ -141,24 +126,9 @@ def main():
     if "wisdm" in experiments_to_run:
         print("_" * 25)
 
-        wisdm_params = Params(
-            data_set_name="wisdm",
-            pooling_factor=5,
-            compression_samples_num=10,
-            hidden_dim=200,
-            latent_dim=50,
-            train_set_ratio=0.3,
-            val_set_ratio=0.01,
-            train_batch_size=64,
-            discretize=True,
-            learning_rate=0.001,
-            weight_decay=0.0001,
-            scale_factor=100,
-            shift=True,
-            max_epochs=1,
-            model_type="beta_binomial_vae",
-            data_set_type="accel"
-        )
+        with open(f"{params_path}/wisdm.json") as f:
+            params_json = json.load(f)
+            wisdm_params = Params.from_dict(params_json)
 
         with open("../params/e2e/wisdm.json", "w") as f:
             json.dump(wisdm_params.to_dict(), f, indent=4)
@@ -178,7 +148,7 @@ def main():
         testSetSize = int(len(wisdm_dataset) * wisdm_params.test_set_ratio)
         trainSetSize = len(wisdm_dataset) - (testSetSize)
         train_set, test_set = data.random_split(wisdm_dataset, [trainSetSize, testSetSize])
-        _export_to_test_set_dir(wisdm_params.test_data_set_dir, test_set.dataset.WISDMdf, "wisdm")
+        _export_to_test_set_dir(wisdm_params.test_data_set_dir, test_set.dataset.WISDMdf, "wisdm", test_set_num)
 
         wisdm_power_input_dim = input_dim(wisdm_params)
 
@@ -205,24 +175,9 @@ def main():
     if "intel" in experiments_to_run:
         print("_" * 25)
 
-        intel_lab_params = Params(
-            pooling_factor=10,
-            data_set_name="intel",
-            hidden_dim=50,
-            compression_samples_num=10,
-            latent_dim=10,
-            train_set_ratio=0.2,
-            val_set_ratio=0.001,
-            train_batch_size=8,
-            discretize=True,
-            learning_rate=0.0001,
-            weight_decay=0.01,
-            scale_factor=100,
-            shift=True,
-            max_epochs=1,
-            model_type="beta_binomial_vae",
-            metric="all"
-        )
+        with open(f"{params_path}/intel.json") as f:
+            params_json = json.load(f)
+            intel_lab_params = Params.from_dict(params_json)
 
         with open("../params/e2e/intel.json", "w") as f:
             json.dump(intel_lab_params.to_dict(), f, indent=4)
@@ -240,7 +195,7 @@ def main():
         testSetSize = int(len(intel_lab_dataset) * intel_lab_params.test_set_ratio)
         trainSetSize = len(intel_lab_dataset) - (testSetSize)
         train_set, test_set = data.random_split(intel_lab_dataset, [trainSetSize, testSetSize])
-        _export_to_test_set_dir(intel_lab_params.test_data_set_dir, test_set.dataset.IntelDataDf, "intel")
+        _export_to_test_set_dir(intel_lab_params.test_data_set_dir, test_set.dataset.IntelDataDf, "intel", test_set_num)
 
         intel_lab_input_dim = input_dim(intel_lab_params)
 
@@ -266,10 +221,22 @@ def main():
         print("_" * 25)
 
 
-def _export_to_test_set_dir(dir, df, name):
-    with open(f"{dir}/{name}.pkl", "wb") as f:
-        pickle.dump(df, f)
+def _export_to_test_set_dir(dir, df, name, partitions):
+
+    partition_dfs = numpy.array_split(df, partitions)
+
+    for partition_idx, partition_df in enumerate(partition_dfs):
+
+        with open(f"{dir}/{name}_{partition_idx}.pkl", "wb") as f:
+            pickle.dump(partition_df, f)
 
 
 if __name__ == "__main__":
-    main()
+
+    params_path = sys.argv[1]
+    if len(sys.argv) >= 3:
+        test_set_num = int(sys.argv[2])
+    else:
+        test_set_num = 3
+
+    main(params_path, test_set_num)
