@@ -112,7 +112,6 @@ class VaeTrainer():
 
 
         trainer = pl.Trainer(
-            limit_train_batches=int((self.params.train_set_ratio * self.trainSetSize) / self.params.train_batch_size),
             max_epochs=self.params.max_epochs,
             accelerator='gpu',
             devices=1,
@@ -122,6 +121,6 @@ class VaeTrainer():
             gradient_clip_val=grad_val,
             gradient_clip_algorithm="norm"
         )
-        trainer.fit(model=self.model, train_dataloaders=trainDataLoader, val_dataloaders=valDataLoader, )
+        trainer.fit(model=self.model, train_dataloaders=trainDataLoader, val_dataloaders=valDataLoader)
         torch.save(self.model.state_dict(), self.model_name)
         wandb.finish()
