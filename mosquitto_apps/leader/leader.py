@@ -2,7 +2,7 @@ import json
 import sys
 import threading
 import time
-from multiprocessing import  cpu_count
+
 
 import numpy as np
 import paho.mqtt.client
@@ -56,20 +56,21 @@ class LeaderNode:
 
     def on_message(self, client, userdata, msg: paho.mqtt.client.MQTTMessage):
 
-        payload = msg.payload
+        raw_payload = msg.payload
 
-        if payload == b"EOT":
+        if raw_payload == b"EOT":
             print("Finished processing samples!")
             self.finish_input_processing()
         else:
+            payload = json.loads(raw_payload)
             if self.compression_mode == "neural":
-                self.process_message_neural_compressor(int(payload))
+                self.process_message_neural_compressor(payload)
             elif self.compression_mode == "benchmark":
                 self.buffer.append(payload)
                 # Just let the buffer accumulate
                 pass
 
-    def process_message_neural_compressor(self, payload: int):
+    def process_message_neural_compressor(self, payload: list):
         if self.random_bits_filled:
             self.buffer.append(payload)
             if len(self.buffer) == self.compression_batch_size:
@@ -77,11 +78,14 @@ class LeaderNode:
                 self.buffer = []
         else:
             self.random_bits_buffer.append(payload)
-            if len(self.random_bits_buffer) == self.random_bits_size:
-                print(f"Using first {self.random_bits_size} samples as random bits for ANS coder")
+            buffer_len = sum([len(l) for l in self.random_bits_buffer])
+            if buffer_len >= self.random_bits_size:
+                print(f"Using first {buffer_len} samples as random bits for ANS coder")
 
                 # TODO: Do this in a way that actually works without degrading compression performance!
-                self.compressor.set_random_bits(np.array(self.random_bits_buffer))
+
+                random_bits_samples = [int(sample) for sublist in self.random_bits_buffer for sample in sublist]
+                self.compressor.set_random_bits(np.array(random_bits_samples))
                 self.random_bits_filled = True
 
     def handle_data_buffer(self):
@@ -151,9 +155,9 @@ if __name__ == "__main__":
 
     leader = LeaderNode(host_address, model_param_path, compression_mode)
 
+
     mqtt_thread = threading.Thread(target=leader.set_up_connection)
     ans_coder_thread = threading.Thread(target=leader.handle_data_buffer)
 
-    print(cpu_count())
     mqtt_thread.start()
     ans_coder_thread.start()

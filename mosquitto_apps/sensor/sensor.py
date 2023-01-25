@@ -70,12 +70,10 @@ class SensorNode:
         total_sent_messages = 1
 
         for idx in tqdm(range(self.params.pooling_factor * self.params.compression_samples_num)):
-            item = self.data_set.__getitem__(idx)
-            nums = item
-            for num in nums:
-                self.client.publish(self.data_set_name, int(num), qos=2)
-                total_sent_messages += 1
-                time.sleep(0.005)
+            nums = self.data_set.__getitem__(idx)
+            json_list = json.dumps(list(nums))
+            self.client.publish(self.data_set_name, json_list, qos=2)
+            total_sent_messages += 1
 
         # end of transmission
         self.client.publish(self.data_set_name, "EOT", qos=2)
