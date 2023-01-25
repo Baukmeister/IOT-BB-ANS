@@ -15,13 +15,17 @@ class WISDMDataset_Lite:
 
         return self.WISDMdf.shape[0] // self.pooling_factor
 
-    def __init__(self, path, pooling_factor=1, scaling_factor=1,  metric="all") -> None:
+    def __init__(self, path, pooling_factor=1, scaling_factor=1,  metric="all", sensor_idx=None) -> None:
 
 
         self.pooling_factor = pooling_factor
         self.scaling_factor = scaling_factor
         self.path = path
-        self.pkl_name = f"wisdm.pkl"
+        if sensor_idx is not None:
+            self.pkl_name = f"wisdm_{sensor_idx}.pkl"
+        else:
+            self.pkl_name = f"wisdm.pkl"
+
         self.pkl_path = f"{self.path}/{self.pkl_name}"
         self.columns = ['user', 'time', 'x', 'y', 'z']
         self.metric = metric

@@ -171,7 +171,6 @@ class NeuralCompressor:
         encoding_time = time.time() - start
         self.encoding_times.append(round(encoding_time, 3))
         current_stack_depth = stack_depth(self.state)
-        print(f"Current stack depth: {current_stack_depth}")
         self.stack_sizes.append(current_stack_depth)
 
     def set_random_bits(self, random_bits):

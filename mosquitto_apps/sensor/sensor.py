@@ -15,7 +15,7 @@ from util.experiment_params import Params
 
 class SensorNode:
 
-    def __init__(self, host_address, param_path):
+    def __init__(self, host_address, sensor_idx, param_path):
         self.data_set = None
         self.client: paho.mqtt.client.Client = None
 
@@ -45,16 +45,19 @@ class SensorNode:
             self.data_set = HouseholdPowerDataset_Lite(
                 self.data_set_dir,
                 scaling_factor=self.params.scale_factor,
+                sensor_idx=sensor_idx
             )
         elif self.data_set_name == "wisdm":
             self.data_set = WISDMDataset_Lite(
                 self.data_set_dir,
                 scaling_factor=self.params.scale_factor,
+                sensor_idx=sensor_idx
             )
         elif self.data_set_name == "intel":
             self.data_set = IntelLabDataset_Lite(
                 self.data_set_dir,
                 scaling_factor=self.params.scale_factor,
+                sensor_idx=sensor_idx
             )
         else:
             print(f"Data set name {self.data_set_name} not implemented!")
@@ -67,24 +70,31 @@ class SensorNode:
             raise Warning(f"Could not connect at port {self.mosquitto_port} - Make sure the service is running!")
 
     def send_data(self):
-        total_sent_messages = 1
+        total_sent_messages = 0
 
-        for idx in tqdm(range(self.params.pooling_factor * self.params.compression_samples_num)):
+        self.client.publish(self.data_set_name, "SOT", qos=2)
+        total_sent_messages += 1
+
+        for idx in tqdm(range(self.params.compression_samples_num)):
             nums = self.data_set.__getitem__(idx)
             json_list = json.dumps(list(nums))
             self.client.publish(self.data_set_name, json_list, qos=2)
             total_sent_messages += 1
+            time.sleep(0.01)
 
         # end of transmission
         self.client.publish(self.data_set_name, "EOT", qos=2)
-        print(f"Sent a total of {total_sent_messages} messages")
+        total_sent_messages += 1
+
+        print(f"Sent a total of {total_sent_messages} messages (Including start and stop messages)")
 
 
 if __name__ == "__main__":
     param_path = sys.argv[1]
-    if len(sys.argv) >= 3:
-        host_address = sys.argv[2]
+    sensor_idx = sys.argv[2]
+    if len(sys.argv) >= 4:
+        host_address = sys.argv[3]
     else:
         host_address = "localhost"
 
-    SensorNode(host_address, param_path)
+    SensorNode(host_address, sensor_idx, param_path)

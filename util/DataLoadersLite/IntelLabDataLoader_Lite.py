@@ -19,14 +19,19 @@ class IntelLabDataset_Lite():
 
         return self.IntelDataDf.shape[0] // self.pooling_factor
 
-    def __init__(self, path, pooling_factor=1, scaling_factor=1,  metric="all") -> None:
+    def __init__(self, path, pooling_factor=1, scaling_factor=1,  metric="all", sensor_idx=None) -> None:
 
 
         self.path = path
         self.pooling_factor = pooling_factor
         self.scaling_factor = scaling_factor
         self.metric = metric
-        self.pkl_name = f"intel.pkl"
+
+        if sensor_idx is not None:
+            self.pkl_name = f"intel_{sensor_idx}.pkl"
+        else:
+            self.pkl_name = f"intel.pkl"
+
         self.pkl_path = f"{self.path}/{self.pkl_name}"
         self.columns = ['date', 'time', 'epoch', 'mote_id', 'temperature', 'humidity', 'light', 'voltage']
 

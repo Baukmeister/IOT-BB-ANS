@@ -21,6 +21,8 @@ class LeaderNode:
 
     def __init__(self, host_address, model_param_path, compression_mode="neural"):
 
+        self.sensor_finished_counter = 0
+        self.sensor_started_counter = 0
         self.compression_mode = compression_mode
         self.compressor: NeuralCompressor = None
         self.model_name = None
@@ -59,16 +61,24 @@ class LeaderNode:
 
         raw_payload = msg.payload
         self.sample_queue.put(raw_payload)
-        print(f"Queue size: {self.sample_queue.qsize()}", flush=True)
 
     def handle_next_sample(self, raw_payload):
-        if raw_payload == b"EOT":
-            print("Finished processing samples!")
-            self.finish_input_processing()
+        if raw_payload == b"SOT":
+            self.sensor_started_counter += 1
+        elif raw_payload == b"EOT":
+
+            self.sensor_finished_counter += 1
+
+            if self.sensor_finished_counter == self.sensor_started_counter:
+                print("All sensors finished!")
+                self.finish_input_processing()
+
         else:
             payload = json.loads(raw_payload)
+
             if self.compression_mode == "neural":
                 self.process_message_neural_compressor(payload)
+
             elif self.compression_mode == "benchmark":
                 # Just let the queue accumulate
                 for item in payload:
@@ -101,9 +111,10 @@ class LeaderNode:
     def compress_current_buffer(self):
         data_point = np.array(self.buffer)
         data_point.shape = (1, self.input_dim)
-        print(f"Encoding current buffer! ({self.compression_steps})")
         self.compression_steps += 1
         self.compressor.add_to_state(data_point)
+        print(f"Compressed sample {self.compression_steps * self.params.pooling_factor}"
+              f"/{self.params.compression_samples_num * self.sensor_started_counter} ")
         self.data_points_num += data_point.size
 
     def set_up_connection(self):
