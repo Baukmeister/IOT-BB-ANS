@@ -1,7 +1,7 @@
 {
     "n_feature": 3,
     "data_set_name": "intel",
-    "pooling_factor": 5,
+    "pooling_factor": 20,
     "hidden_dim": 50,
     "latent_dim": 10,
     "train_set_ratio": 1,

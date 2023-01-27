@@ -17,7 +17,7 @@
     "model_type": "beta_binomial_vae",
     "metric": "all",
     "train_batches": 10000,
-    "max_epochs": 3,
+    "max_epochs": 1,
     "compression_batch_size": 1,
     "prior_precision": 8,
     "obs_precision": 24,

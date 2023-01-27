@@ -24,9 +24,9 @@ def main(params_path, test_set_num):
     numpy.random.seed(seed)
 
     experiments_to_run = [
-        #"simple",
-        #"household",
-        #"wisdm",
+        "simple",
+        "household",
+        "wisdm",
         "intel"
     ]
 
