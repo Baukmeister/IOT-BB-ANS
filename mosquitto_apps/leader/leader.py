@@ -19,11 +19,10 @@ from util.experiment_params import Params
 # TODO: use a queue for buffer management
 class LeaderNode:
 
-    def __init__(self, host_address, model_param_path, compression_mode="neural"):
+    def __init__(self, host_address, model_param_path):
 
         self.sensor_finished_counter = 0
         self.sensor_started_counter = 0
-        self.compression_mode = compression_mode
         self.compressor: NeuralCompressor = None
         self.model_name = None
         self.n_features = None
@@ -153,24 +152,19 @@ class LeaderNode:
             self.compressor.get_encoding_stats(self.data_points_num,
                                                include_init_bits_in_calculation=include_init_bits_in_stats)
             self.compressor.plot_stack_sizes()
-        elif self.compression_mode == "benchmark":
-
-            benchmark_compression.benchmark_on_data(self.buffer)
-            pass
 
         self.exit = True
 
 
 if __name__ == "__main__":
 
-    compression_mode = sys.argv[1]
-    model_param_path = sys.argv[2]
-    if len(sys.argv) >= 4:
-        host_address = sys.argv[3]
+    model_param_path = sys.argv[1]
+    if len(sys.argv) >= 3:
+        host_address = sys.argv[2]
     else:
         host_address = "localhost"
 
-    leader = LeaderNode(host_address, model_param_path, compression_mode)
+    leader = LeaderNode(host_address, model_param_path)
 
     mqtt_thread = threading.Thread(target=leader.set_up_connection)
     ans_coder_thread = threading.Thread(target=leader.handle_data_buffer)

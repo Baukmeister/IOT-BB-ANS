@@ -2,10 +2,12 @@ import json
 import sys
 import time
 
+import numpy
 import paho.mqtt.client
 import paho.mqtt.client as mqtt
 from tqdm import tqdm
 
+import benchmark_compression
 from util.DataLoadersLite.HouseholdPowerDataLoader_Lite import HouseholdPowerDataset_Lite
 from util.DataLoadersLite.IntelLabDataLoader_Lite import IntelLabDataset_Lite
 from util.DataLoadersLite.SimpleDataLoader_Lite import SimpleDataSet_Lite
@@ -15,15 +17,18 @@ from util.experiment_params import Params
 
 class SensorNode:
 
-    def __init__(self, host_address, sensor_idx, param_path):
+    def __init__(self, host_address, sensor_idx, param_path, compression_mode="neural"):
         self.data_set = None
         self.client: paho.mqtt.client.Client = None
 
-        with open(f"{param_path}",) as f:
+        with open(f"{param_path}", ) as f:
             params_json = json.load(f)
             self.params: Params = Params.from_dict(params_json)
 
         self.host_address = host_address
+        self.sensor_idx = sensor_idx
+        self.compression_mode = compression_mode
+
         self.data_set_name = self.params.data_set_name
         self.data_set_dir = self.params.test_data_set_dir
         self.mosquitto_port = 1883
@@ -45,19 +50,19 @@ class SensorNode:
             self.data_set = HouseholdPowerDataset_Lite(
                 self.data_set_dir,
                 scaling_factor=self.params.scale_factor,
-                sensor_idx=sensor_idx
+                sensor_idx=self.sensor_idx
             )
         elif self.data_set_name == "wisdm":
             self.data_set = WISDMDataset_Lite(
                 self.data_set_dir,
                 scaling_factor=self.params.scale_factor,
-                sensor_idx=sensor_idx
+                sensor_idx=self.sensor_idx
             )
         elif self.data_set_name == "intel":
             self.data_set = IntelLabDataset_Lite(
                 self.data_set_dir,
                 scaling_factor=self.params.scale_factor,
-                sensor_idx=sensor_idx
+                sensor_idx=self.sensor_idx
             )
         else:
             print(f"Data set name {self.data_set_name} not implemented!")
@@ -70,31 +75,39 @@ class SensorNode:
             raise Warning(f"Could not connect at port {self.mosquitto_port} - Make sure the service is running!")
 
     def send_data(self):
-        total_sent_messages = 0
 
-        self.client.publish(self.data_set_name, "SOT", qos=2)
-        total_sent_messages += 1
+        compression_samples = [self.data_set.__getitem__(idx) for idx in range(self.params.compression_samples_num)]
 
-        for idx in tqdm(range(self.params.compression_samples_num)):
-            nums = self.data_set.__getitem__(idx)
-            json_list = json.dumps(list(nums))
-            self.client.publish(self.data_set_name, json_list, qos=2)
+        if self.compression_mode == "neural":
+            total_sent_messages = 0
+
+            self.client.publish(self.data_set_name, "SOT", qos=2)
             total_sent_messages += 1
-            time.sleep(0.01)
 
-        # end of transmission
-        self.client.publish(self.data_set_name, "EOT", qos=2)
-        total_sent_messages += 1
+            for nums in tqdm(compression_samples):
+                json_list = json.dumps(list(nums))
+                self.client.publish(self.data_set_name, json_list, qos=2)
+                total_sent_messages += 1
+                time.sleep(0.01)
 
-        print(f"Sent a total of {total_sent_messages} messages (Including start and stop messages)")
+            # end of transmission
+            self.client.publish(self.data_set_name, "EOT", qos=2)
+            total_sent_messages += 1
+
+            print(f"Sent a total of {total_sent_messages} messages (Including start and stop messages)")
+        elif self.compression_mode == "benchmark":
+
+            print(f"Benchmarking compression for sensor {self.sensor_idx}")
+            benchmark_compression.benchmark_on_data(compression_samples)
 
 
 if __name__ == "__main__":
     param_path = sys.argv[1]
     sensor_idx = sys.argv[2]
-    if len(sys.argv) >= 4:
-        host_address = sys.argv[3]
+    compression_mode = sys.argv[3]
+    if len(sys.argv) >= 5:
+        host_address = sys.argv[4]
     else:
         host_address = "localhost"
 
-    SensorNode(host_address, sensor_idx, param_path)
+    SensorNode(host_address, sensor_idx, param_path, compression_mode)
