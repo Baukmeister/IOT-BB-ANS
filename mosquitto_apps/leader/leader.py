@@ -1,22 +1,16 @@
 import json
 import sys
 import threading
-import time
 from queue import Queue
 
 import numpy as np
 import paho.mqtt.client
 import paho.mqtt.client as mqtt
 
-import benchmark_compression
 from compression.Neural_Compressor import NeuralCompressor
 from util.io import input_dim
 from util.experiment_params import Params
 
-
-# TODO: implement multithreading following this guide https://www.tutorialspoint.com/python/python_multithreading.htm
-# TODO: consider multiprocessing instead of multithreading
-# TODO: use a queue for buffer management
 class LeaderNode:
 
     def __init__(self, host_address, model_param_path):
@@ -34,8 +28,6 @@ class LeaderNode:
             params_json = json.load(f)
             self.params: Params = Params.from_dict(params_json)
 
-        print(f"Running leader node in '{self.compression_mode}' compression mode")
-
         self.input_dim = input_dim(self.params)
         self.client: paho.mqtt.client.Client = None
         self.random_bits_filled = not self.params.use_first_samples_as_extra_bits
@@ -49,8 +41,7 @@ class LeaderNode:
         self.sample_queue = Queue()
         self.exit = False
 
-        if self.compression_mode == "neural":
-            self.instantiate_neural_compressor()
+        self.instantiate_neural_compressor()
 
     def on_connect(self, client, userdata, flags, rc):
         print("Connected with result code " + str(rc))
@@ -70,19 +61,17 @@ class LeaderNode:
 
             if self.sensor_finished_counter == self.sensor_started_counter:
                 print("All sensors finished!")
-                self.finish_input_processing()
+                if self.random_bits_filled:
+                    self.finish_input_processing()
+                else:
+                    raise RuntimeWarning(
+                        "Random bits have not been filled! Consider increasing the number of samples sent by sensor"
+                    )
 
         else:
             payload = json.loads(raw_payload)
 
-            if self.compression_mode == "neural":
-                self.process_message_neural_compressor(payload)
-
-            elif self.compression_mode == "benchmark":
-                # Just let the queue accumulate
-                for item in payload:
-                    self.buffer.append(int(item))
-                pass
+            self.process_message_neural_compressor(payload)
 
     def process_message_neural_compressor(self, payload: list):
         if self.random_bits_filled:
@@ -142,16 +131,16 @@ class LeaderNode:
         self.client.unsubscribe(self.params.data_set_name)
         self.client.loop_stop()
         self.client.disconnect()
-        if self.compression_mode == "neural":
-            if self.params.use_first_samples_as_extra_bits:
-                include_init_bits_in_stats = True
-            else:
-                include_init_bits_in_stats = False
 
-            self.compressor.decode_entire_state(self.compression_steps)
-            self.compressor.get_encoding_stats(self.data_points_num,
-                                               include_init_bits_in_calculation=include_init_bits_in_stats)
-            self.compressor.plot_stack_sizes()
+        if self.params.use_first_samples_as_extra_bits:
+            include_init_bits_in_stats = True
+        else:
+            include_init_bits_in_stats = False
+
+        self.compressor.decode_entire_state(self.compression_steps)
+        self.compressor.get_encoding_stats(self.data_points_num,
+                                           include_init_bits_in_calculation=include_init_bits_in_stats)
+        self.compressor.plot_stack_sizes()
 
         self.exit = True
 

@@ -134,8 +134,11 @@ class NeuralCompressor:
         print('\nAll decoded in {:.2f}s'.format(time.time() - decode_start_time))
         recovered_bits = rans.flatten(self.state)
         assert all(self.other_bits == recovered_bits)
-        assert (list(self.data_samples)[0] == list(reconstructed_data_points)[0]).all()
-        print('\nLossless reconstruction!')
+        if data_points_num > 0:
+            assert (list(self.data_samples)[0] == list(reconstructed_data_points)[0]).all()
+            print('\nLossless reconstruction!')
+        else:
+            print("\nNo data points were decoded!")
 
     def encode_data_set(self):
         data_points = np.split(np.reshape(self.data_samples, (len(self.data_samples), -1)), self.num_batches)
@@ -148,14 +151,17 @@ class NeuralCompressor:
         return data_points
 
     def get_encoding_stats(self, data_points_num, include_init_bits_in_calculation=False):
-        if include_init_bits_in_calculation:
-            self.compressed_bits = 32 * (len(self.compressed_message))
-        else:
-            self.compressed_bits = 32 * (len(self.compressed_message) - len(self.other_bits))
-        self.compression_rate = self.compressed_bits / (data_points_num * 32)
-        self.bits_per_datapoint = self.compressed_bits / data_points_num
+        if data_points_num > 0:
+            if include_init_bits_in_calculation:
+                self.compressed_bits = 32 * (len(self.compressed_message))
+            else:
+                self.compressed_bits = 32 * (len(self.compressed_message) - len(self.other_bits))
+            self.compression_rate = self.compressed_bits / (data_points_num * 32)
+            self.bits_per_datapoint = self.compressed_bits / data_points_num
 
-        self.print_metrics()
+            self.print_metrics()
+        else:
+            raise RuntimeWarning("No datapoints encoded on stack! Can't calculate stats!")
 
     def remove_from_state(self, reconstructed_data_points):
         start = time.time()
@@ -167,7 +173,7 @@ class NeuralCompressor:
     def add_to_state(self, data_point):
         self.data_samples.append(data_point)
         start = time.time()
-        self.state = self.vae_append(self.state, data_point)
+        self.state, rec_net_time = self.vae_append(self.state, data_point)
         encoding_time = time.time() - start
         self.encoding_times.append(round(encoding_time, 3))
         current_stack_depth = stack_depth(self.state)

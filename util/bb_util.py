@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 from numpy import float32
 from scipy.stats import norm, beta, binom
@@ -180,10 +182,10 @@ def beta_latent_ppf(
 # ----------------------------------------------------------------------------
 def bb_ans_append(post_pop, lik_append, prior_append):
     def append(state, data):
-        state, latent = post_pop(data)(state)
+        state, latent, rec_net_time = post_pop(data)(state)
         state = lik_append(latent)(state, data)
         state = prior_append(state, latent)
-        return state
+        return state, rec_net_time
 
     return append
 
@@ -206,13 +208,16 @@ def vae_append(latent_shape, gen_net, rec_net, obs_append, prior_prec=8,
     """
 
     def post_pop(data):
+        rec_net_start = time.time()
         post_mean, post_stdd = rec_net(data)
+        rec_net_time = time.time() - rec_net_start
+
         post_mean, post_stdd = np.ravel(post_mean), np.ravel(post_stdd)
         cdfs = [gaussian_latent_cdf(m, s, prior_prec, latent_prec)
                 for m, s in zip(post_mean, post_stdd)]
         ppfs = [gaussian_latent_ppf(m, s, prior_prec, latent_prec)
                 for m, s in zip(post_mean, post_stdd)]
-        return non_uniforms_pop(latent_prec, ppfs, cdfs)
+        return non_uniforms_pop(latent_prec, ppfs, cdfs), rec_net_time
 
     def lik_append(latent_idxs):
         y = std_gaussian_centres(prior_prec)[latent_idxs]
