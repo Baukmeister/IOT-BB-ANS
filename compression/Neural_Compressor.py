@@ -105,9 +105,9 @@ class NeuralCompressor:
         self.vae_pop = bb_util.vae_pop(latent_shape, gen_net, rec_net, obs_pop,
                                        self.params.prior_precision, self.params.q_precision)
         self.rng = numpy.random.RandomState()
-        self.other_bits = self.rng.randint(low=1 << 16, high=1 << 31, size=self.params.random_bit_samples,
-                                           dtype=np.uint32)
-        self.state = rans.unflatten(self.other_bits)
+        self.other_bit_integers = self.rng.randint(low=1 << 16, high=1 << 31, size=self.params.random_bit_samples,
+                                                   dtype=np.uint32)
+        self.state = rans.unflatten(self.other_bit_integers)
         self.stack_sizes = []
 
         self.encoding_times = []
@@ -139,7 +139,7 @@ class NeuralCompressor:
             self.remove_from_state(reconstructed_data_points)
         print('\nAll decoded in {:.2f}s'.format(time.time() - decode_start_time))
         recovered_bits = rans.flatten(self.state)
-        assert all(self.other_bits == recovered_bits)
+        assert all(self.other_bit_integers == recovered_bits)
         if data_points_num > 0:
             assert (list(self.data_samples)[0] == list(reconstructed_data_points)[0]).all()
             print('\nLossless reconstruction!')
@@ -159,7 +159,7 @@ class NeuralCompressor:
     def get_encoding_stats(self, data_points_num, include_init_bits_in_calculation=False):
         if data_points_num > 0:
             self.compressed_bits_consider_init = 32 * (len(self.compressed_message))
-            self.compressed_bits_no_init = 32 * (len(self.compressed_message) - len(self.other_bits))
+            self.compressed_bits_no_init = 32 * (len(self.compressed_message) - len(self.other_bit_integers))
 
             self.compression_rate_consider_init = self.compressed_bits_consider_init / (data_points_num * 32)
             self.bits_per_datapoint_consider_init = self.compressed_bits_consider_init / data_points_num
@@ -193,9 +193,9 @@ class NeuralCompressor:
         self.stack_sizes.append(current_stack_depth)
 
     def set_random_bits(self, random_bits):
-        if all(self.other_bits == rans.flatten(self.state)):
+        if all(self.other_bit_integers == rans.flatten(self.state)):
             self.state = rans.unflatten(random_bits)
-            self.other_bits = random_bits
+            self.other_bit_integers = random_bits
         else:
             raise ValueError("Can't change random start bits of ANS coder since information has already been encoded!")
 
