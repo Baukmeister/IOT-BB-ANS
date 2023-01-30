@@ -106,7 +106,10 @@ class NeuralCompressor:
                                            dtype=np.uint32)
         self.state = rans.unflatten(self.other_bits)
         self.stack_sizes = []
+
         self.encoding_times = []
+        self.rec_net_times = []
+        self.gen_net_times = []
         self.decoding_times = []
 
     def run_compression(self):
@@ -173,10 +176,15 @@ class NeuralCompressor:
     def add_to_state(self, data_point):
         self.data_samples.append(data_point)
         start = time.time()
-        self.state, rec_net_time = self.vae_append(self.state, data_point)
+        self.state, rec_net_time, gen_net_time = self.vae_append(self.state, data_point)
         encoding_time = time.time() - start
-        self.encoding_times.append(round(encoding_time, 3))
+        self.encoding_times.append(round(encoding_time, 5))
+
+        self.rec_net_times.append(round(rec_net_time, 5))
+        self.gen_net_times.append(round(gen_net_time, 5))
+
         current_stack_depth = stack_depth(self.state)
+
         self.stack_sizes.append(current_stack_depth)
 
     def set_random_bits(self, random_bits):
@@ -196,3 +204,5 @@ class NeuralCompressor:
         print(f'Stack sizes: {self.stack_sizes}')
         print(f'Encoding times: {self.encoding_times}')
         print(f'Decoding times: {self.decoding_times}')
+        print(f'Gen Net times: {self.gen_net_times}')
+        print(f'Rec Net times: {self.rec_net_times}')

@@ -182,10 +182,14 @@ def beta_latent_ppf(
 # ----------------------------------------------------------------------------
 def bb_ans_append(post_pop, lik_append, prior_append):
     def append(state, data):
-        state, latent, rec_net_time = post_pop(data)(state)
-        state = lik_append(latent)(state, data)
+        pop_fun, rec_net_time = post_pop(data)
+        state, latent = pop_fun(state)
+
+        append_fun, gen_net_time = lik_append(latent)
+        state = append_fun(state, data)
         state = prior_append(state, latent)
-        return state, rec_net_time
+
+        return state, rec_net_time, gen_net_time
 
     return append
 
@@ -221,8 +225,10 @@ def vae_append(latent_shape, gen_net, rec_net, obs_append, prior_prec=8,
 
     def lik_append(latent_idxs):
         y = std_gaussian_centres(prior_prec)[latent_idxs]
+        gen_net_start = time.time()
         obs_params = gen_net(np.reshape(y, latent_shape))
-        return obs_append(obs_params)
+        gen_net_time = time.time() - gen_net_start
+        return obs_append(obs_params), gen_net_time
 
     prior_append = uniforms_append(prior_prec)
     return bb_ans_append(post_pop, lik_append, prior_append)

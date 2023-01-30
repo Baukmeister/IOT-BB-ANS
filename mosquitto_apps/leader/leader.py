@@ -56,7 +56,6 @@ class LeaderNode:
         if raw_payload == b"SOT":
             self.sensor_started_counter += 1
         elif raw_payload == b"EOT":
-
             self.sensor_finished_counter += 1
 
             if self.sensor_finished_counter == self.sensor_started_counter:
