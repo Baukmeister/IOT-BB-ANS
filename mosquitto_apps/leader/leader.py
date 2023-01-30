@@ -137,6 +137,8 @@ class LeaderNode:
             include_init_bits_in_stats = False
 
         self.compressor.decode_entire_state(self.compression_steps)
+
+        print(f"Printing metrics for {self.data_points_num} data points")
         self.compressor.get_encoding_stats(self.data_points_num,
                                            include_init_bits_in_calculation=include_init_bits_in_stats)
         self.compressor.plot_stack_sizes()

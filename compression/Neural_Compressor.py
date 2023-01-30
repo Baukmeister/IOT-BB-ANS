@@ -22,9 +22,12 @@ class NeuralCompressor:
     def __init__(self, params: Params, data_samples: list, input_dim, plot=False,
                  trained_model_folder="../models/trained_models"):
         self.compressed_message = None
-        self.bits_per_datapoint = None
-        self.compression_rate = None
-        self.compressed_bits = None
+        self.bits_per_datapoint_consider_init = None
+        self.bits_per_datapoint_no_init = None
+        self.compression_rate_consider_init = None
+        self.compression_rate_no_init = None
+        self.compressed_bits_consider_init = None
+        self.compressed_bits_no_init = None
         self.plot = plot
         self.params = params
         self.state = None
@@ -155,12 +158,14 @@ class NeuralCompressor:
 
     def get_encoding_stats(self, data_points_num, include_init_bits_in_calculation=False):
         if data_points_num > 0:
-            if include_init_bits_in_calculation:
-                self.compressed_bits = 32 * (len(self.compressed_message))
-            else:
-                self.compressed_bits = 32 * (len(self.compressed_message) - len(self.other_bits))
-            self.compression_rate = self.compressed_bits / (data_points_num * 32)
-            self.bits_per_datapoint = self.compressed_bits / data_points_num
+            self.compressed_bits_consider_init = 32 * (len(self.compressed_message))
+            self.compressed_bits_no_init = 32 * (len(self.compressed_message) - len(self.other_bits))
+
+            self.compression_rate_consider_init = self.compressed_bits_consider_init / (data_points_num * 32)
+            self.bits_per_datapoint_consider_init = self.compressed_bits_consider_init / data_points_num
+
+            self.compression_rate_no_init = self.compressed_bits_no_init / (data_points_num * 32)
+            self.bits_per_datapoint_no_init = self.compressed_bits_no_init / data_points_num
 
             self.print_metrics()
         else:
@@ -198,9 +203,22 @@ class NeuralCompressor:
         print("\n"
               "#########METRICS##########"
               "\n")
-        print(f"Used bits: {str(self.compressed_bits)}")
-        print(f'Compression ratio: {round(self.compression_rate, 4)}')
-        print(f'BpD: {self.bits_per_datapoint}')
+
+        print(f"Used bits (including init bits): {str(self.compressed_bits_consider_init)}")
+        print(f"Used bits (without init bits): {str(self.compressed_bits_no_init)}")
+
+        print("\n")
+
+        print(f'Compression ratio (including init bits): {round(self.compression_rate_consider_init, 4)}')
+        print(f'Compression ratio (without init bits): {round(self.compression_rate_no_init, 4)}')
+
+        print("\n")
+
+        print(f'BpD (including init bits): {self.bits_per_datapoint_consider_init}')
+        print(f'BpD (without init bits): {self.bits_per_datapoint_no_init}')
+
+        print("\n")
+
         print(f'Stack sizes: {self.stack_sizes}')
         print(f'Encoding times: {self.encoding_times}')
         print(f'Decoding times: {self.decoding_times}')
