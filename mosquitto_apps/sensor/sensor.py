@@ -2,12 +2,11 @@ import json
 import sys
 import time
 
-import numpy
 import paho.mqtt.client
 import paho.mqtt.client as mqtt
 from tqdm import tqdm
 
-import benchmark_compression
+from compression import benchmark_compression
 from util.DataLoadersLite.HouseholdPowerDataLoader_Lite import HouseholdPowerDataset_Lite
 from util.DataLoadersLite.IntelLabDataLoader_Lite import IntelLabDataset_Lite
 from util.DataLoadersLite.SimpleDataLoader_Lite import SimpleDataSet_Lite

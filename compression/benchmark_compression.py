@@ -7,11 +7,6 @@ import numpy as np
 import zstd
 from tqdm import tqdm
 
-from util.DataLoaders.HouseholdPowerDataLoader import HouseholdPowerDataset
-from util.DataLoaders.IntelLabDataLoader import IntelLabDataset
-from util.DataLoaders.SimpleDataLoader import SimpleDataSet
-from util.DataLoaders.WIDSMDataLoader import WISDMDataset
-
 
 def bench_compressor(compress_fun, decompress_fun, compressor_name, data_points):
     print(f"Running compressor: {compressor_name}")
@@ -60,45 +55,3 @@ def benchmark_on_data(custom_data_set, compression_samples_num=None):
     bench_compressor(bz2_compress, bz2.decompress, "bz2", custom_data)
     bench_compressor(lzma_compress, lzma.decompress, "lzma", custom_data)
     bench_compressor(zstd_compress, zstd.decompress, "zstd", custom_data)
-
-
-if __name__ == "__main__":
-    # Biometrics data
-    data_set_size = 1000
-    data_set_name = "intelLab"
-
-    if data_set_name == "WISDM":
-        dataSet = WISDMDataset(
-            "data/wisdm-dataset/raw",
-            pooling_factor=100,
-            discretize=True,
-            scaling_factor=100,
-            caching=False,
-            data_set_size="all"
-        )
-
-    elif data_set_name == "simple":
-        dataSet = SimpleDataSet()
-
-    elif data_set_name == "intelLab":
-        dataSet = IntelLabDataset(
-            path="data/IntelLabData",
-            pooling_factor=10,
-            scaling_factor=100,
-            caching=False,
-            metric="temperature"
-        )
-
-    elif data_set_name == "householdPower":
-        dataSet = HouseholdPowerDataset(
-            "data/household_power_consumption",
-            pooling_factor=5,
-            scaling_factor=100,
-            caching=False,
-            metric="all")
-
-    print("\nCollecting data for compression benchmark ...")
-    data = np.array([dataSet.__getitem__(i).cpu().numpy()[0] for i in tqdm(range(data_set_size))]).astype("uint8")
-    bench_compressor(gzip_compress, gzip.decompress, "gzip", data)
-    bench_compressor(bz2_compress, bz2.decompress, "bz2", data)
-    bench_compressor(lzma_compress, lzma.decompress, "lzma", data)

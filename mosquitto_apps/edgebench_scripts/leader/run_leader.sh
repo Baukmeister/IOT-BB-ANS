@@ -1,1 +1,0 @@
-sudo docker run -it --runtime nvidia baukmeister/leader-app params/household.json 192.168.1.2

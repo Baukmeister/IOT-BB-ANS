@@ -1,5 +1,6 @@
 paho-mqtt
 numpy
 pandas
+zstd
 tqdm
 dataclasses-json

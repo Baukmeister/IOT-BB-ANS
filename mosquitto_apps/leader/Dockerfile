@@ -7,7 +7,6 @@ COPY ./mosquitto_apps/leader .
 COPY ../../util ./util
 COPY ./compression ./compression
 COPY ./models ./models
-COPY ./benchmark_compression.py ./benchmark_compression.py
 COPY ./params/mosquitto_params ./params
 
 
@@ -17,4 +16,4 @@ RUN --mount=type=cache,target=/root/.cache \
     pip3 install -r requirements.txt
 
 
-ENTRYPOINT [ "python3" , "leader.py", "neural"]
+ENTRYPOINT [ "python3" , "leader.py"]
