@@ -11,7 +11,8 @@ COPY ./params/mosquitto_params ./mosquitto_apps/sensor/params
 COPY ./compression/benchmark_compression.py ./compression/benchmark_compression.py
 
 ENV PYTHONPATH "${PYTHONPATH}:/app"
-RUN pip3 install -r ./mosquitto_apps/sensor/requirements.txt
+RUN --mount=type=cache,target=/root/.cache \
+    pip3 install -r ./mosquitto_apps/sensor/requirements.txt
 
 WORKDIR /app/mosquitto_apps/sensor
 
