@@ -6,8 +6,8 @@ import numpy
 import torch.random
 from torch.utils import data
 
-from benchmark_compression import benchmark_on_data
 from compression.Neural_Compressor import NeuralCompressor
+from compression.benchmark_compression import benchmark_on_data
 from model_training.VAE_Trainer import VaeTrainer
 from util.DataLoaders.HouseholdPowerDataLoader import HouseholdPowerDataset
 from util.DataLoaders.IntelLabDataLoader import IntelLabDataset
@@ -24,10 +24,10 @@ def main(params_path, test_set_num):
     numpy.random.seed(seed)
 
     experiments_to_run = [
-        "simple",
+        #"simple",
         "household",
-        "wisdm",
-        "intel"
+        #"wisdm",
+        #"intel"
     ]
 
     modes_to_evaluate = [

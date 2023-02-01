@@ -24,19 +24,22 @@ class SensorNode:
             params_json = json.load(f)
             self.params: Params = Params.from_dict(params_json)
 
-        self.host_address = host_address
-        self.sensor_idx = sensor_idx
-        self.compression_mode = compression_mode
-
         self.data_set_name = self.params.data_set_name
         self.data_set_dir = self.params.test_data_set_dir
+        self.compression_mode = compression_mode
+        self.host_address = host_address
+        self.sensor_idx = sensor_idx
         self.mosquitto_port = 1883
-
         self.load_data()
-        self.set_up_connection()
-        self.client.loop_start()
-        self.send_data()
-        self.client.loop_stop()
+
+        if compression_mode == "neural":
+            self.set_up_connection()
+            self.client.loop_start()
+            self.send_data()
+            self.client.loop_stop()
+
+        elif compression_mode == "benchmark":
+            self.send_data()
 
     def load_data(self):
 
@@ -75,7 +78,10 @@ class SensorNode:
 
     def send_data(self):
 
-        compression_samples = [self.data_set.__getitem__(idx) for idx in range(self.params.compression_samples_num)]
+        if self.params.compression_samples_num == -1:
+            compression_samples = [self.data_set.__getitem__(idx) for idx in range(self.data_set.__len__())]
+        else:
+            compression_samples = [self.data_set.__getitem__(idx) for idx in range(self.params.compression_samples_num)]
 
         if self.compression_mode == "neural":
             total_sent_messages = 0
