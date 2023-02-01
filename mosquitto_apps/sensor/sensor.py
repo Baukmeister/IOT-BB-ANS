@@ -13,7 +13,8 @@ from util.DataLoadersLite.SimpleDataLoader_Lite import SimpleDataSet_Lite
 from util.DataLoadersLite.WIDSMDataLoader_Lite import WISDMDataset_Lite
 from util.experiment_params import Params
 
-
+# TODO document what -1 means as input for sensor_idx
+# TODO document what -1 menas for compression_samples_num
 class SensorNode:
 
     def __init__(self, host_address, sensor_idx, param_path, compression_mode="neural"):

@@ -26,12 +26,12 @@ def main(params_path, test_set_num):
     experiments_to_run = [
         #"simple",
         "household",
-        #"wisdm",
-        #"intel"
+        "wisdm",
+        "intel"
     ]
 
     modes_to_evaluate = [
-        "model_training",
+        # "model_training",
         # "compression"
     ]
 
@@ -223,12 +223,21 @@ def main(params_path, test_set_num):
 
 def _export_to_test_set_dir(dir, df, name, partitions):
 
+    # store entire test dataset
+
+    with open(f"{dir}/{name}_total.pkl", "wb") as f:
+        pickle.dump(df, f)
+
+    # store partitions
     partition_dfs = numpy.array_split(df, partitions)
 
     for partition_idx, partition_df in enumerate(partition_dfs):
 
         with open(f"{dir}/{name}_{partition_idx}.pkl", "wb") as f:
             pickle.dump(partition_df, f)
+
+
+
 
 
 if __name__ == "__main__":
