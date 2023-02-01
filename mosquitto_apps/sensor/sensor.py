@@ -29,7 +29,11 @@ class SensorNode:
         self.data_set_dir = self.params.test_data_set_dir
         self.compression_mode = compression_mode
         self.host_address = host_address
-        self.sensor_idx = sensor_idx
+        if sensor_idx == -1:
+            self.sensor_idx = "total"
+        else:
+            self.sensor_idx = sensor_idx
+
         self.mosquitto_port = 1883
         self.load_data()
 
@@ -109,7 +113,7 @@ class SensorNode:
 
 if __name__ == "__main__":
     param_path = sys.argv[1]
-    sensor_idx = sys.argv[2]
+    sensor_idx = int(sys.argv[2])
     compression_mode = sys.argv[3]
     if len(sys.argv) >= 5:
         host_address = sys.argv[4]
