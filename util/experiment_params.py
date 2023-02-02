@@ -21,7 +21,7 @@ class Params:
     range: int = 100
     shift: bool = False
     model_type: str = "beta_binomial_vae"
-    metric: str = None
+    metric = "all"
     train_batches: int = 10000
     max_epochs: int = 1
     compression_batch_size: int = 1
@@ -32,5 +32,5 @@ class Params:
     data_set_type: str = ""
     caching: bool = False
     use_first_samples_as_extra_bits: bool = True
-    random_bit_samples:int = 50
+    random_bit_samples: int = 50
     test_data_set_dir: str = "../data/test_data_dfs"

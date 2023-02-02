@@ -20,10 +20,10 @@ def bench_compressor(compress_fun, decompress_fun, compressor_name, data_points)
     compression_rate = n_bits/uncompressed_bits
     bits_per_datapoint = (n_bits / np.size(data_points))
     print(f"Compressor: {compressor_name}. \n"
-          f"Uncompressed data size: {_format_bytes(uncompressed_bits)}\n"
-          f"Compression rate: {round(compression_rate,4)}. \n"
-          f"BpD: {bits_per_datapoint}. \n"
-          f"Time: {compression_time} seconds")
+          f"{compressor_name}-Uncompressed data size: {_format_bytes(uncompressed_bits)}\n"
+          f"{compressor_name}-Compression rate: {round(compression_rate,4)}\n"
+          f"{compressor_name}-BpD: {bits_per_datapoint} \n"
+          f"{compressor_name}-Time (seconds): {compression_time}")
     print("#########################\n")
     recon = np.ndarray(data_points.shape, np.uint8, decompress_fun(byts))
     assert np.equal(data_points, recon).all()

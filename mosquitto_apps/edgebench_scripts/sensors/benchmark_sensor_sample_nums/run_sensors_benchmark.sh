@@ -56,10 +56,10 @@ docker run baukmeister/sensor-app params/benchmark_compression_eval/100_samples/
 
 
 echo "500 Samples"
-docker run baukmeister/sensor-app params/benchmark_compression_eval/ 500_samples/household.json -1 benchmark
-docker run baukmeister/sensor-app params/benchmark_compression_eval/ 500_samples/intel.json -1 benchmark
-docker run baukmeister/sensor-app params/benchmark_compression_eval/ 500_samples/wisdm.json -1 benchmark
-docker run baukmeister/sensor-app params/benchmark_compression_eval/ 500_samples/simple.json -1 benchmark
+docker run baukmeister/sensor-app params/benchmark_compression_eval/500_samples/household.json -1 benchmark
+docker run baukmeister/sensor-app params/benchmark_compression_eval/500_samples/intel.json -1 benchmark
+docker run baukmeister/sensor-app params/benchmark_compression_eval/500_samples/wisdm.json -1 benchmark
+docker run baukmeister/sensor-app params/benchmark_compression_eval/500_samples/simple.json -1 benchmark
 
 
 echo "1000 Samples"

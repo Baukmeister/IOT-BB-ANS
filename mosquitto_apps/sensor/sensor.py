@@ -84,7 +84,9 @@ class SensorNode:
     def send_data(self):
 
         if self.params.compression_samples_num == -1:
-            compression_samples = [self.data_set.__getitem__(idx) for idx in range(self.data_set.__len__())]
+            compression_sample_num = self.data_set.__len__()
+            print(f"MAX sample number: {compression_sample_num}")
+            compression_samples = [self.data_set.__getitem__(idx) for idx in range(compression_sample_num)]
         else:
             compression_samples = [self.data_set.__getitem__(idx) for idx in range(self.params.compression_samples_num)]
 
@@ -107,7 +109,7 @@ class SensorNode:
             print(f"Sent a total of {total_sent_messages} messages (Including start and stop messages)")
         elif self.compression_mode == "benchmark":
 
-            print(f"Benchmarking compression for sensor {self.sensor_idx}")
+            print(f"Benchmarking compression on dataset '{self.params.data_set_name}' for sensor '{self.sensor_idx}'")
             benchmark_compression.benchmark_on_data(compression_samples)
 
 
