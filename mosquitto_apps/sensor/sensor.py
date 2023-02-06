@@ -51,6 +51,7 @@ class SensorNode:
         if self.data_set_name == "simple":
             self.data_set = SimpleDataSet_Lite(
                 data_range=self.params.scale_factor,
+                data_set_size=self.params.compression_samples_num,
                 pooling_factor=self.params.pooling_factor
             )
         elif self.data_set_name == "household":
