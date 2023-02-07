@@ -24,7 +24,7 @@ def main(params_path, test_set_num):
     numpy.random.seed(seed)
 
     experiments_to_run = [
-        #"simple",
+        "simple",
         "household",
         "wisdm",
         "intel"
@@ -48,6 +48,8 @@ def main(params_path, test_set_num):
             pooling_factor=simple_params.pooling_factor,
             data_set_size=int(1e6)
         )
+
+        simpleDataSet.export_as_csv("../data/exports")
 
         testSetSize = int(len(simpleDataSet) * simple_params.test_set_ratio)
         trainSetSize = len(simpleDataSet) - (testSetSize)
@@ -90,6 +92,8 @@ def main(params_path, test_set_num):
             caching=False,
             metric=household_power_params.metric
         )
+
+        householdPowerDataSet.export_as_csv("../data/exports")
 
         household_power_params.range = householdPowerDataSet.range
 
@@ -143,6 +147,8 @@ def main(params_path, test_set_num):
             caching=False
         )
 
+        wisdm_dataset.export_as_csv("../data/exports")
+
         wisdm_params.range = wisdm_dataset.range
 
         testSetSize = int(len(wisdm_dataset) * wisdm_params.test_set_ratio)
@@ -189,6 +195,9 @@ def main(params_path, test_set_num):
             caching=intel_lab_params.caching,
             metric=intel_lab_params.metric
         )
+
+        intel_lab_dataset.export_as_csv("../data/exports")
+
 
         intel_lab_params.range = intel_lab_dataset.range
 

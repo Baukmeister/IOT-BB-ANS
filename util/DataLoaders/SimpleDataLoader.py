@@ -1,3 +1,4 @@
+import numpy
 import torch
 from torch.utils.data.dataset import T_co, Dataset
 import numpy as np
@@ -19,3 +20,8 @@ class SimpleDataSet(Dataset):
             std = 1
             data = np.random.normal(mean, scale=std, size=data_set_size)
             self.data = data.astype(np.int64)
+
+    def export_as_csv(self, export_dir):
+        file_name = f"{export_dir}/simple_dataset.csv"
+        numpy.savetxt(file_name, self.data, delimiter=",")
+

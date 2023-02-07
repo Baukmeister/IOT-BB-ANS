@@ -130,3 +130,8 @@ class HouseholdPowerDataset(Dataset):
 
     def _cached_file_name(self, idx):
         return f"{self.pkl_path}/{idx}.npy"
+
+
+    def export_as_csv(self, export_dir):
+        file_name = f"{export_dir}/household_dataset.csv"
+        self.HouseholdPowerDf.to_csv(file_name)
