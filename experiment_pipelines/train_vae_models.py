@@ -35,6 +35,8 @@ def main(params_path, test_set_num):
         # "compression"
     ]
 
+    export_to_csv = False
+
     if "simple" in experiments_to_run:
         print("_" * 25)
 
@@ -49,7 +51,8 @@ def main(params_path, test_set_num):
             data_set_size=int(1e6)
         )
 
-        simpleDataSet.export_as_csv("../data/exports")
+        if export_to_csv:
+            simpleDataSet.export_as_csv("../data/exports")
 
         testSetSize = int(len(simpleDataSet) * simple_params.test_set_ratio)
         trainSetSize = len(simpleDataSet) - (testSetSize)
@@ -93,7 +96,8 @@ def main(params_path, test_set_num):
             metric=household_power_params.metric
         )
 
-        householdPowerDataSet.export_as_csv("../data/exports")
+        if export_to_csv:
+            householdPowerDataSet.export_as_csv("../data/exports")
 
         household_power_params.range = householdPowerDataSet.range
 
@@ -147,7 +151,8 @@ def main(params_path, test_set_num):
             caching=False
         )
 
-        wisdm_dataset.export_as_csv("../data/exports")
+        if export_to_csv:
+            wisdm_dataset.export_as_csv("../data/exports")
 
         wisdm_params.range = wisdm_dataset.range
 
@@ -196,7 +201,8 @@ def main(params_path, test_set_num):
             metric=intel_lab_params.metric
         )
 
-        intel_lab_dataset.export_as_csv("../data/exports")
+        if export_to_csv:
+            intel_lab_dataset.export_as_csv("../data/exports")
 
 
         intel_lab_params.range = intel_lab_dataset.range
@@ -244,10 +250,6 @@ def _export_to_test_set_dir(dir, df, name, partitions):
 
         with open(f"{dir}/{name}_{partition_idx}.pkl", "wb") as f:
             pickle.dump(partition_df, f)
-
-
-
-
 
 if __name__ == "__main__":
 

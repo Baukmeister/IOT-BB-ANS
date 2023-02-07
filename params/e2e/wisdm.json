@@ -15,7 +15,6 @@
     "range": 100,
     "shift": true,
     "model_type": "beta_binomial_vae",
-    "metric": null,
     "train_batches": 10000,
     "max_epochs": 1,
     "compression_batch_size": 1,
