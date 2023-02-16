@@ -85,7 +85,6 @@ class LeaderNode:
             if buffer_len >= self.random_bits_size:
                 print(f"Using first {buffer_len} samples as random bits for ANS coder")
 
-                # TODO: Do this in a way that actually works without degrading compression performance!
                 random_bits_samples = [int(sample) for sublist in self.random_bits_buffer for sample in sublist]
                 self.compressor.set_random_bits(np.array(random_bits_samples))
                 self.random_bits_filled = True

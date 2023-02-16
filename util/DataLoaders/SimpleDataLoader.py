@@ -19,7 +19,7 @@ class SimpleDataSet(Dataset):
             mean = data_range / 2
             std = 1
             data = np.random.normal(mean, scale=std, size=data_set_size)
-            self.data = data.astype(np.int64)
+            self.data = data.round().astype(np.int64)
 
     def export_as_csv(self, export_dir):
         file_name = f"{export_dir}/simple_dataset.csv"

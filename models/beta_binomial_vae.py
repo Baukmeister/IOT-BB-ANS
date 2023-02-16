@@ -108,14 +108,12 @@ class BetaBinomialVAE_sbs(pl.LightningModule):
         x_sample = x_sample.float() / float(self.range)
 
     def reconstruct(self, x, device):
-        x = x.view(-1, self.n_features).float().to(device)
-        z_mu, z_logvar = self.encode(x)
-        z = self.reparameterize(z_mu, z_logvar)  # sample zs
+        z_mu, z_std = self.encode(x.view(-1, self.n_features))
+        z = self.reparameterize(z_mu, z_std)  # sample zs
+
         x_alpha, x_beta = self.decode(z)
-        beta = Beta(x_alpha, x_beta)
-        p = beta.sample()
-        binomial = Binomial(self.range, p)
-        x_recon = binomial.sample()
+        distr = Beta(x_alpha, x_beta)
+        x_recon = distr.sample()
         return x_recon
 
     def training_step(self, batch, batch_idx):

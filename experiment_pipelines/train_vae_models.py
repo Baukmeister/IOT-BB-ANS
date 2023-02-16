@@ -24,18 +24,18 @@ def main(params_path, test_set_num):
     numpy.random.seed(seed)
 
     experiments_to_run = [
-        "simple",
-        "household",
+        #"simple",
+        #"household",
         "wisdm",
-        "intel"
+        #"intel"
     ]
 
     modes_to_evaluate = [
-        # "model_training",
+        "model_training",
         # "compression"
     ]
 
-    export_to_csv = False
+    export_to_csv = True
 
     if "simple" in experiments_to_run:
         print("_" * 25)
@@ -91,8 +91,9 @@ def main(params_path, test_set_num):
         householdPowerDataSet = HouseholdPowerDataset(
             "../data/household_power_consumption",
             pooling_factor=household_power_params.pooling_factor,
-            scaling_factor=household_power_params.scale_factor,
+            scaling_factor=1,
             caching=False,
+            discretize=False,
             metric=household_power_params.metric
         )
 
@@ -144,9 +145,9 @@ def main(params_path, test_set_num):
         wisdm_dataset = WISDMDataset(
             "../data/wisdm-dataset/raw",
             pooling_factor=wisdm_params.pooling_factor,
-            discretize=wisdm_params.discretize,
-            scaling_factor=wisdm_params.scale_factor,
-            shift=wisdm_params.shift,
+            discretize=False,
+            scaling_factor=1,
+            shift=False,
             data_set_size=wisdm_params.data_set_type,
             caching=False
         )
@@ -196,7 +197,8 @@ def main(params_path, test_set_num):
         intel_lab_dataset = IntelLabDataset(
             "../data/IntelLabData",
             pooling_factor=intel_lab_params.pooling_factor,
-            scaling_factor=intel_lab_params.scale_factor,
+            scaling_factor=1,
+            discretize=False,
             caching=intel_lab_params.caching,
             metric=intel_lab_params.metric
         )
