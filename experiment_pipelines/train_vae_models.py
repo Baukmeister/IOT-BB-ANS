@@ -25,8 +25,8 @@ def main(params_path, test_set_num):
 
     experiments_to_run = [
         #"simple",
-        "household",
-        #"wisdm",
+        #"household",
+        "wisdm",
         #"intel"
     ]
 
