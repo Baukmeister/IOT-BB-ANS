@@ -91,9 +91,8 @@ def main(params_path, test_set_num):
         householdPowerDataSet = HouseholdPowerDataset(
             "../data/household_power_consumption",
             pooling_factor=household_power_params.pooling_factor,
-            scaling_factor=1,
+            scaling_factor=household_power_params.scale_factor,
             caching=False,
-            discretize=False,
             metric=household_power_params.metric
         )
 
@@ -145,9 +144,9 @@ def main(params_path, test_set_num):
         wisdm_dataset = WISDMDataset(
             "../data/wisdm-dataset/raw",
             pooling_factor=wisdm_params.pooling_factor,
-            discretize=False,
-            scaling_factor=1,
-            shift=False,
+            discretize=wisdm_params.discretize,
+            scaling_factor=wisdm_params.scale_factor,
+            shift=wisdm_params.shift,
             data_set_size=wisdm_params.data_set_type,
             caching=False
         )
@@ -197,8 +196,7 @@ def main(params_path, test_set_num):
         intel_lab_dataset = IntelLabDataset(
             "../data/IntelLabData",
             pooling_factor=intel_lab_params.pooling_factor,
-            scaling_factor=1,
-            discretize=False,
+            scaling_factor=intel_lab_params.scale_factor,
             caching=intel_lab_params.caching,
             metric=intel_lab_params.metric
         )
