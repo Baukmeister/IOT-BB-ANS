@@ -26,8 +26,8 @@ def main(params_path, test_set_num):
     experiments_to_run = [
         #"simple",
         #"household",
-        "wisdm",
-        #"intel"
+        #"wisdm",
+        "intel"
     ]
 
     modes_to_evaluate = [

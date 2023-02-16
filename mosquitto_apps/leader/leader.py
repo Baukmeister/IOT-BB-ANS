@@ -75,7 +75,7 @@ class LeaderNode:
     def process_message_neural_compressor(self, payload: list):
         if self.random_bits_filled:
             for item in payload:
-                self.buffer.append(int(item))
+                self.buffer.append(int(float(item)))
             if len(self.buffer) == self.compression_batch_size:
                 self.compress_current_buffer()
                 self.buffer = []
@@ -85,7 +85,7 @@ class LeaderNode:
             if buffer_len >= self.random_bits_size:
                 print(f"Using first {buffer_len} samples as random bits for ANS coder")
 
-                random_bits_samples = [int(sample) for sublist in self.random_bits_buffer for sample in sublist]
+                random_bits_samples = [int(float(sample)) for sublist in self.random_bits_buffer for sample in sublist]
                 self.compressor.set_random_bits(np.array(random_bits_samples))
                 self.random_bits_filled = True
 
