@@ -2,7 +2,7 @@
     "n_feature": 3,
     "data_set_name": "household",
     "pooling_factor": 5,
-    "hidden_dim": 50,
+    "hidden_dim": 100,
     "latent_dim": 10,
     "train_set_ratio": 1.0,
     "val_set_ratio": 0.01,

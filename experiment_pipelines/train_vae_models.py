@@ -25,14 +25,14 @@ def main(params_path, test_set_num):
 
     experiments_to_run = [
         #"simple",
-        #"household",
-        "wisdm",
+        "household",
+        #"wisdm",
         #"intel"
     ]
 
     modes_to_evaluate = [
         "model_training",
-        # "compression"
+        #"compression"
     ]
 
     export_to_csv = True

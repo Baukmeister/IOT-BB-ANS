@@ -31,7 +31,7 @@ class LeaderNode:
         self.input_dim = input_dim(self.params)
         self.client: paho.mqtt.client.Client = None
         self.random_bits_filled = not self.params.use_first_samples_as_extra_bits
-        self.random_bits_size = 50
+        self.random_bits_size = self.params.random_bit_samples
         self.random_bits_buffer = []
 
         self.compression_batch_size = self.input_dim
