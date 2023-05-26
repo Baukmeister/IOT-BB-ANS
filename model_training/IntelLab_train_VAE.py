@@ -5,7 +5,7 @@ from torch.utils import data
 from models.beta_binomial_vae import BetaBinomialVAE_sbs
 from models.vae import *
 from models.vanilla_vae import *
-from util.IntelLabDataLoader import IntelLabDataset
+from util.DataLoaders.IntelLabDataLoader import IntelLabDataset
 from util.io import vae_model_name
 from pytorch_lightning import loggers as pl_loggers
 
