@@ -1,5 +1,3 @@
-#TODO: Figure this out "FileNotFoundError: [Errno 2] No such file or directory: 'params/benchmark_compression_eval/10_samples/simple.json'"
-
 echo "1 Samples"
 docker run baukmeister/sensor-app params/benchmark_compression_eval/1_samples/household.json -1 benchmark
 docker run baukmeister/sensor-app params/benchmark_compression_eval/1_samples/intel.json -1 benchmark
